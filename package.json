@@ -4,6 +4,9 @@
   "description": "AI-powered booking SaaS platform",
   "type": "module",
   "main": "index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "start": "node index.js",
     "dev": "node --env-file=.env --watch index.js"
