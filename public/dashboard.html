@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — BookingAI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --border: #e5e8ed;
+      --text: #1a1d23;
+      --muted: #6b7280;
+      --accent: #1a1a2e;
+      --green: #16a34a;  --green-bg: #dcfce7;
+      --yellow: #b45309; --yellow-bg: #fef3c7;
+      --red: #dc2626;    --red-bg: #fee2e2;
+      --blue: #2563eb;   --blue-bg: #dbeafe;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      background: var(--accent); color: #fff;
+      display: flex; flex-direction: column; padding: 28px 0;
+    }
+    .sidebar-logo {
+      font-size: 1.1rem; font-weight: 700; letter-spacing: 0.04em;
+      padding: 0 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-logo span { color: #b89a6a; }
+    .sidebar-nav { padding: 20px 12px; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px; margin-bottom: 2px;
+      font-size: 0.875rem; color: rgba(255,255,255,0.7);
+      text-decoration: none; transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.14); color: #fff; font-weight: 600; }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+    .sidebar-footer {
+      padding: 16px 24px; border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.75rem; color: rgba(255,255,255,0.4);
+    }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 60px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar h1 { font-size: 1rem; font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .topbar-date { font-size: 0.8rem; color: var(--muted); }
+    .btn-refresh {
+      background: var(--accent); color: #fff; border: none;
+      padding: 7px 16px; border-radius: 6px; font-size: 0.8rem;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .btn-refresh:hover { opacity: 0.85; }
+
+    .content { padding: 28px 32px; overflow-y: auto; flex: 1; }
+
+    /* ── Stats ── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 22px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; }
+    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+    .stat-icon { font-size: 1.2rem; }
+    .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .stat-sub { font-size: 0.75rem; color: var(--muted); }
+    .stat-card.all       .stat-value { color: var(--blue); }
+    .stat-card.confirmed .stat-value { color: var(--green); }
+    .stat-card.pending   .stat-value { color: var(--yellow); }
+    .stat-card.cancelled .stat-value { color: var(--red); }
+
+    /* ── Table card ── */
+    .table-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .table-header {
+      padding: 18px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      flex-wrap: wrap;
+    }
+    .table-header h2 { font-size: 0.95rem; font-weight: 600; }
+
+    .filter-tabs { display: flex; gap: 4px; }
+    .tab {
+      padding: 5px 14px; border-radius: 6px; font-size: 0.78rem;
+      cursor: pointer; border: 1px solid transparent; color: var(--muted);
+      transition: background 0.15s;
+    }
+    .tab:hover { background: var(--bg); }
+    .tab.active { background: var(--accent); color: #fff; }
+
+    .search-wrap { position: relative; }
+    .search-wrap input {
+      padding: 6px 12px 6px 32px; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 0.8rem; outline: none; width: 200px;
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap::before {
+      content: '🔍'; position: absolute; left: 9px; top: 50%;
+      transform: translateY(-50%); font-size: 0.75rem; pointer-events: none;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left; font-size: 0.72rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted);
+      padding: 11px 20px; border-bottom: 1px solid var(--border);
+      background: #fafbfc; white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafbfc; }
+    td { padding: 13px 20px; font-size: 0.85rem; vertical-align: middle; }
+
+    .customer-name  { font-weight: 500; }
+    .customer-meta  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    .service-chip {
+      display: inline-block; background: var(--blue-bg); color: var(--blue);
+      padding: 2px 9px; border-radius: 4px; font-size: 0.72rem; font-weight: 600;
+    }
+    .no-service { color: var(--muted); font-style: italic; font-size: 0.78rem; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    .badge-confirmed { background: var(--green-bg);  color: var(--green); }
+    .badge-confirmed::before { background: var(--green); }
+    .badge-pending   { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-pending::before   { background: var(--yellow); }
+    .badge-cancelled { background: var(--red-bg);    color: var(--red); }
+    .badge-cancelled::before { background: var(--red); }
+
+    .actions { display: flex; gap: 6px; }
+    .btn-action {
+      padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 500;
+      cursor: pointer; border: 1.5px solid; background: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-confirm { border-color: var(--green); color: var(--green); }
+    .btn-confirm:hover { background: var(--green); color: #fff; }
+    .btn-cancel  { border-color: #e5e7eb; color: var(--muted); }
+    .btn-cancel:hover { border-color: var(--red); color: var(--red); }
+    .btn-action:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+    .empty {
+      text-align: center; padding: 56px 24px;
+      color: var(--muted); font-size: 0.9rem;
+    }
+    .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      background: #1a1d23; color: #fff;
+      padding: 10px 22px; border-radius: 8px; font-size: 0.85rem;
+      opacity: 0; transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none; z-index: 9999; white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--red); }
+
+    @media (max-width: 960px) {
+      .sidebar { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .content { padding: 16px; }
+      td.hide-sm, th.hide-sm { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">BookingAI<span>.</span></div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="/dashboard">
+        <span class="nav-icon">📋</span> Κρατήσεις
+      </a>
+      <a class="nav-item" href="/test.html">
+        <span class="nav-icon">🏠</span> Site Demo
+      </a>
+      <a class="nav-item" href="/demo.html">
+        <span class="nav-icon">🤖</span> Widget Demo
+      </a>
+    </nav>
+    <div class="sidebar-footer">Éclat Hair Studio</div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h1>Διαχείριση Κρατήσεων</h1>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbar-date"></span>
+        <button class="btn-refresh" onclick="loadAll()">↻ Ανανέωση</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <div class="stats-grid">
+        <div class="stat-card all">
+          <div class="stat-top">
+            <div class="stat-label">Σύνολο</div>
+            <div class="stat-icon">📊</div>
+          </div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-sub">κρατήσεις</div>
+        </div>
+        <div class="stat-card confirmed">
+          <div class="stat-top">
+            <div class="stat-label">Επιβεβαιωμένες</div>
+            <div class="stat-icon">✅</div>
+          </div>
+          <div class="stat-value" id="stat-confirmed">—</div>
+          <div class="stat-sub">ενεργές</div>
+        </div>
+        <div class="stat-card pending">
+          <div class="stat-top">
+            <div class="stat-label">Αναμονή</div>
+            <div class="stat-icon">⏳</div>
+          </div>
+          <div class="stat-value" id="stat-pending">—</div>
+          <div class="stat-sub">αναμένουν</div>
+        </div>
+        <div class="stat-card cancelled">
+          <div class="stat-top">
+            <div class="stat-label">Ακυρωμένες</div>
+            <div class="stat-icon">❌</div>
+          </div>
+          <div class="stat-value" id="stat-cancelled">—</div>
+          <div class="stat-sub">ακυρώσεις</div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h2>Λίστα Κρατήσεων</h2>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <div class="search-wrap">
+              <input type="text" id="search" placeholder="Αναζήτηση..." oninput="renderTable()" />
+            </div>
+            <div class="filter-tabs">
+              <div class="tab active" data-filter="all">Όλες</div>
+              <div class="tab" data-filter="pending">Αναμονή</div>
+              <div class="tab" data-filter="confirmed">Επιβεβαιωμένες</div>
+              <div class="tab" data-filter="cancelled">Ακυρωμένες</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Πελάτης</th>
+                <th class="hide-sm">Υπηρεσία</th>
+                <th>Ημερομηνία</th>
+                <th class="hide-sm">Ώρα</th>
+                <th>Κατάσταση</th>
+                <th>Ενέργειες</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-body"></tbody>
+          </table>
+          <div class="empty" id="empty-state" style="display:none;">
+            <div class="empty-icon">📭</div>
+            Δεν βρέθηκαν κρατήσεις.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let allBookings = [];
+  let activeFilter = 'all';
+
+  document.getElementById('topbar-date').textContent =
+    new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  async function loadAll() {
+    try {
+      const [bRes, sRes] = await Promise.all([
+        fetch('/api/bookings'),
+        fetch('/api/bookings/stats'),
+      ]);
+      const bData = await bRes.json();
+      const stats = await sRes.json();
+      allBookings = bData.bookings;
+      renderStats(stats);
+      renderTable();
+    } catch {
+      showToast('Σφάλμα φόρτωσης δεδομένων', true);
+    }
+  }
+
+  function renderStats(s) {
+    document.getElementById('stat-total').textContent     = s.total     ?? 0;
+    document.getElementById('stat-confirmed').textContent = s.confirmed ?? 0;
+    document.getElementById('stat-pending').textContent   = s.pending   ?? 0;
+    document.getElementById('stat-cancelled').textContent = s.cancelled ?? 0;
+  }
+
+  function renderTable() {
+    const query = document.getElementById('search').value.toLowerCase();
+    const filtered = allBookings.filter(b => {
+      if (activeFilter !== 'all' && b.status !== activeFilter) return false;
+      if (!query) return true;
+      return [b.name, b.email, b.phone, b.service, b.date].some(v => v && v.toLowerCase().includes(query));
+    });
+
+    const tbody  = document.getElementById('bookings-body');
+    const empty  = document.getElementById('empty-state');
+
+    if (!filtered.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    const statusLabel = { confirmed: 'Επιβεβαιωμένη', pending: 'Αναμονή', cancelled: 'Ακυρωμένη' };
+
+    tbody.innerHTML = filtered.map(b => `
+      <tr id="row-${b.id}">
+        <td style="color:var(--muted);font-size:0.75rem;white-space:nowrap;">#${b.id}</td>
+        <td>
+          <div class="customer-name">${esc(b.name)}</div>
+          <div class="customer-meta">${esc(b.email)}${b.phone ? ' · ' + esc(b.phone) : ''}</div>
+        </td>
+        <td class="hide-sm">
+          ${b.service
+            ? `<span class="service-chip">${esc(b.service)}</span>`
+            : `<span class="no-service">—</span>`}
+        </td>
+        <td style="white-space:nowrap;">${formatDate(b.date)}</td>
+        <td class="hide-sm">${b.time}</td>
+        <td><span class="badge badge-${b.status}">${statusLabel[b.status] ?? b.status}</span></td>
+        <td>
+          <div class="actions">
+            <button class="btn-action btn-confirm"
+              ${b.status === 'confirmed' ? 'disabled' : ''}
+              onclick="updateStatus(${b.id}, 'confirmed')">✓ Επιβεβαίωση</button>
+            <button class="btn-action btn-cancel"
+              ${b.status === 'cancelled' ? 'disabled' : ''}
+              onclick="updateStatus(${b.id}, 'cancelled')">✕ Ακύρωση</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const idx = allBookings.findIndex(b => b.id === id);
+      if (idx !== -1) allBookings[idx] = data.booking;
+      // refresh stats from server
+      const sRes = await fetch('/api/bookings/stats');
+      renderStats(await sRes.json());
+      renderTable();
+      const labels = { confirmed: '✅ Κράτηση επιβεβαιώθηκε!', cancelled: '❌ Κράτηση ακυρώθηκε.' };
+      showToast(labels[status] ?? 'Ενημερώθηκε');
+    } catch {
+      showToast('Σφάλμα ενημέρωσης', true);
+    }
+  }
+
+  function formatDate(d) {
+    if (!d || d === '—') return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('el-GR', {
+      weekday: 'short', day: 'numeric', month: 'short',
+    });
+  }
+
+  function esc(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  let toastTimer;
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.toggle('error', isError);
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeFilter = tab.dataset.filter;
+      renderTable();
+    });
+  });
+
+  loadAll();
+</script>
+</body>
+</html>

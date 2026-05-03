@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — BookingAI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f6f9; --surface: #ffffff; --border: #e5e8ed;
+      --text: #1a1d23; --muted: #6b7280; --accent: #1a1a2e;
+      --green: #16a34a;  --green-bg: #dcfce7;
+      --yellow: #b45309; --yellow-bg: #fef3c7;
+      --red: #dc2626;    --red-bg: #fee2e2;
+      --blue: #2563eb;   --blue-bg: #dbeafe;
+    }
+
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 230px; flex-shrink: 0; background: var(--accent); color: #fff; display: flex; flex-direction: column; }
+    .sidebar-logo { padding: 22px 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .sidebar-logo h2 { font-size: 1rem; font-weight: 700; }
+    .sidebar-logo h2 span { color: #b89a6a; }
+    .sidebar-logo p { font-size: 0.68rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .sidebar-nav { padding: 14px 10px; flex: 1; }
+    .nav-section { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 8px 12px 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 12px; border-radius: 7px; margin-bottom: 1px;
+      font-size: 0.83rem; color: rgba(255,255,255,0.7);
+      text-decoration: none; transition: background 0.15s, color 0.15s; cursor: pointer;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .nav-item.active { background: rgba(255,255,255,0.14); color: #fff; font-weight: 600; }
+    .nav-icon { font-size: 0.9rem; width: 18px; text-align: center; }
+
+    /* Business switcher in sidebar */
+    .biz-list { padding: 6px 10px; }
+    .biz-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 12px; border-radius: 7px; margin-bottom: 1px;
+      font-size: 0.8rem; color: rgba(255,255,255,0.6);
+      cursor: pointer; transition: background 0.15s, color 0.15s;
+    }
+    .biz-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .biz-item.active { background: rgba(255,255,255,0.12); color: #fff; }
+    .biz-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .biz-count { margin-left: auto; font-size: 0.68rem; background: rgba(255,255,255,0.12); padding: 1px 7px; border-radius: 10px; }
+
+    .sidebar-user { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 9px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 0.8rem; font-weight: 600; }
+    .user-role { font-size: 0.65rem; color: rgba(255,255,255,0.4); }
+    .btn-logout { background: none; border: none; color: rgba(255,255,255,0.45); cursor: pointer; padding: 4px; border-radius: 5px; font-size: 0.95rem; transition: color 0.2s, background 0.2s; }
+    .btn-logout:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 26px; height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
+    .topbar-left h1 { font-size: 0.92rem; font-weight: 600; }
+    .topbar-left p { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .btn-sm { padding: 6px 13px; border-radius: 6px; font-size: 0.76rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: background 0.15s; }
+    .btn-sm:hover { background: var(--bg); }
+    .btn-sm.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-sm.primary:hover { opacity: 0.88; }
+
+    .content { padding: 22px 26px; overflow-y: auto; flex: 1; }
+
+    /* ── Active business banner ── */
+    .biz-banner {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 20px;
+    }
+    .biz-banner-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .biz-banner h3 { font-size: 0.88rem; font-weight: 600; }
+    .biz-banner p { font-size: 0.75rem; color: var(--muted); }
+    .biz-banner-right { margin-left: auto; font-size: 0.75rem; color: var(--muted); }
+
+    /* ── Stats ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; margin-bottom: 20px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+    .stat-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+    .stat-icon-wrap { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .stat-card.all       .stat-icon-wrap { background: var(--blue-bg); }
+    .stat-card.confirmed .stat-icon-wrap { background: var(--green-bg); }
+    .stat-card.pending   .stat-icon-wrap { background: var(--yellow-bg); }
+    .stat-card.cancelled .stat-icon-wrap { background: var(--red-bg); }
+    .stat-value { font-size: 1.7rem; font-weight: 700; line-height: 1; }
+    .stat-card.all       .stat-value { color: var(--blue); }
+    .stat-card.confirmed .stat-value { color: var(--green); }
+    .stat-card.pending   .stat-value { color: var(--yellow); }
+    .stat-card.cancelled .stat-value { color: var(--red); }
+    .stat-label { font-size: 0.68rem; color: var(--muted); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+
+    /* ── Table ── */
+    .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .table-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .table-header h2 { font-size: 0.88rem; font-weight: 600; }
+    .table-controls { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .search-wrap { position: relative; }
+    .search-wrap input { padding: 5px 9px 5px 28px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.78rem; outline: none; width: 180px; transition: border-color 0.2s; }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap::before { content: '🔍'; position: absolute; left: 7px; top: 50%; transform: translateY(-50%); font-size: 0.68rem; pointer-events: none; }
+    .filter-tabs { display: flex; gap: 3px; }
+    .tab { padding: 4px 11px; border-radius: 5px; font-size: 0.73rem; cursor: pointer; border: 1px solid transparent; color: var(--muted); transition: background 0.15s; }
+    .tab:hover { background: var(--bg); }
+    .tab.active { background: var(--accent); color: #fff; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th { text-align: left; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding: 9px 16px; border-bottom: 1px solid var(--border); background: #fafbfc; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafbfc; }
+    td { padding: 11px 16px; font-size: 0.82rem; vertical-align: middle; }
+
+    .customer-name { font-weight: 500; font-size: 0.84rem; }
+    .customer-meta { font-size: 0.71rem; color: var(--muted); margin-top: 1px; }
+    .service-chip { display: inline-block; background: var(--blue-bg); color: var(--blue); padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
+    .biz-chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
+    .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+    .badge-confirmed { background: var(--green-bg); color: var(--green); }
+    .badge-confirmed::before { background: var(--green); }
+    .badge-pending   { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-pending::before   { background: var(--yellow); }
+    .badge-cancelled { background: var(--red-bg);   color: var(--red); }
+    .badge-cancelled::before { background: var(--red); }
+
+    .actions { display: flex; gap: 5px; }
+    .btn-action { padding: 4px 9px; border-radius: 5px; font-size: 0.7rem; font-weight: 500; cursor: pointer; border: 1.5px solid; background: transparent; transition: background 0.15s, color 0.15s; }
+    .btn-confirm { border-color: var(--green); color: var(--green); }
+    .btn-confirm:hover { background: var(--green); color: #fff; }
+    .btn-cancel  { border-color: #e5e7eb; color: var(--muted); }
+    .btn-cancel:hover { border-color: var(--red); color: var(--red); }
+    .btn-action:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+    .empty { text-align: center; padding: 48px 24px; color: var(--muted); }
+    .empty-icon { font-size: 2rem; margin-bottom: 8px; }
+
+    /* ── Toast ── */
+    #toast { position: fixed; bottom: 20px; right: 24px; padding: 9px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; opacity: 0; transform: translateY(6px); transition: opacity 0.22s, transform 0.22s; pointer-events: none; z-index: 9999; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: var(--green-bg); color: var(--green); border: 1px solid #bbf7d0; }
+    #toast.error   { background: var(--red-bg);   color: var(--red);   border: 1px solid #fca5a5; }
+    #toast.info    { background: #fff; color: var(--text); border: 1px solid var(--border); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(2px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 12px; padding: 26px; max-width: 340px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
+    .modal h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 7px; }
+    .modal p  { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 7px; justify-content: flex-end; }
+    .modal-btn { padding: 7px 16px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); transition: background 0.15s; }
+    .modal-btn.danger { background: var(--red); color: #fff; border-color: var(--red); }
+    .modal-btn.danger:hover { opacity: 0.88; }
+    .modal-btn:not(.danger):hover { background: var(--bg); }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .content { padding: 14px; }
+      th.hide-sm, td.hide-sm { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2>BookingAI<span>.</span></h2>
+      <p>Admin Panel</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Κρατήσεις</div>
+      <a class="nav-item active" href="/admin/dashboard">
+        <span class="nav-icon">📋</span> Όλες οι κρατήσεις
+      </a>
+
+      <div class="nav-section" style="margin-top:12px;">Επιχειρήσεις</div>
+      <div class="biz-list" id="sidebar-biz-list">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="nav-section" style="margin-top:12px;">Links</div>
+      <a class="nav-item" href="/test.html" target="_blank">
+        <span class="nav-icon">💇</span> Éclat Hair Studio
+      </a>
+      <a class="nav-item" href="/nails-sofia.html" target="_blank">
+        <span class="nav-icon">💅</span> Nails by Sofia
+      </a>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar">👤</div>
+      <div class="user-info">
+        <div class="user-name">admin</div>
+        <div class="user-role">Διαχειριστής</div>
+      </div>
+      <button class="btn-logout" title="Αποσύνδεση" onclick="confirmLogout()">⏻</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 id="topbar-title">Όλες οι Κρατήσεις</h1>
+        <p id="topbar-date"></p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-sm" onclick="loadAll()">↻ Ανανέωση</button>
+        <button class="btn-sm primary" onclick="confirmLogout()">Αποσύνδεση</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Active business banner -->
+      <div class="biz-banner" id="biz-banner">
+        <div class="biz-banner-dot" id="biz-banner-dot"></div>
+        <div>
+          <h3 id="biz-banner-name">Φόρτωση...</h3>
+          <p id="biz-banner-services"></p>
+        </div>
+        <div class="biz-banner-right" id="biz-banner-right"></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card all">
+          <div class="stat-top"><div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Σύνολο</div></div><div class="stat-icon-wrap">📊</div></div>
+        </div>
+        <div class="stat-card confirmed">
+          <div class="stat-top"><div><div class="stat-value" id="stat-confirmed">—</div><div class="stat-label">Επιβεβαιωμένες</div></div><div class="stat-icon-wrap">✅</div></div>
+        </div>
+        <div class="stat-card pending">
+          <div class="stat-top"><div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Αναμονή</div></div><div class="stat-icon-wrap">⏳</div></div>
+        </div>
+        <div class="stat-card cancelled">
+          <div class="stat-top"><div><div class="stat-value" id="stat-cancelled">—</div><div class="stat-label">Ακυρωμένες</div></div><div class="stat-icon-wrap">❌</div></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-header">
+          <h2>Λίστα Κρατήσεων</h2>
+          <div class="table-controls">
+            <div class="search-wrap">
+              <input type="text" id="search" placeholder="Αναζήτηση..." oninput="renderTable()" />
+            </div>
+            <div class="filter-tabs">
+              <div class="tab active" data-filter="all">Όλες</div>
+              <div class="tab" data-filter="pending">Αναμονή</div>
+              <div class="tab" data-filter="confirmed">Επιβεβαιωμένες</div>
+              <div class="tab" data-filter="cancelled">Ακυρωμένες</div>
+            </div>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Πελάτης</th>
+              <th class="hide-sm">Επιχείρηση</th>
+              <th class="hide-sm">Υπηρεσία</th>
+              <th>Ημ/νία</th>
+              <th class="hide-sm">Ώρα</th>
+              <th>Κατάσταση</th>
+              <th>Ενέργειες</th>
+            </tr>
+          </thead>
+          <tbody id="bookings-body"></tbody>
+        </table>
+        <div class="empty" id="empty-state" style="display:none;">
+          <div class="empty-icon">📭</div>
+          Δεν βρέθηκαν κρατήσεις.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="logout-modal">
+  <div class="modal">
+    <h3>Αποσύνδεση;</h3>
+    <p>Είσαι σίγουρος ότι θέλεις να αποσυνδεθείς;</p>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal()">Άκυρο</button>
+      <button class="modal-btn danger" onclick="doLogout()">Αποσύνδεση</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let allBookings  = [];
+  let allBusinesses = [];
+  let activeFilter = 'all';
+  let activeBizId  = null; // null = show all
+
+  document.getElementById('topbar-date').textContent =
+    new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  // ── Data loading ──────────────────────────────────────────────────────────
+
+  async function loadAll() {
+    try {
+      const bizParam = activeBizId ? `?businessId=${activeBizId}` : '';
+      const [bRes, sRes, bizRes] = await Promise.all([
+        fetch(`/api/bookings${bizParam}`),
+        fetch(`/api/bookings/stats${bizParam}`),
+        fetch('/api/businesses'),
+      ]);
+      if ([bRes, sRes, bizRes].some(r => r.status === 401)) { location.href = '/admin/login'; return; }
+
+      allBookings   = (await bRes.json()).bookings;
+      allBusinesses = (await bizRes.json()).businesses;
+      const stats   = await sRes.json();
+
+      renderStats(stats);
+      renderSidebarBiz();
+      renderBanner();
+      renderTable();
+    } catch {
+      showToast('Σφάλμα φόρτωσης', 'error');
+    }
+  }
+
+  function renderStats(s) {
+    document.getElementById('stat-total').textContent     = s.total     ?? 0;
+    document.getElementById('stat-confirmed').textContent = s.confirmed ?? 0;
+    document.getElementById('stat-pending').textContent   = s.pending   ?? 0;
+    document.getElementById('stat-cancelled').textContent = s.cancelled ?? 0;
+  }
+
+  // ── Sidebar business list ─────────────────────────────────────────────────
+
+  const BIZ_COLORS = ['#1a1a2e','#7c3aed','#0891b2','#16a34a','#b45309','#dc2626'];
+
+  function bizColor(biz) {
+    return biz.theme_color || BIZ_COLORS[allBusinesses.indexOf(biz) % BIZ_COLORS.length];
+  }
+
+  function renderSidebarBiz() {
+    const list = document.getElementById('sidebar-biz-list');
+    const allItem = `
+      <div class="biz-item ${activeBizId === null ? 'active' : ''}" onclick="switchBiz(null)">
+        <div class="biz-dot" style="background:#6b7280"></div>
+        <span>Όλες</span>
+        <span class="biz-count">${allBookings.length}</span>
+      </div>`;
+    const items = allBusinesses.map(biz => {
+      const cnt = allBookings.filter(b => b.business_id === biz.business_id).length;
+      return `
+        <div class="biz-item ${activeBizId === biz.business_id ? 'active' : ''}" onclick="switchBiz('${biz.business_id}')">
+          <div class="biz-dot" style="background:${bizColor(biz)}"></div>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(biz.name)}</span>
+          <span class="biz-count">${cnt}</span>
+        </div>`;
+    }).join('');
+    list.innerHTML = allItem + items;
+  }
+
+  function switchBiz(bizId) {
+    activeBizId = bizId;
+    document.getElementById('topbar-title').textContent = bizId
+      ? (allBusinesses.find(b => b.business_id === bizId)?.name ?? bizId)
+      : 'Όλες οι Κρατήσεις';
+    loadAll();
+  }
+
+  // ── Business banner ───────────────────────────────────────────────────────
+
+  function renderBanner() {
+    const biz = activeBizId ? allBusinesses.find(b => b.business_id === activeBizId) : null;
+    const dot  = document.getElementById('biz-banner-dot');
+    const name = document.getElementById('biz-banner-name');
+    const subs = document.getElementById('biz-banner-services');
+    const right = document.getElementById('biz-banner-right');
+
+    if (biz) {
+      dot.style.background = biz.theme_color || '#6b7280';
+      name.textContent = biz.name;
+      subs.textContent = biz.services.slice(0, 4).map(s => s.name).join(' · ');
+      right.textContent = `${biz.services.length} υπηρεσίες`;
+    } else {
+      dot.style.background = '#6b7280';
+      name.textContent = 'Όλες οι επιχειρήσεις';
+      subs.textContent = allBusinesses.map(b => b.name).join(' · ');
+      right.textContent = `${allBusinesses.length} επιχειρήσεις`;
+    }
+  }
+
+  // ── Table ─────────────────────────────────────────────────────────────────
+
+  function renderTable() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const filtered = allBookings.filter(b => {
+      if (activeFilter !== 'all' && b.status !== activeFilter) return false;
+      if (!q) return true;
+      return [b.name, b.email, b.phone, b.service, b.date, b.business_id].some(v => v && String(v).toLowerCase().includes(q));
+    });
+
+    const tbody = document.getElementById('bookings-body');
+    const empty = document.getElementById('empty-state');
+    if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+
+    const statusLabel = { confirmed: 'Επιβεβαιωμένη', pending: 'Αναμονή', cancelled: 'Ακυρωμένη' };
+
+    tbody.innerHTML = filtered.map(b => {
+      const biz = allBusinesses.find(x => x.business_id === b.business_id);
+      const color = biz?.theme_color || '#6b7280';
+      return `
+        <tr id="row-${b.id}">
+          <td style="color:var(--muted);font-size:0.7rem;">#${b.id}</td>
+          <td>
+            <div class="customer-name">${esc(b.name)}</div>
+            <div class="customer-meta">${esc(b.email)}${b.phone ? ' · ' + esc(b.phone) : ''}</div>
+          </td>
+          <td class="hide-sm">
+            <span class="biz-chip" style="background:${color}22;color:${color};">${esc(biz?.name ?? b.business_id ?? '—')}</span>
+          </td>
+          <td class="hide-sm">
+            ${b.service ? `<span class="service-chip">${esc(b.service)}</span>` : '<span style="color:var(--muted);font-style:italic;font-size:0.75rem;">—</span>'}
+          </td>
+          <td style="white-space:nowrap;">
+            <div style="font-size:0.82rem;">${formatDate(b.date)}</div>
+            <div style="font-size:0.7rem;color:var(--muted);">${b.time}</div>
+          </td>
+          <td class="hide-sm" style="font-size:0.7rem;color:var(--muted);">${formatCreatedAt(b.created_at)}</td>
+          <td><span class="badge badge-${b.status}">${statusLabel[b.status] ?? b.status}</span></td>
+          <td>
+            <div class="actions">
+              <button class="btn-action btn-confirm" ${b.status === 'confirmed' ? 'disabled' : ''} onclick="updateStatus(${b.id}, 'confirmed')">✓</button>
+              <button class="btn-action btn-cancel"  ${b.status === 'cancelled' ? 'disabled' : ''} onclick="updateStatus(${b.id}, 'cancelled')">✕</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+
+  async function updateStatus(id, status) {
+    try {
+      const res = await fetch(`/api/bookings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const idx = allBookings.findIndex(b => b.id === id);
+      if (idx !== -1) allBookings[idx] = data.booking;
+      const bizParam = activeBizId ? `?businessId=${activeBizId}` : '';
+      const sRes = await fetch(`/api/bookings/stats${bizParam}`);
+      renderStats(await sRes.json());
+      renderSidebarBiz();
+      renderTable();
+      showToast(status === 'confirmed' ? '✅ Επιβεβαιώθηκε!' : '❌ Ακυρώθηκε.', status === 'confirmed' ? 'success' : 'info');
+    } catch {
+      showToast('Σφάλμα ενημέρωσης', 'error');
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  function formatDate(d) {
+    if (!d || d === '—') return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('el-GR', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  function formatCreatedAt(dt) {
+    if (!dt) return '—';
+    return new Date(dt.replace(' ', 'T')).toLocaleString('el-GR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+  function esc(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+
+  let toastTimer;
+  function showToast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeFilter = tab.dataset.filter;
+      renderTable();
+    });
+  });
+
+  function confirmLogout() { document.getElementById('logout-modal').classList.add('open'); }
+  function closeModal()    { document.getElementById('logout-modal').classList.remove('open'); }
+  async function doLogout() { await fetch('/admin/logout', { method: 'POST' }); location.href = '/admin/login'; }
+  document.getElementById('logout-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+  loadAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Éclat Hair Studio — Κομμωτήριο Αθήνα</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #faf8f5;
+      --dark:  #1c1c1c;
+      --gold:  #b89a6a;
+      --muted: #6b6b6b;
+      --card:  #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--cream);
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(250, 248, 245, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e8e4de;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+    }
+    .nav-logo {
+      font-size: 1.25rem; font-weight: 700; letter-spacing: 0.04em; color: var(--dark);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a {
+      text-decoration: none; color: var(--muted); font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--dark); }
+    .nav-cta {
+      background: var(--dark); color: #fff;
+      padding: 9px 22px; border-radius: 6px; font-size: 0.875rem;
+      text-decoration: none; transition: background 0.2s;
+    }
+    .nav-cta:hover { background: #333; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 88vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 80px 24px;
+      background: linear-gradient(160deg, #faf8f5 60%, #f0ebe3);
+    }
+    .hero-eyebrow {
+      font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 20px; font-weight: 600;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 700; line-height: 1.15; letter-spacing: -0.02em;
+      max-width: 680px; margin-bottom: 20px;
+    }
+    .hero h1 em { font-style: italic; color: var(--gold); }
+    .hero p {
+      color: var(--muted); font-size: 1.1rem;
+      max-width: 460px; margin-bottom: 40px;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--dark); color: #fff;
+      padding: 14px 32px; border-radius: 8px; font-size: 0.95rem;
+      text-decoration: none; font-weight: 500; transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #333; }
+    .btn-outline {
+      border: 1.5px solid #c8c0b4; color: var(--dark);
+      padding: 14px 32px; border-radius: 8px; font-size: 0.95rem;
+      text-decoration: none; font-weight: 500; transition: border-color 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--dark); }
+
+    /* ── Section common ── */
+    section { padding: 96px 48px; }
+    .section-label {
+      font-size: 0.75rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--gold); font-weight: 600; margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700;
+      letter-spacing: -0.02em; margin-bottom: 48px; max-width: 520px;
+    }
+
+    /* ── Services ── */
+    #services { background: #fff; }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px; max-width: 960px;
+    }
+    .service-card {
+      border: 1px solid #ede9e2; border-radius: 12px;
+      padding: 28px 24px; transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .service-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .service-icon { font-size: 1.8rem; margin-bottom: 14px; }
+    .service-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+    .service-card p { font-size: 0.85rem; color: var(--muted); margin-bottom: 14px; }
+    .service-price { font-size: 0.85rem; font-weight: 600; color: var(--gold); }
+
+    /* ── About ── */
+    #about {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 64px; align-items: center;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .about-image {
+      background: linear-gradient(135deg, #e8e1d6 0%, #d4c9b8 100%);
+      border-radius: 16px; aspect-ratio: 4/3;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem;
+    }
+    .about-content .section-title { margin-bottom: 16px; }
+    .about-content p { color: var(--muted); margin-bottom: 16px; font-size: 0.95rem; }
+    .about-stats {
+      display: flex; gap: 32px; margin-top: 32px;
+      padding-top: 28px; border-top: 1px solid #ede9e2;
+    }
+    .stat-number { font-size: 1.8rem; font-weight: 700; color: var(--dark); display: block; }
+    .stat-label { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── Team ── */
+    #team { background: #fff; }
+    .team-grid {
+      display: flex; gap: 24px; flex-wrap: wrap;
+    }
+    .team-card {
+      flex: 1; min-width: 180px; max-width: 220px;
+      text-align: center;
+    }
+    .team-avatar {
+      width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; background: #f0ebe3;
+    }
+    .team-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+    .team-card p { font-size: 0.8rem; color: var(--gold); }
+
+    /* ── Hours ── */
+    #hours { background: var(--dark); color: #fff; }
+    #hours .section-label { color: var(--gold); }
+    #hours .section-title { color: #fff; }
+    .hours-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px; max-width: 800px;
+    }
+    .hours-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px; background: rgba(255,255,255,0.06);
+      border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
+    }
+    .hours-day { font-size: 0.9rem; font-weight: 500; }
+    .hours-time { font-size: 0.85rem; color: var(--gold); }
+    .hours-closed { color: #555; }
+
+    /* ── Footer ── */
+    footer {
+      background: #111; color: #aaa;
+      padding: 32px 48px; display: flex;
+      align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+      font-size: 0.82rem;
+    }
+    footer strong { color: #fff; }
+    footer a { color: #aaa; text-decoration: none; }
+    footer a:hover { color: #fff; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      section { padding: 64px 20px; }
+      #about { grid-template-columns: 1fr; gap: 32px; }
+      .about-image { aspect-ratio: 16/7; }
+      footer { padding: 24px 20px; flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="#" class="nav-logo">Éclat<span>.</span></a>
+    <ul class="nav-links">
+      <li><a href="#services">Υπηρεσίες</a></li>
+      <li><a href="#about">Σχετικά</a></li>
+      <li><a href="#team">Ομάδα</a></li>
+      <li><a href="#hours">Ώρες</a></li>
+    </ul>
+    <a href="#" class="nav-cta">Κράτηση</a>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <p class="hero-eyebrow">Κομμωτήριο · Αθήνα, Κολωνάκι</p>
+    <h1>Η τέχνη της <em>ομορφιάς</em> στα χέρια σου</h1>
+    <p>Επαγγελματικές υπηρεσίες κομμωτικής σε ένα χώρο που σε κάνει να νιώθεις ξεχωριστή.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">Κλείσε ραντεβού →</a>
+      <a href="#services" class="btn-outline">Οι υπηρεσίες μας</a>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <section id="services">
+    <p class="section-label">Τι προσφέρουμε</p>
+    <h2 class="section-title">Υπηρεσίες για κάθε ανάγκη</h2>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">✂️</div>
+        <h3>Κούρεμα</h3>
+        <p>Κούρεμα προσαρμοσμένο στη μορφολογία σου</p>
+        <span class="service-price">από €25</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🎨</div>
+        <h3>Βαφή</h3>
+        <p>Μόνιμη βαφή, highlights και balayage</p>
+        <span class="service-price">από €45</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💆</div>
+        <h3>Θεραπείες</h3>
+        <p>Ενυδάτωση, keratin και αναδόμηση</p>
+        <span class="service-price">από €35</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">👰</div>
+        <h3>Νυφικό Χτένισμα</h3>
+        <p>Χτενίσματα για γάμο και ειδικές περιστάσεις</p>
+        <span class="service-price">από €80</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🌊</div>
+        <h3>Μπούκλες</h3>
+        <p>Permanent wave και styling για σγουρά μαλλιά</p>
+        <span class="service-price">από €55</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">✨</div>
+        <h3>Styling</h3>
+        <p>Χτένισμα, blow dry και ισιωτική</p>
+        <span class="service-price">από €20</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section>
+    <div id="about">
+      <div class="about-image">💇‍♀️</div>
+      <div class="about-content">
+        <p class="section-label">Η ιστορία μας</p>
+        <h2 class="section-title">15 χρόνια εμπειρίας στην τέχνη της κομμωτικής</h2>
+        <p>Το Éclat Hair Studio ιδρύθηκε το 2009 με όραμα να δημιουργήσει έναν χώρο όπου κάθε πελάτης νιώθει μοναδικός. Χρησιμοποιούμε αποκλειστικά επώνυμα προϊόντα και τεχνικές αιχμής.</p>
+        <p>Η ομάδα μας αποτελείται από πιστοποιημένους κομμωτές με συνεχή εκπαίδευση στις τελευταίες τάσεις.</p>
+        <div class="about-stats">
+          <div><span class="stat-number">2,500+</span><span class="stat-label">Ευχαριστημένοι πελάτες</span></div>
+          <div><span class="stat-number">15</span><span class="stat-label">Χρόνια εμπειρίας</span></div>
+          <div><span class="stat-number">8</span><span class="stat-label">Βραβεία ομορφιάς</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team -->
+  <section id="team">
+    <p class="section-label">Οι άνθρωποί μας</p>
+    <h2 class="section-title">Γνωρίστε την ομάδα μας</h2>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">👩‍🦱</div>
+        <h3>Μαρία Παπαδοπούλου</h3>
+        <p>Art Director</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">👩‍🦳</div>
+        <h3>Ελένη Κωστοπούλου</h3>
+        <p>Colorist</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">👱‍♀️</div>
+        <h3>Σοφία Νικολάου</h3>
+        <p>Stylist</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">🧑‍🦲</div>
+        <h3>Δημήτρης Αλεξίου</h3>
+        <p>Senior Stylist</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hours -->
+  <section id="hours">
+    <p class="section-label">Ωράριο λειτουργίας</p>
+    <h2 class="section-title">Είμαστε εδώ για σας</h2>
+    <div class="hours-grid">
+      <div class="hours-row"><span class="hours-day">Δευτέρα</span><span class="hours-time">09:00 – 20:00</span></div>
+      <div class="hours-row"><span class="hours-day">Τρίτη</span><span class="hours-time">09:00 – 20:00</span></div>
+      <div class="hours-row"><span class="hours-day">Τετάρτη</span><span class="hours-time">09:00 – 20:00</span></div>
+      <div class="hours-row"><span class="hours-day">Πέμπτη</span><span class="hours-time">09:00 – 21:00</span></div>
+      <div class="hours-row"><span class="hours-day">Παρασκευή</span><span class="hours-time">09:00 – 21:00</span></div>
+      <div class="hours-row"><span class="hours-day">Σάββατο</span><span class="hours-time">09:00 – 18:00</span></div>
+      <div class="hours-row"><span class="hours-day hours-closed">Κυριακή</span><span class="hours-time hours-closed">Κλειστά</span></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div><strong>Éclat Hair Studio</strong> · Σκουφά 14, Κολωνάκι, Αθήνα</div>
+    <div>
+      <a href="tel:+302106754321">📞 210 675 4321</a> &nbsp;·&nbsp;
+      <a href="mailto:info@eclat-hair.gr">✉️ info@eclat-hair.gr</a>
+    </div>
+    <div>© 2026 Éclat Hair Studio</div>
+  </footer>
+
+  <!-- BookingAI Widget -->
+  <script src="/booking-widget.js" data-api-url="http://localhost:3000" data-business-id="eclat"></script>
+
+</body>
+</html>

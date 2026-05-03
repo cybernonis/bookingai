@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ΤαξίApp Θεσσαλονίκη</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --amber: #d97706;
+      --amber-light: #fef3c7;
+      --dark: #0f0a00;
+      --surface: #1a1400;
+      --text: #fef9f0;
+      --muted: #a3957a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--dark); color: var(--text); line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15, 10, 0, 0.9); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px; height: 64px;
+    }
+    .nav-logo { font-size: 1.2rem; font-weight: 800; color: var(--text); text-decoration: none; letter-spacing: -0.01em; }
+    .nav-logo span { color: var(--amber); }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a { text-decoration: none; color: var(--muted); font-size: 0.88rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--amber); color: #000;
+      padding: 9px 22px; border-radius: 6px; font-size: 0.85rem; font-weight: 700;
+      text-decoration: none; transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.88; }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 90vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 80px 24px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(217,119,6,0.15) 0%, transparent 70%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(217,119,6,0.15); border: 1px solid rgba(217,119,6,0.3);
+      color: var(--amber); padding: 6px 16px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 800;
+      line-height: 1.1; letter-spacing: -0.03em;
+      max-width: 700px; margin-bottom: 20px;
+    }
+    .hero h1 span { color: var(--amber); }
+    .hero p { color: var(--muted); font-size: 1.1rem; max-width: 460px; margin-bottom: 40px; }
+
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--amber); color: #000;
+      padding: 14px 32px; border-radius: 8px; font-size: 0.95rem;
+      text-decoration: none; font-weight: 700; transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-ghost {
+      border: 1px solid rgba(255,255,255,0.15); color: var(--text);
+      padding: 14px 32px; border-radius: 8px; font-size: 0.95rem;
+      text-decoration: none; font-weight: 500; transition: border-color 0.2s;
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.4); }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 28px 48px;
+      display: flex; justify-content: center; gap: 64px; flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 1.8rem; font-weight: 800; color: var(--amber); }
+    .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── How it works ── */
+    #how { padding: 88px 48px; }
+    .section-label {
+      font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--amber); font-weight: 600; margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 700;
+      letter-spacing: -0.02em; margin-bottom: 48px;
+    }
+    .steps { display: flex; gap: 24px; max-width: 900px; flex-wrap: wrap; }
+    .step {
+      flex: 1; min-width: 200px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 24px 20px;
+    }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--amber);
+      color: #000; font-weight: 800; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+    }
+    .step h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; }
+    .step p  { font-size: 0.82rem; color: var(--muted); }
+
+    /* ── Tariff ── */
+    #tariff {
+      padding: 88px 48px;
+      background: rgba(217,119,6,0.05); border-top: 1px solid rgba(217,119,6,0.15);
+    }
+    .tariff-card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(217,119,6,0.2);
+      border-radius: 14px; padding: 32px; max-width: 480px;
+    }
+    .tariff-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .tariff-row:last-child { border-bottom: none; }
+    .tariff-name { font-size: 0.88rem; color: var(--muted); }
+    .tariff-value { font-size: 0.95rem; font-weight: 700; color: var(--amber); }
+
+    /* ── Fleet ── */
+    #fleet { padding: 88px 48px; }
+    .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; max-width: 900px; }
+    .fleet-card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 24px 20px; text-align: center;
+    }
+    .fleet-icon { font-size: 2.8rem; margin-bottom: 12px; }
+    .fleet-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+    .fleet-card p  { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── Footer ── */
+    footer {
+      background: #000; border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 28px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 14px; font-size: 0.8rem; color: var(--muted);
+    }
+    footer strong { color: var(--text); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      #how, #tariff, #fleet { padding: 60px 20px; }
+      .stats-bar { padding: 20px; gap: 32px; }
+      footer { padding: 20px; flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="nav-logo">Taxi<span>App</span></a>
+    <ul class="nav-links">
+      <li><a href="#how">Πώς λειτουργεί</a></li>
+      <li><a href="#tariff">Τιμοκατάλογος</a></li>
+      <li><a href="#fleet">Στόλος</a></li>
+    </ul>
+    <a href="#" class="nav-cta">Κλείσε ταξί →</a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">🚕 Θεσσαλονίκη · 24/7</div>
+    <h1>Το ταξί σου,<br>όπου κι αν πας <span>στη Θεσσαλονίκη</span></h1>
+    <p>Κλείσε ταξί σε δευτερόλεπτα μέσω AI assistant. Άμεση εκτίμηση τιμής βάσει διαδρομής.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">Κλείσε τώρα →</a>
+      <a href="#tariff" class="btn-ghost">Δες τιμοκατάλογο</a>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num">1,200+</div><div class="stat-label">Διαδρομές / μήνα</div></div>
+    <div class="stat"><div class="stat-num">48</div><div class="stat-label">Οδηγοί</div></div>
+    <div class="stat"><div class="stat-num">4.9★</div><div class="stat-label">Μέση βαθμολογία</div></div>
+    <div class="stat"><div class="stat-num">4 λεπτά</div><div class="stat-label">Μέση αναμονή</div></div>
+  </div>
+
+  <!-- How it works -->
+  <section id="how">
+    <p class="section-label">Διαδικασία</p>
+    <h2 class="section-title">Σε 3 απλά βήματα</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Πες τη διαδρομή</h3>
+        <p>Γράψε σημείο αναχώρησης και προορισμό στο AI chat.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Λάβε εκτίμηση τιμής</h3>
+        <p>Το σύστημα υπολογίζει την απόσταση και σου δίνει εκτιμώμενο κόστος αμέσως.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Επιβεβαίωση</h3>
+        <p>Δώσε το όνομα και τηλέφωνό σου — ο οδηγός σε καλεί για επιβεβαίωση.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tariff -->
+  <section id="tariff">
+    <p class="section-label">Χρεώσεις</p>
+    <h2 class="section-title">Τιμοκατάλογος</h2>
+    <div class="tariff-card">
+      <div class="tariff-row">
+        <span class="tariff-name">Εκκίνηση (flag fall)</span>
+        <span class="tariff-value">€3.50</span>
+      </div>
+      <div class="tariff-row">
+        <span class="tariff-name">Τιμή ανά χιλιόμετρο</span>
+        <span class="tariff-value">€1.50 / χλμ</span>
+      </div>
+      <div class="tariff-row">
+        <span class="tariff-name">Ελάχιστη χρέωση</span>
+        <span class="tariff-value">€4.50</span>
+      </div>
+      <div class="tariff-row">
+        <span class="tariff-name">Νυχτερινό (22:00–06:00)</span>
+        <span class="tariff-value">+20%</span>
+      </div>
+      <div class="tariff-row">
+        <span class="tariff-name">Αεροδρόμιο Μακεδονία</span>
+        <span class="tariff-value">€35 flat</span>
+      </div>
+      <div class="tariff-row">
+        <span class="tariff-name">Αποσκευές > 2</span>
+        <span class="tariff-value">€1.00 / τεμ.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fleet -->
+  <section id="fleet">
+    <p class="section-label">Στόλος</p>
+    <h2 class="section-title">Για κάθε ανάγκη</h2>
+    <div class="fleet-grid">
+      <div class="fleet-card">
+        <div class="fleet-icon">🚗</div>
+        <h3>Standard</h3>
+        <p>4 επιβάτες · οικονομική επιλογή</p>
+      </div>
+      <div class="fleet-card">
+        <div class="fleet-icon">🚙</div>
+        <h3>Business</h3>
+        <p>4 επιβάτες · premium άνεση</p>
+      </div>
+      <div class="fleet-card">
+        <div class="fleet-icon">🚐</div>
+        <h3>Van</h3>
+        <p>8 επιβάτες · ιδανικό για ομάδες</p>
+      </div>
+      <div class="fleet-card">
+        <div class="fleet-icon">♿</div>
+        <h3>Accessible</h3>
+        <p>Εξοπλισμένο για ΑΜΕΑ</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div><strong>ΤαξίApp Θεσσαλονίκη</strong> · Εγνατία 45, Θεσσαλονίκη</div>
+    <div>
+      <a href="tel:+302310123456">📞 2310 123456</a> &nbsp;·&nbsp;
+      <a href="mailto:info@taxiapp-thess.gr">✉️ info@taxiapp-thess.gr</a>
+    </div>
+    <div>© 2026 ΤαξίApp</div>
+  </footer>
+
+  <!-- BookingAI Widget — taxi-thess business -->
+  <script src="/booking-widget.js"
+          data-api-url="http://localhost:3000"
+          data-business-id="taxi-thess"></script>
+
+</body>
+</html>

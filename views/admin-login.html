@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login — BookingAI</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e8ed;
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo-mark {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: #1a1a2e;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 14px;
+    }
+    .logo h1 {
+      font-size: 1.1rem; font-weight: 700; color: #1a1d23;
+      letter-spacing: 0.01em;
+    }
+    .logo p {
+      font-size: 0.8rem; color: #6b7280; margin-top: 4px;
+    }
+
+    .error-banner {
+      background: #fee2e2; color: #dc2626;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .field { margin-bottom: 16px; }
+    label {
+      display: block;
+      font-size: 0.78rem; font-weight: 600; color: #374151;
+      margin-bottom: 6px; letter-spacing: 0.03em;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid #e5e7eb; border-radius: 8px;
+      font-size: 0.9rem; outline: none; color: #1a1d23;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus {
+      border-color: #1a1a2e;
+      box-shadow: 0 0 0 3px rgba(26,26,46,0.08);
+    }
+
+    .btn-login {
+      width: 100%; padding: 11px;
+      background: #1a1a2e; color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; margin-top: 8px;
+      transition: background 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .btn-login:hover { background: #2d2d4e; }
+    .btn-login:active { background: #111; }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.72rem; color: #9ca3af;
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-mark">📋</div>
+      <h1>BookingAI Admin</h1>
+      <p>Σύνδεση διαχειριστή</p>
+    </div>
+
+    <!-- Error banner shown only when ?error=1 -->
+    <div class="error-banner" id="err-banner" style="display:none;">
+      ⚠️ Λάθος username ή password.
+    </div>
+
+    <form method="POST" action="/admin/login" autocomplete="off">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text"
+               placeholder="admin" autofocus autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password"
+               placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+      <button class="btn-login" type="submit">Σύνδεση →</button>
+    </form>
+
+    <p class="footer-note">BookingAI · Éclat Hair Studio</p>
+  </div>
+
+  <script>
+    if (new URLSearchParams(location.search).get('error')) {
+      document.getElementById('err-banner').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
