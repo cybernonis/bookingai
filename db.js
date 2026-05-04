@@ -82,8 +82,8 @@ const q = {
     VALUES (@business_id, @name, @type, @services, @hours, @theme_color, @config)
     ON CONFLICT(business_id) DO UPDATE SET
       type        = excluded.type,
-      config      = excluded.config,
-      theme_color = excluded.theme_color
+      theme_color = excluded.theme_color,
+      config      = json_patch(businesses.config, json_remove(excluded.config, '$.zones'))
   `),
   bizCount:      db.prepare('SELECT COUNT(*) AS n FROM businesses'),
   bizPatchConfig: db.prepare('UPDATE businesses SET config = ? WHERE business_id = ?'),
