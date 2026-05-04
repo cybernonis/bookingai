@@ -83,7 +83,7 @@ const q = {
     ON CONFLICT(business_id) DO UPDATE SET
       type        = excluded.type,
       theme_color = excluded.theme_color,
-      config      = json_patch(businesses.config, json_remove(excluded.config, '$.zones', '$.pricing'))
+      config      = excluded.config
   `),
   bizCount:      db.prepare('SELECT COUNT(*) AS n FROM businesses'),
   bizPatchConfig: db.prepare('UPDATE businesses SET config = ? WHERE business_id = ?'),
@@ -295,7 +295,20 @@ CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{pr
       }),
     },
   ];
-  businesses.forEach(b => q.bizUpsert.run(b));
+  businesses.forEach(b => {
+    const existing = q.bizById.get(b.business_id);
+    if (existing) {
+      const cur = JSON.parse(existing.config || '{}');
+      const seed = JSON.parse(b.config);
+      // Preserve admin-set fields; update code-owned fields (system_prompt, etc.)
+      const merged = { ...seed };
+      if (cur.zones    !== undefined) merged.zones    = cur.zones;
+      if (cur.pricing  !== undefined) merged.pricing  = cur.pricing;
+      q.bizUpsert.run({ ...b, config: JSON.stringify(merged) });
+    } else {
+      q.bizUpsert.run(b);
+    }
+  });
 
   // Slots — only seed once
   if (q.slotCount.get().n === 0) {
