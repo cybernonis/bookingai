@@ -116,6 +116,25 @@
       font-family: -apple-system, sans-serif; flex-shrink: 0;
     }
 
+    #bw-quick-replies {
+      display: flex; gap: 7px; flex-wrap: wrap;
+      padding: 0 14px 10px; flex-shrink: 0;
+    }
+    #bw-quick-replies:empty { display: none; }
+    .bw-quick-reply {
+      background: #f0f2f5; border: 1.5px solid #e0e0e0;
+      border-radius: 16px; padding: 6px 14px;
+      font-size: 0.8rem; color: #1a1a2e; cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .bw-quick-reply:hover {
+      background: var(--bw-accent, #1a1a2e);
+      border-color: var(--bw-accent, #1a1a2e);
+      color: #fff;
+    }
+
     @media (max-width: 420px) {
       #bw-panel { width: calc(100vw - 16px); right: 8px; bottom: 80px; }
       #bw-bubble { right: 16px; bottom: 16px; }
@@ -147,6 +166,7 @@
       <button id="bw-close" aria-label="Close">✕</button>
     </div>
     <div id="bw-messages"></div>
+    <div id="bw-quick-replies"></div>
     <div id="bw-input-area">
       <input id="bw-input" type="text" placeholder="Γράψε μήνυμα..." autocomplete="off" />
       <button id="bw-send" aria-label="Send">
@@ -165,9 +185,10 @@
   let isOpen = false;
   let greeted = false;
 
-  const messagesEl = panel.querySelector('#bw-messages');
-  const inputEl    = panel.querySelector('#bw-input');
-  const sendBtn    = panel.querySelector('#bw-send');
+  const messagesEl     = panel.querySelector('#bw-messages');
+  const quickRepliesEl = panel.querySelector('#bw-quick-replies');
+  const inputEl        = panel.querySelector('#bw-input');
+  const sendBtn        = panel.querySelector('#bw-send');
 
   // ── Business info ─────────────────────────────────────────────────────────
 
@@ -210,9 +231,55 @@
     return el;
   }
 
+  function extractQuickReplies(text) {
+    const clean = text.replace(/\*\*/g, '');
+    const lines = clean.split('\n').map(l => l.trim()).filter(Boolean);
+
+    // Numbered list: "1. Economy" / "1) Van"
+    const numbered = lines.filter(l => /^\d+[.)]\s+\S/.test(l));
+    if (numbered.length >= 2 && numbered.length <= 6) {
+      const labels = numbered.map(l =>
+        l.replace(/^\d+[.)]\s+/, '').split(/\s*\(/)[0].trim()
+      ).filter(l => l.length > 0 && l.length <= 50);
+      if (labels.length >= 2) return labels;
+    }
+
+    // Bullet list: "• Option" / "- Option"
+    const bulleted = lines.filter(l => /^[•\-\*]\s+\S/.test(l));
+    if (bulleted.length >= 2 && bulleted.length <= 6) {
+      const labels = bulleted.map(l =>
+        l.replace(/^[•\-\*]\s+/, '').split(/\s*[\(+]/)[0].trim()
+      ).filter(l => l.length > 0 && l.length <= 50);
+      if (labels.length >= 2) return labels;
+    }
+
+    // Ναι / Όχι patterns
+    if (/\(Ναι\s*\/\s*Όχι\)/i.test(clean) || /\bΝαι\b\s*\/\s*\bΌχι\b/i.test(clean)) {
+      return ['Ναι', 'Όχι'];
+    }
+
+    return [];
+  }
+
+  function showQuickReplies(options) {
+    quickRepliesEl.innerHTML = '';
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'bw-quick-reply';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        quickRepliesEl.innerHTML = '';
+        sendMessage(opt);
+      });
+      quickRepliesEl.appendChild(btn);
+    });
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
   async function sendMessage(text) {
     if (!text.trim()) return;
 
+    quickRepliesEl.innerHTML = '';
     inputEl.value = '';
     inputEl.disabled = true;
     sendBtn.disabled = true;
@@ -234,6 +301,8 @@
       } else {
         history = data.history;
         addMessage('assistant', data.reply);
+        const replies = extractQuickReplies(data.reply);
+        if (replies.length) showQuickReplies(replies);
       }
     } catch {
       typing.remove();
@@ -257,7 +326,12 @@
       });
       const data = await res.json();
       typing.remove();
-      if (res.ok) { history = data.history; addMessage('assistant', data.reply); }
+      if (res.ok) {
+        history = data.history;
+        addMessage('assistant', data.reply);
+        const replies = extractQuickReplies(data.reply);
+        if (replies.length) showQuickReplies(replies);
+      }
     } catch {
       typing.remove();
       addMessage('assistant', 'Γεια! Πώς μπορώ να σε βοηθήσω με την κράτησή σου;');

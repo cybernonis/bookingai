@@ -6,8 +6,14 @@
 
 import { createBooking, getAvailableSlots, getSlotById, markSlotUnavailable } from './db.js';
 import { calculateDistance } from './distance.js';
+import Anthropic from '@anthropic-ai/sdk';
+
+const anthropic = new Anthropic();
 
 export async function getBookingReply(message, history, business) {
+  if (business.config?.system_prompt) {
+    return await aiChatFlow(message, history, business);
+  }
   switch (business.type) {
     case 'taxi':       return await taxiFlow(message, history, business);
     case 'clinic':     return clinicFlow(message, history, business);
@@ -15,6 +21,26 @@ export async function getBookingReply(message, history, business) {
     case 'salon':
     default:           return salonFlow(message, history, business);
   }
+}
+
+// ── AI Chat Flow (Claude-powered) ─────────────────────────────────────────────
+
+async function aiChatFlow(message, history, business) {
+  const msgs = history.map(m => ({
+    role: m.role,
+    content: m.content === '__init__' ? 'Γεια σου.' : m.content,
+  }));
+
+  msgs.push({ role: 'user', content: message === '__init__' ? 'Γεια σου.' : message });
+
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 512,
+    system: business.config.system_prompt,
+    messages: msgs,
+  });
+
+  return response.content[0].text;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
