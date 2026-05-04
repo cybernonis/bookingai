@@ -83,7 +83,7 @@ const q = {
     ON CONFLICT(business_id) DO UPDATE SET
       type        = excluded.type,
       theme_color = excluded.theme_color,
-      config      = json_patch(businesses.config, json_remove(excluded.config, '$.zones'))
+      config      = json_patch(businesses.config, json_remove(excluded.config, '$.zones', '$.pricing'))
   `),
   bizCount:      db.prepare('SELECT COUNT(*) AS n FROM businesses'),
   bizPatchConfig: db.prepare('UPDATE businesses SET config = ? WHERE business_id = ?'),
@@ -243,16 +243,39 @@ export function seedIfEmpty() {
       services: JSON.stringify([]),
       hours: JSON.stringify({ 'Δευτέρα': '24/7', 'Τρίτη': '24/7', 'Τετάρτη': '24/7', 'Πέμπτη': '24/7', 'Παρασκευή': '24/7', 'Σάββατο': '24/7', 'Κυριακή': '24/7' }),
       config: JSON.stringify({
-        base_fare: 2.00,
-        price_per_km: 0.92,
-        min_fare: 5.00,
-        currency: '€',
         zones: {
           mode: 'whitelist',
           areas: ['Κρήτη', 'Αεροδρόμιο Ηρακλείου', 'Αεροδρόμιο Χανίων', 'Ηράκλειο', 'Χανιά', 'Ρέθυμνο', 'Αγ. Νικόλαος', 'Ιεράπετρα', 'Σητεία', 'Μάλια', 'Ελούντα', 'Ανώγεια'],
           intra_zone: true,
         },
-        system_prompt: `Είσαι AI assistant για υπηρεσία ταξί και airport transfers. Στόχος σου είναι να βοηθάς τον πελάτη να κλείσει, αλλάξει ή ακυρώσει μια διαδρομή γρήγορα και ξεκάθαρα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά και επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. Χρησιμοποίησε σύντομες απαντήσεις. Πάντα επιβεβαίωσε πριν ολοκληρώσεις ενέργεια. ΜΟΡΦΟΠΟΙΗΣΗ ΕΠΙΛΟΓΩΝ: Όταν δίνεις επιλογές στον πελάτη, χρησιμοποίησε ΠΑΝΤΑ αριθμημένη λίστα, μία επιλογή ανά γραμμή, π.χ.:\n1. Economy\n2. Van\n3. VIP\nΓια ερωτήσεις επιβεβαίωσης χρησιμοποίησε πάντα (Ναι/Όχι) στο τέλος της ερώτησης. BOOKING FLOW: 1)Ζήτα pickup location 2)Ζήτα προορισμό 3)Ζήτα ημερομηνία και ώρα 4)Ζήτα αριθμό επιβατών - αν >4 πρότεινε VAN 5)Τύπος οχήματος: Economy, Van, VIP 6)Extras — εμφάνισε ΠΑΝΤΑ ΑΚΡΙΒΩΣ αυτή τη λίστα:\n1. Παιδικό κάθισμα (+€5)\n2. Επιπλέον αποσκευή (+€3/τεμ.)\n3. Κατοικίδιο (+€5)\n4. Χωρίς extras\nΑν επιλέξει 1-3 ρώτα αν θέλει κάτι άλλο με την ίδια λίστα. Αν επιλέξει 4 ή πει "όχι"/"τίποτα" προχώρα. 7)Υπολόγισε τιμή 8)Δείξε σύνοψη 9)Ζήτα επιβεβαίωση (Ναι/Όχι) 10)Ζήτα όνομα 11)Ζήτα τηλέφωνο 12)Στείλε επιβεβαίωση. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ — ΚΡΙΣΙΜΟ: ΠΟΤΕ μην γράψεις αριθμό κράτησης μόνος σου (π.χ. CRT-xxx, TXI-xxx ή οποιοδήποτε άλλο format). Ο αριθμός κράτησης παράγεται ΜΟΝΟ από το σύστημα. Μόλις έχεις ΟΛΑ: pickup, destination, datetime, vehicle, price, name ΚΑΙ phone, γράψε ΑΚΡΙΒΩΣ αυτή τη γραμμή στο τέλος του μηνύματός σου (μία φορά, χωρίς κενά):\nCONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{price}\nΤο σύστημα θα την αντικαταστήσει αυτόματα με τον πραγματικό αριθμό κράτησης.\n\nΕΤΑΙΡΕΙΑ: Crete Transfers — 24/7 taxi & airport transfers σε όλη την Κρήτη.\nΤΙΜΟΚΑΤΑΛΟΓΟΣ: €2.00 εκκίνηση + €0.92/χλμ (ελάχιστο €5.00). Νυχτερινό (00:00–05:00) +30%.\nΣΤΑΘΕΡΕΣ ΤΙΜΕΣ ΑΕΡΟΔΡΟΜΙΟΥ:\n• Αεροδρόμιο Ηρακλείου ↔ Ηράκλειο Κέντρο: €15\n• Αεροδρόμιο Ηρακλείου → Ρέθυμνο: €55\n• Αεροδρόμιο Ηρακλείου → Χανιά: €95\n• Αεροδρόμιο Χανίων ↔ Χανιά Κέντρο: €12\n• Αεροδρόμιο Χανίων → Ρέθυμνο: €40\nΤΥΠΟΙ ΟΧΗΜΑΤΩΝ: Economy/Standard (1-4 άτομα), Van (5-8 άτομα, +€10), VIP/Mercedes (1-4 άτομα, +50%)\nEXTRAS: Παιδικό κάθισμα +€5, Επιπλέον αποσκευή +€3/τεμ., Κατοικίδιο +€5`,
+        pricing: {
+          mode: 'combined',
+          base_fare: 2.00,
+          price_per_km: 0.92,
+          min_fare: 5.00,
+          currency: '€',
+          rounding: 2,
+          two_way_enabled: true,
+          two_way_discount_pct: 10,
+          night_surcharge_enabled: true,
+          night_surcharge_pct: 20,
+          night_from: '22:00',
+          night_to: '06:00',
+          extras: { child_seat: 5, extra_luggage: 3, pet: 5 },
+          fixed_routes: [
+            { origin: 'Αεροδρόμιο Ηρακλείου', destination: 'Ηράκλειο Κέντρο', price: 15 },
+            { origin: 'Αεροδρόμιο Ηρακλείου', destination: 'Ρέθυμνο', price: 55 },
+            { origin: 'Αεροδρόμιο Ηρακλείου', destination: 'Χανιά', price: 95 },
+            { origin: 'Αεροδρόμιο Χανίων', destination: 'Χανιά Κέντρο', price: 12 },
+            { origin: 'Αεροδρόμιο Χανίων', destination: 'Ρέθυμνο', price: 40 },
+          ],
+        },
+        system_prompt: `Είσαι AI assistant για υπηρεσία ταξί και airport transfers. Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες (>4 → VAN) 5)Όχημα: Economy/Van/VIP 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:
+CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{price}
+
+ΕΤΑΙΡΕΙΑ: Crete Transfers — 24/7 transfers σε όλη την Κρήτη.
+ΤΥΠΟΙ ΟΧΗΜΑΤΩΝ: Economy (1-4 άτομα), Van (5-8 άτομα, +€10), VIP/Mercedes (1-4 άτομα, +50%)`,
+      })
       }),
     },
     {

@@ -161,7 +161,19 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// ── Admin: zones ─────────────────────────────────────────────────────────────
+// ── Admin: zones & pricing ────────────────────────────────────────────────────
+
+app.patch('/api/admin/business/:id/pricing', requireAdmin, (req, res) => {
+  const bizId = req.params.id;
+  if (req.session.businessId && req.session.businessId !== bizId)
+    return res.status(403).json({ error: 'Forbidden' });
+  const { pricing } = req.body;
+  if (!pricing || typeof pricing !== 'object')
+    return res.status(400).json({ error: 'pricing object required' });
+  const biz = updateBusinessConfig(bizId, { pricing });
+  if (!biz) return res.status(404).json({ error: 'Business not found' });
+  res.json({ business: biz });
+});
 
 app.patch('/api/admin/business/:id/zones', requireAdmin, (req, res) => {
   const bizId = req.params.id;

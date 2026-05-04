@@ -23,6 +23,60 @@ export async function getBookingReply(message, history, business) {
   }
 }
 
+// ── Pricing instructions builder ─────────────────────────────────────────────
+
+function buildPricingInstructions(pricing) {
+  if (!pricing) return '';
+  const {
+    mode = 'combined',
+    base_fare = 2, price_per_km = 0.92, min_fare = 5, currency = '€',
+    rounding = 0,
+    two_way_enabled = false, two_way_discount_pct = 10,
+    night_surcharge_enabled = false, night_surcharge_pct = 20, night_from = '22:00', night_to = '06:00',
+    extras = {}, fixed_routes = [],
+  } = pricing;
+  const cur = currency;
+  const lines = ['\n\nΤΙΜΟΛΟΓΗΣΗ:'];
+
+  if (mode === 'per_km' || mode === 'combined') {
+    lines.push(`Τιμοκατάλογος: ${cur}${base_fare.toFixed(2)} εκκίνηση + ${cur}${price_per_km.toFixed(2)}/χλμ (ελάχιστο ${cur}${min_fare.toFixed(2)}).`);
+  }
+  if ((mode === 'fixed' || mode === 'combined') && fixed_routes.length > 0) {
+    lines.push('Σταθερές τιμές:');
+    fixed_routes.forEach(r => lines.push(`• ${r.origin} → ${r.destination}: ${cur}${Number(r.price).toFixed(2)}`));
+  }
+  if (mode === 'combined') {
+    lines.push('Για γνωστές διαδρομές χρησιμοποίησε τη σταθερή τιμή. Για άλλες υπολόγισε βάσει χλμ.');
+  } else if (mode === 'fixed') {
+    lines.push('Έχεις ΜΟΝΟ σταθερές τιμές. Αν δεν υπάρχει σταθερή τιμή, ενημέρωσε ευγενικά.');
+  }
+
+  if (rounding > 0) {
+    const ex = Math.ceil(22.35 / rounding) * rounding;
+    lines.push(`Στρογγυλοποίηση: Στρογγυλοποίησε στο επόμενο πολλαπλάσιο του ${rounding} (π.χ. ${cur}22.35 → ${cur}${ex}).`);
+  }
+  if (two_way_enabled) {
+    lines.push(`Μετ' επιστροφής: Ρώτα ΠΑΝΤΑ αν θέλει επιστροφή (Ναι/Όχι). Αν ναι: τελική τιμή = (τιμή × 2) × ${(1 - two_way_discount_pct / 100).toFixed(2)} (${two_way_discount_pct}% έκπτωση two-way).`);
+  }
+  if (night_surcharge_enabled) {
+    lines.push(`Νυχτερινή χρέωση: Αν η ώρα παραλαβής είναι ${night_from}–${night_to}, πρόσθεσε +${night_surcharge_pct}% στη βασική τιμή.`);
+  }
+
+  const extrasItems = [];
+  if (extras.child_seat)    extrasItems.push(`Παιδικό κάθισμα (+${cur}${extras.child_seat})`);
+  if (extras.extra_luggage) extrasItems.push(`Επιπλέον αποσκευή (+${cur}${extras.extra_luggage}/τεμ.)`);
+  if (extras.pet)           extrasItems.push(`Κατοικίδιο (+${cur}${extras.pet})`);
+
+  if (extrasItems.length > 0) {
+    lines.push('EXTRAS — εμφάνισε ΠΑΝΤΑ ΑΚΡΙΒΩΣ αυτή τη λίστα:');
+    extrasItems.forEach((item, i) => lines.push(`${i + 1}. ${item}`));
+    lines.push(`${extrasItems.length + 1}. Χωρίς extras`);
+    lines.push(`Αν επιλέξει 1-${extrasItems.length} ρώτα αν θέλει κάτι άλλο με την ίδια λίστα. Αν επιλέξει ${extrasItems.length + 1} ή πει "όχι"/"τίποτα" προχώρα.`);
+  }
+
+  return lines.join('\n');
+}
+
 // ── Zone instructions builder ─────────────────────────────────────────────────
 
 function buildZoneInstructions(zones) {
@@ -54,11 +108,12 @@ async function aiChatFlow(message, history, business) {
   msgs.push({ role: 'user', content: message === '__init__' ? 'Γεια σου.' : message });
 
   const today = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const zoneRules = buildZoneInstructions(business.config.zones);
+  const pricingRules = buildPricingInstructions(business.config.pricing);
+  const zoneRules    = buildZoneInstructions(business.config.zones);
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${zoneRules}`,
+    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${pricingRules}${zoneRules}`,
     messages: msgs,
   });
 
