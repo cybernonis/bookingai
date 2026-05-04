@@ -33,10 +33,11 @@ async function aiChatFlow(message, history, business) {
 
   msgs.push({ role: 'user', content: message === '__init__' ? 'Γεια σου.' : message });
 
+  const today = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: business.config.system_prompt,
+    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}`,
     messages: msgs,
   });
 
