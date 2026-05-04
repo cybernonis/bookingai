@@ -8,7 +8,7 @@ import {
   getAllBookings, getBookingById, createBooking,
   updateBookingStatus, getStats, seedIfEmpty,
   getAdminByUsername, createAdmin, verifyPassword,
-  setupNewBusiness,
+  setupNewBusiness, updateBusinessConfig,
 } from './db.js';
 import { getBookingReply } from './flows.js';
 
@@ -159,6 +159,20 @@ app.post('/api/chat', async (req, res) => {
     console.error('Flow error:', err);
     res.status(500).json({ error: 'Σφάλμα επεξεργασίας. Δοκίμασε ξανά.' });
   }
+});
+
+// ── Admin: zones ─────────────────────────────────────────────────────────────
+
+app.patch('/api/admin/business/:id/zones', requireAdmin, (req, res) => {
+  const bizId = req.params.id;
+  if (req.session.businessId && req.session.businessId !== bizId)
+    return res.status(403).json({ error: 'Forbidden' });
+  const { zones } = req.body;
+  if (!zones || typeof zones !== 'object')
+    return res.status(400).json({ error: 'zones object required' });
+  const biz = updateBusinessConfig(bizId, { zones });
+  if (!biz) return res.status(404).json({ error: 'Business not found' });
+  res.json({ business: biz });
 });
 
 // ── Setup wizard ──────────────────────────────────────────────────────────────

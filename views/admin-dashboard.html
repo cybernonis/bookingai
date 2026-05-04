@@ -163,6 +163,25 @@
     .modal-btn.danger:hover { opacity: 0.88; }
     .modal-btn:not(.danger):hover { background: var(--bg); }
 
+    /* ── Zones card ── */
+    .zones-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+    .zones-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .zones-header h2 { font-size: 0.88rem; font-weight: 600; }
+    .zones-header p { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .zones-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+    .zones-row label:first-child { display: block; font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .mode-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mode-option { display: flex; align-items: center; gap: 7px; padding: 7px 13px; border: 1.5px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 0.8rem; transition: border-color 0.15s, background 0.15s; user-select: none; }
+    .mode-option:has(input:checked) { border-color: var(--accent); background: #f0f1ff; font-weight: 600; }
+    .mode-option input { width: 14px; height: 14px; accent-color: var(--accent); }
+    .zones-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 0.82rem; font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s; line-height: 1.6; }
+    .zones-textarea:focus { border-color: var(--accent); }
+    .zones-textarea::placeholder { color: #bbb; }
+    .intra-toggle { display: flex; align-items: center; gap: 9px; font-size: 0.83rem; cursor: pointer; }
+    .intra-toggle input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+    .zones-footer { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
+    .zones-hint { font-size: 0.72rem; color: var(--muted); flex: 1; }
+
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -245,6 +264,42 @@
         </div>
         <div class="stat-card cancelled">
           <div class="stat-top"><div><div class="stat-value" id="stat-cancelled">—</div><div class="stat-label">Ακυρωμένες</div></div><div class="stat-icon-wrap">❌</div></div>
+        </div>
+      </div>
+
+      <!-- Zones Management -->
+      <div class="zones-card" id="zones-card" style="display:none;">
+        <div class="zones-header">
+          <div>
+            <h2>🗺️ Ζώνες Εξυπηρέτησης</h2>
+            <p>Ορίστε ποιες περιοχές εξυπηρετεί αυτή η επιχείρηση</p>
+          </div>
+        </div>
+        <div class="zones-body">
+          <div class="zones-row">
+            <label>Κανόνας</label>
+            <div class="mode-options">
+              <label class="mode-option"><input type="radio" name="zone-mode" value="open" /> 🌍 Παγκόσμιο (χωρίς περιορισμό)</label>
+              <label class="mode-option"><input type="radio" name="zone-mode" value="whitelist" /> ✅ Whitelist — μόνο αυτές οι περιοχές</label>
+              <label class="mode-option"><input type="radio" name="zone-mode" value="blacklist" /> 🚫 Blacklist — εκτός αυτών</label>
+            </div>
+          </div>
+          <div class="zones-row" id="areas-row">
+            <label>Περιοχές <span style="font-weight:400">(μία ανά γραμμή — πόλη, χώρα, αεροδρόμιο, custom κείμενο)</span></label>
+            <textarea id="zones-areas" class="zones-textarea" rows="5"
+              placeholder="Κρήτη&#10;Αεροδρόμιο Ηρακλείου&#10;Χανιά&#10;Ρέθυμνο&#10;Greece&#10;Larnaca Airport"></textarea>
+          </div>
+          <div class="zones-row">
+            <label>Intra-zone Transfers</label>
+            <label class="intra-toggle">
+              <input type="checkbox" id="zones-intra" />
+              Επιτρέπονται transfers εντός της ίδιας περιοχής/πόλης
+            </label>
+          </div>
+          <div class="zones-footer">
+            <button class="btn-sm primary" onclick="saveZones()">💾 Αποθήκευση</button>
+            <span class="zones-hint" id="zones-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
+          </div>
         </div>
       </div>
 
@@ -377,6 +432,7 @@
       ? (allBusinesses.find(b => b.business_id === bizId)?.name ?? bizId)
       : 'Όλες οι Κρατήσεις';
     loadAll();
+    loadZones(bizId);
   }
 
   // ── Business banner ───────────────────────────────────────────────────────
@@ -505,6 +561,56 @@
       renderTable();
     });
   });
+
+  // ── Zones ─────────────────────────────────────────────────────────────────
+
+  async function loadZones(bizId) {
+    const card = document.getElementById('zones-card');
+    if (!bizId) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    try {
+      const res = await fetch(`/api/business/${bizId}`);
+      if (!res.ok) return;
+      const biz = await res.json();
+      const z = biz.config?.zones || { mode: 'open', areas: [], intra_zone: true };
+      document.querySelectorAll('input[name="zone-mode"]').forEach(r => { r.checked = r.value === (z.mode || 'open'); });
+      document.getElementById('zones-areas').value = (z.areas || []).join('\n');
+      document.getElementById('zones-intra').checked = z.intra_zone !== false;
+      toggleAreasRow();
+    } catch { /* ignore */ }
+  }
+
+  function toggleAreasRow() {
+    const mode = document.querySelector('input[name="zone-mode"]:checked')?.value;
+    document.getElementById('areas-row').style.display = mode === 'open' ? 'none' : 'block';
+  }
+
+  document.querySelectorAll('input[name="zone-mode"]').forEach(r =>
+    r.addEventListener('change', toggleAreasRow));
+
+  async function saveZones() {
+    if (!activeBizId) return;
+    const mode = document.querySelector('input[name="zone-mode"]:checked')?.value || 'open';
+    const areas = document.getElementById('zones-areas').value
+      .split('\n').map(s => s.trim()).filter(Boolean);
+    const intra_zone = document.getElementById('zones-intra').checked;
+    const hint = document.getElementById('zones-hint');
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/zones`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zones: { mode, areas, intra_zone } }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error();
+      hint.textContent = '✅ Αποθηκεύτηκε!';
+      hint.style.color = 'var(--green)';
+      showToast('✅ Ζώνες αποθηκεύτηκαν!', 'success');
+      setTimeout(() => { hint.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; hint.style.color = ''; }, 3000);
+    } catch {
+      showToast('Σφάλμα αποθήκευσης ζωνών', 'error');
+    }
+  }
 
   function confirmLogout() { document.getElementById('logout-modal').classList.add('open'); }
   function closeModal()    { document.getElementById('logout-modal').classList.remove('open'); }

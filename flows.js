@@ -23,6 +23,26 @@ export async function getBookingReply(message, history, business) {
   }
 }
 
+// ── Zone instructions builder ─────────────────────────────────────────────────
+
+function buildZoneInstructions(zones) {
+  if (!zones) return '';
+  const { mode, areas, intra_zone } = zones;
+  const list = Array.isArray(areas) && areas.length ? areas.join(', ') : null;
+  let s = '\n\nΖΩΝΕΣ ΕΞΥΠΗΡΕΤΗΣΗΣ:';
+  if (mode === 'whitelist' && list) {
+    s += ` Εξυπηρετείς ΜΟΝΟ διαδρομές που αφορούν αυτές τις περιοχές: ${list}. Αν pickup ή προορισμός δεν ανήκουν σε αυτές, απόρριψε ευγενικά και ενημέρωσε τον πελάτη ποιες περιοχές καλύπτεις.`;
+  } else if (mode === 'blacklist' && list) {
+    s += ` ΔΕΝ εξυπηρετείς αυτές τις περιοχές: ${list}. Σε οποιαδήποτε άλλη περιοχή εξυπηρετείς κανονικά.`;
+  } else {
+    s += ' Εξυπηρετείς παγκοσμίως χωρίς περιορισμό περιοχής.';
+  }
+  if (intra_zone === false) {
+    s += ' Transfers εντός της ίδιας περιοχής/πόλης ΔΕΝ επιτρέπονται.';
+  }
+  return s;
+}
+
 // ── AI Chat Flow (Claude-powered) ─────────────────────────────────────────────
 
 async function aiChatFlow(message, history, business) {
@@ -34,10 +54,11 @@ async function aiChatFlow(message, history, business) {
   msgs.push({ role: 'user', content: message === '__init__' ? 'Γεια σου.' : message });
 
   const today = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const zoneRules = buildZoneInstructions(business.config.zones);
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}`,
+    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${zoneRules}`,
     messages: msgs,
   });
 
