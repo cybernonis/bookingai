@@ -41,7 +41,34 @@ async function aiChatFlow(message, history, business) {
     messages: msgs,
   });
 
-  return response.content[0].text;
+  let text = response.content[0].text;
+
+  // Detect booking confirmation marker and create real DB entry
+  const confirmMatch = text.match(/CONFIRMED_BOOKING:([^\n]+)/);
+  if (confirmMatch) {
+    const parts = confirmMatch[1].split('|').map(s => s.trim());
+    const [name, phone, pickup, destination, datetime, vehicle, price] = parts;
+
+    const timeMatch = (datetime || '').match(/\b(\d{1,2}:\d{2})\b/);
+    const time = timeMatch ? timeMatch[1].padStart(5, '0') : '00:00';
+    const date = new Date().toISOString().split('T')[0];
+
+    const booking = createBooking({
+      business_id: business.business_id,
+      name: name || 'Πελάτης',
+      email: null,
+      phone: phone || null,
+      service: `${pickup} → ${destination}`,
+      date, time, status: 'confirmed',
+      notes: JSON.stringify({ pickup, destination, datetime, vehicle, price }),
+    });
+
+    const year = new Date().getFullYear();
+    const bookingNum = `#TXI-${year}-${String(booking.id).padStart(3, '0')}`;
+    text = text.replace(confirmMatch[0], `\n🔖 **Αριθμός κράτησης: ${bookingNum}**`);
+  }
+
+  return text;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
