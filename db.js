@@ -275,7 +275,6 @@ CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{pr
 
 ΕΤΑΙΡΕΙΑ: Crete Transfers — 24/7 transfers σε όλη την Κρήτη.
 ΤΥΠΟΙ ΟΧΗΜΑΤΩΝ: Economy (1-4 άτομα), Van (5-8 άτομα, +€10), VIP/Mercedes (1-4 άτομα, +50%)`,
-      })
       }),
     },
     {
