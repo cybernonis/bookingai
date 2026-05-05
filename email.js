@@ -1,14 +1,18 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
-
-const FROM = process.env.RESEND_FROM;
+function getTransporter() {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  if (!user || !pass) return null;
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+  });
+}
 
 export async function sendBookingConfirmation({ to, businessName, bookingNum, name, rows }) {
-  if (!resend)  { console.warn('Email: RESEND_API_KEY not set, skipping.'); return; }
-  if (!FROM)    { console.warn('Email: RESEND_FROM not set, skipping.'); return; }
+  const transporter = getTransporter();
+  if (!transporter) { console.warn('Email: EMAIL_USER/EMAIL_PASS not set, skipping.'); return; }
   if (!to || !to.includes('@')) return;
 
   const rowsHtml = rows
@@ -92,13 +96,13 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
 </html>`;
 
   try {
-    await resend.emails.send({
-      from: FROM,
+    const info = await transporter.sendMail({
+      from: `"${businessName}" <${process.env.EMAIL_USER}>`,
       to,
       subject: `✅ Επιβεβαίωση κράτησης ${bookingNum} — ${businessName}`,
       html,
     });
-    console.log(`Email sent to ${to} (${bookingNum})`);
+    console.log(`Email sent to ${to} (${bookingNum}) — ${info.messageId}`);
   } catch (err) {
     console.error('Email send error:', err?.message || err);
   }
