@@ -554,6 +554,20 @@
           </div>
         </div>
 
+        <!-- ── Pricing Zones ── -->
+        <div class="s-card" id="pricing-zones-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>💶 Ζώνες Χρέωσης</h2>
+            <p>Περιοχές με επιπλέον χρέωση — εφαρμόζονται αυτόματα βάσει προορισμού</p>
+          </div>
+          <div class="s-card-body">
+            <div id="pricing-zones-content"></div>
+            <p style="font-size:0.72rem;color:var(--muted);">
+              💡 Χρησιμοποίησε τον <strong>AI Assistant</strong> παρακάτω για να προσθέσεις ζώνες, π.χ. <em>"Νότια ζώνη Ηρακλείου +15%"</em>
+            </p>
+          </div>
+        </div>
+
         <!-- ── Vehicles ── -->
         <div class="s-card" id="vehicles-card" style="display:none;">
           <div class="s-card-header">
@@ -597,6 +611,10 @@
               <button class="ai-chip" onclick="fillAI(this)">Άλλαξε τιμή Ηράκλειο→Χανιά σε €55</button>
               <button class="ai-chip" onclick="fillAI(this)">Απενεργοποίησε το VIP όχημα</button>
               <button class="ai-chip" onclick="fillAI(this)">Βάλε παιδικό κάθισμα στα €8</button>
+              <button class="ai-chip" onclick="fillAI(this)">Νότια ζώνη Ηρακλείου +15%</button>
+              <button class="ai-chip" onclick="fillAI(this)">Περιοχή Λασιθίου τιμή x1.2</button>
+              <button class="ai-chip" onclick="fillAI(this)">Χωριά νότιου Ρεθύμνου +€10 επιπλέον</button>
+              <button class="ai-chip" onclick="fillAI(this)">Εμφάνισε τις ζώνες χρέωσης</button>
             </div>
             <textarea id="ai-input" class="ai-textarea" rows="3"
               placeholder="π.χ. Πρόσθεσε Αθήνα στις whitelist περιοχές και αύξησε τη βασική εκκίνηση σε €3"></textarea>
@@ -809,7 +827,7 @@
 
   async function loadSettings(bizId) {
     const placeholder = document.getElementById('settings-placeholder');
-    const settingCards = ['zones-card','pricing-card','extras-card','vehicles-card','ai-card'];
+    const settingCards = ['zones-card','pricing-card','extras-card','pricing-zones-card','vehicles-card','ai-card'];
 
     if (!bizId) {
       placeholder.style.display = '';
@@ -825,11 +843,12 @@
       const biz = await res.json();
       const isTaxi = biz.type === 'taxi';
 
-      document.getElementById('zones-card').style.display    = '';
-      document.getElementById('pricing-card').style.display  = isTaxi ? '' : 'none';
-      document.getElementById('extras-card').style.display   = isTaxi ? '' : 'none';
-      document.getElementById('vehicles-card').style.display = isTaxi ? '' : 'none';
-      document.getElementById('ai-card').style.display       = isTaxi ? '' : 'none';
+      document.getElementById('zones-card').style.display         = '';
+      document.getElementById('pricing-card').style.display       = isTaxi ? '' : 'none';
+      document.getElementById('extras-card').style.display        = isTaxi ? '' : 'none';
+      document.getElementById('pricing-zones-card').style.display = isTaxi ? '' : 'none';
+      document.getElementById('vehicles-card').style.display      = isTaxi ? '' : 'none';
+      document.getElementById('ai-card').style.display            = isTaxi ? '' : 'none';
 
       // Zones
       const z = biz.config?.zones || { mode: 'open', areas: [], intra_zone: false };
@@ -863,6 +882,9 @@
       toggleNight();
       togglePricingMode();
       renderRoutesTable(p.fixed_routes || []);
+
+      // Pricing zones
+      renderPricingZonesCard(biz.config?.pricing_zones || []);
 
       // Vehicles
       renderVehiclesTable(biz.config?.vehicles || []);
@@ -1087,6 +1109,61 @@
       showToast('✅ Οχήματα αποθηκεύτηκαν!', 'success');
       setTimeout(() => { hint.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; hint.style.color = ''; }, 3000);
     } catch (e) { showToast('Σφάλμα αποθήκευσης: ' + e.message, 'error'); }
+  }
+
+  // ── Pricing Zones ─────────────────────────────────────────────────────────
+
+  function renderPricingZonesCard(zones) {
+    const content = document.getElementById('pricing-zones-content');
+    if (!Array.isArray(zones) || !zones.length) {
+      content.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;text-align:center;padding:16px 0;">Δεν υπάρχουν ζώνες χρέωσης ακόμα.</p>';
+      return;
+    }
+    const surchargeLabel = z => {
+      if (z.surcharge_type === 'pct')         return `+${z.surcharge_value}%`;
+      if (z.surcharge_type === 'fixed')       return `+€${z.surcharge_value}`;
+      if (z.surcharge_type === 'multiplier')  return `×${z.surcharge_value}`;
+      return String(z.surcharge_value);
+    };
+    content.innerHTML = `
+      <table class="p-routes-table" style="margin-bottom:10px;">
+        <thead><tr>
+          <th style="width:28%">Ζώνη</th>
+          <th style="width:13%">Χρέωση</th>
+          <th>Keywords αναγνώρισης</th>
+          <th style="width:7%"></th>
+        </tr></thead>
+        <tbody>
+          ${zones.map((z, i) => `
+            <tr>
+              <td style="font-weight:500;">${esc(z.name)}</td>
+              <td><span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700;">${surchargeLabel(z)}</span></td>
+              <td style="font-size:0.74rem;color:var(--muted);">${esc((z.keywords || []).join(', '))}</td>
+              <td><button class="btn-del" onclick="deletePricingZone(${i})" title="Διαγραφή">🗑</button></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function deletePricingZone(idx) {
+    if (!activeBizId) return;
+    const biz = allBusinesses.find(b => b.business_id === activeBizId);
+    if (!biz) return;
+    const zones = [...(biz.config?.pricing_zones || [])];
+    zones.splice(idx, 1);
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/pricing-zones`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pricing_zones: zones }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const i = allBusinesses.findIndex(b => b.business_id === activeBizId);
+      if (i !== -1) allBusinesses[i] = data.business;
+      renderPricingZonesCard(data.business.config?.pricing_zones || []);
+      showToast('✅ Ζώνη διαγράφηκε!', 'success');
+    } catch { showToast('Σφάλμα διαγραφής ζώνης', 'error'); }
   }
 
   // ── AI Assistant ──────────────────────────────────────────────────────────

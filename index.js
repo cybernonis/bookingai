@@ -201,6 +201,18 @@ app.patch('/api/admin/business/:id/vehicles', requireAdmin, (req, res) => {
   res.json({ business: biz });
 });
 
+app.patch('/api/admin/business/:id/pricing-zones', requireAdmin, (req, res) => {
+  const bizId = req.params.id;
+  if (req.session.businessId && req.session.businessId !== bizId)
+    return res.status(403).json({ error: 'Forbidden' });
+  const { pricing_zones } = req.body;
+  if (!Array.isArray(pricing_zones))
+    return res.status(400).json({ error: 'pricing_zones array required' });
+  const biz = updateBusinessConfig(bizId, { pricing_zones });
+  if (!biz) return res.status(404).json({ error: 'Business not found' });
+  res.json({ business: biz });
+});
+
 app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) => {
   const bizId = req.params.id;
   if (req.session.businessId && req.session.businessId !== bizId)

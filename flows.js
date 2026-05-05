@@ -114,6 +114,24 @@ function buildVehicleInstructions(vehicles) {
   return lines.join('\n');
 }
 
+// ── Pricing Zone instructions builder ────────────────────────────────────────
+
+function buildPricingZoneInstructions(pricingZones) {
+  if (!Array.isArray(pricingZones) || !pricingZones.length) return '';
+  const lines = ['\n\nΖΩΝΕΣ ΧΡΕΩΣΗΣ — εφαρμόζονται ΠΑΝΤΑ βάσει pickup/προορισμού:'];
+  pricingZones.forEach(z => {
+    let desc;
+    if (z.surcharge_type === 'pct')            desc = `+${z.surcharge_value}% επί της τιμής`;
+    else if (z.surcharge_type === 'fixed')     desc = `+€${z.surcharge_value} σταθερό`;
+    else if (z.surcharge_type === 'multiplier') desc = `×${z.surcharge_value} (πολλαπλασίασε τη βασική)`;
+    else                                        desc = `+${z.surcharge_value}`;
+    const kwds = Array.isArray(z.keywords) && z.keywords.length ? z.keywords.join(', ') : z.name.toLowerCase();
+    lines.push(`• "${z.name}": αν pickup ή προορισμός περιέχει [${kwds}] → ${desc}`);
+  });
+  lines.push('ΚΑΝΟΝΑΣ ΖΩΝΩΝ: Πριν δώσεις τελική τιμή, έλεγξε ΑΝ pickup ή προορισμός ταιριάζει με κάποια ζώνη. Αν ναι, εφάρμοσε τη χρέωση ζώνης επιπλέον και ενημέρωσε τον πελάτη (π.χ. "Εφαρμόστηκε χρέωση ζώνης \'Νότιο Ρέθυμνο\': +€10, τελική τιμή €X").');
+  return lines.join('\n');
+}
+
 // ── AI Chat Flow (Claude-powered) ─────────────────────────────────────────────
 
 async function aiChatFlow(message, history, business) {
@@ -125,13 +143,14 @@ async function aiChatFlow(message, history, business) {
   msgs.push({ role: 'user', content: message === '__init__' ? 'Γεια σου.' : message });
 
   const today = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const pricingRules  = buildPricingInstructions(business.config.pricing);
-  const vehicleRules  = buildVehicleInstructions(business.config.vehicles);
-  const zoneRules     = buildZoneInstructions(business.config.zones);
+  const pricingRules      = buildPricingInstructions(business.config.pricing);
+  const vehicleRules      = buildVehicleInstructions(business.config.vehicles);
+  const zoneRules         = buildZoneInstructions(business.config.zones);
+  const pricingZoneRules  = buildPricingZoneInstructions(business.config.pricing_zones);
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}`,
+    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}`,
     messages: msgs,
   });
 
@@ -502,15 +521,27 @@ ${configJson}
 - zones: { mode: "whitelist"|"blacklist"|"open", areas: string[], intra_zone: boolean }
 - pricing: { mode, base_fare, price_per_km, min_fare, currency, rounding, two_way_enabled, two_way_discount_pct, night_surcharge_enabled, night_surcharge_pct, night_from, night_to, extras:{child_seat,extra_luggage,pet}, fixed_routes:[{origin,destination,price}] }
 - vehicles: [{ id, label, icon, capacity, surcharge_type:"none"|"fixed"|"pct", surcharge_value, enabled }]
+- pricing_zones: [{ id, name, surcharge_type:"pct"|"fixed"|"multiplier", surcharge_value, keywords:string[] }]
+  Εξήγηση pricing_zones:
+  • id: μοναδικό string (π.χ. "zone_1"), name: εμφανιζόμενο όνομα
+  • surcharge_type "pct": +N% επί της βασικής τιμής, surcharge_value = το N
+  • surcharge_type "fixed": +€N σταθερό ποσό, surcharge_value = το N
+  • surcharge_type "multiplier": τιμή × N, surcharge_value = το N (π.χ. 1.2 για x1.2)
+  • keywords: λίστα λέξεων/φράσεων (μικρά γράμματα, ελληνικά) για αναγνώριση της περιοχής
 
 ΚΑΝΟΝΕΣ:
 1. Επέστρεψε ΜΟΝΟ έγκυρο JSON: {"message":"...ελληνικά...","patch":{...} ή null}
-2. Στο patch βάλε ΜΟΝΟ τα top-level keys που αλλάζουν (zones, pricing, ή vehicles)
-3. Αν αλλάζεις μέρος του zones/pricing/vehicles, στείλε ΟΛΟ το object εκείνο (όχι partial)
+2. Στο patch βάλε ΜΟΝΟ τα top-level keys που αλλάζουν (zones, pricing, vehicles, ή pricing_zones)
+3. Αν αλλάζεις μέρος του zones/pricing/vehicles/pricing_zones, στείλε ΟΛΟ το object/array εκείνο (όχι partial)
 4. Χρήση παραδειγμάτων:
    - "Πρόσθεσε Ρέθυμνο στις περιοχές" → patch: { zones: { ...currentZones, areas: [...currentAreas, "Ρέθυμνο"] } }
    - "Άλλαξε τιμή Ηράκλειο-Ρέθυμνο σε €60" → patch: { pricing: { ...currentPricing, fixed_routes: [...updatedRoutes] } }
    - "Ενεργοποίησε νυχτερινή +25%" → patch: { pricing: { ...currentPricing, night_surcharge_enabled:true, night_surcharge_pct:25 } }
+   - "Νότια ζώνη Ηρακλείου +15%" → patch: { pricing_zones: [...currentZones, { id:"zone_1", name:"Νότια ζώνη Ηρακλείου", surcharge_type:"pct", surcharge_value:15, keywords:["νότια ηράκλειο","νότιο ηράκλειο","νότια ηρακλείου"] }] }
+   - "Περιοχή Λασιθίου τιμή x1.2" → patch: { pricing_zones: [...currentZones, { id:"zone_2", name:"Περιοχή Λασιθίου", surcharge_type:"multiplier", surcharge_value:1.2, keywords:["λασίθι","λασιθίου","περιοχή λασιθίου"] }] }
+   - "Χωριά νότιου Ρεθύμνου +€10" → patch: { pricing_zones: [...currentZones, { id:"zone_3", name:"Χωριά νότιου Ρεθύμνου", surcharge_type:"fixed", surcharge_value:10, keywords:["νότιο ρέθυμνο","νότιο ρεθύμνου","χωριά ρεθύμνου"] }] }
+   - "Διέγραψε ζώνη Λασιθίου" → φιλτράρισε το pricing_zones array και patch: { pricing_zones: [filteredArray] }
+   - "Εμφάνισε ζώνες χρέωσης" → message με λίστα, patch: null
 5. Μη γράψεις τίποτα εκτός JSON`,
     messages: [{ role: 'user', content: message }],
   });
