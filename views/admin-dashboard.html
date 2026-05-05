@@ -324,8 +324,12 @@
             <label>Intra-zone Transfers</label>
             <label class="intra-toggle">
               <input type="checkbox" id="zones-intra" />
-              Επιτρέπονται transfers εντός της ίδιας περιοχής/πόλης
+              Επιτρέπονται transfers εντός της ίδιας πόλης/περιοχής
             </label>
+            <p style="margin-top:6px;font-size:0.71rem;color:var(--muted);line-height:1.5;">
+              <strong>Απενεργοποιημένο (προτεινόμενο):</strong> Χανιά → Χανιά ΟΧΙ · Νέα Υόρκη → Νέα Υόρκη ΟΧΙ<br>
+              <strong>Ενεργοποιημένο:</strong> Επιτρέπονται διαδρομές εντός της ίδιας πόλης/περιοχής
+            </p>
           </div>
           <div class="zones-footer">
             <button class="btn-sm primary" onclick="saveZones()">💾 Αποθήκευση</button>
@@ -746,10 +750,10 @@
       const res = await fetch(`/api/business/${bizId}`);
       if (!res.ok) return;
       const biz = await res.json();
-      const z = biz.config?.zones || { mode: 'open', areas: [], intra_zone: true };
+      const z = biz.config?.zones || { mode: 'open', areas: [], intra_zone: false };
       document.querySelectorAll('input[name="zone-mode"]').forEach(r => { r.checked = r.value === (z.mode || 'open'); });
       document.getElementById('zones-areas').value = (z.areas || []).join('\n');
-      document.getElementById('zones-intra').checked = z.intra_zone !== false;
+      document.getElementById('zones-intra').checked = z.intra_zone === true;
       toggleAreasRow();
     } catch { /* ignore */ }
   }

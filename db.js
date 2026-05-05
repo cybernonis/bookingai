@@ -246,7 +246,7 @@ export function seedIfEmpty() {
         zones: {
           mode: 'whitelist',
           areas: ['Κρήτη', 'Αεροδρόμιο Ηρακλείου', 'Αεροδρόμιο Χανίων', 'Ηράκλειο', 'Χανιά', 'Ρέθυμνο', 'Αγ. Νικόλαος', 'Ιεράπετρα', 'Σητεία', 'Μάλια', 'Ελούντα', 'Ανώγεια'],
-          intra_zone: true,
+          intra_zone: false,
         },
         pricing: {
           mode: 'combined',
