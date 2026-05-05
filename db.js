@@ -71,6 +71,35 @@ addColIfMissing('bookings',   'notes',       'TEXT');
 // backfill existing bookings that have no business_id
 db.exec("UPDATE bookings SET business_id = 'eclat' WHERE business_id IS NULL");
 
+// make email nullable (SQLite requires table recreation to drop NOT NULL)
+(function migrateEmailNullable() {
+  const emailCol = db.prepare('PRAGMA table_info(bookings)').all().find(c => c.name === 'email');
+  if (emailCol && emailCol.notnull === 1) {
+    db.exec(`
+      BEGIN;
+      CREATE TABLE bookings_new (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        business_id TEXT,
+        name        TEXT    NOT NULL,
+        email       TEXT,
+        phone       TEXT,
+        service     TEXT,
+        date        TEXT    NOT NULL,
+        time        TEXT    NOT NULL,
+        status      TEXT    NOT NULL DEFAULT 'pending',
+        notes       TEXT,
+        created_at  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+      );
+      INSERT INTO bookings_new (id, business_id, name, email, phone, service, date, time, status, notes, created_at)
+        SELECT id, business_id, name, email, phone, service, date, time, status, notes, created_at FROM bookings;
+      DROP TABLE bookings;
+      ALTER TABLE bookings_new RENAME TO bookings;
+      COMMIT;
+    `);
+    console.log('Migration: email column is now nullable');
+  }
+})();
+
 // ── Prepared statements ───────────────────────────────────────────────────────
 
 const q = {
@@ -224,8 +253,8 @@ export function seedIfEmpty() {
           { id: 'van',     label: 'Van',           icon: '🚐', capacity: '5-8', surcharge_type: 'fixed', surcharge_value: 10, enabled: true },
           { id: 'vip',     label: 'VIP/Mercedes',  icon: '🚘', capacity: '1-4', surcharge_type: 'pct',   surcharge_value: 50, enabled: true },
         ],
-        system_prompt: `Είσαι AI assistant για υπηρεσία ταξί και airport transfers. Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες 5)Όχημα βάσει λίστας 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:
-CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{price}
+        system_prompt: `Είσαι AI assistant για υπηρεσία ταξί και airport transfers. Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες 5)Όχημα βάσει λίστας 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Email για επιβεβαίωση (αν δεν θέλει πες "skip") 13)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:
+CONFIRMED_BOOKING:{name}|{phone}|{email}|{pickup}|{destination}|{datetime}|{vehicle}|{price}
 
 ΕΤΑΙΡΕΙΑ: Crete Transfers — 24/7 transfers σε όλη την Κρήτη.`,
       }),

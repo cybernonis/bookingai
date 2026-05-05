@@ -6,6 +6,7 @@
 
 import { createBooking, getAvailableSlots, getSlotById, markSlotUnavailable } from './db.js';
 import { calculateDistance } from './distance.js';
+import { sendBookingConfirmation } from './email.js';
 import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic();
@@ -140,16 +141,18 @@ async function aiChatFlow(message, history, business) {
   const confirmMatch = text.match(/CONFIRMED_BOOKING:([^\n]+)/);
   if (confirmMatch) {
     const parts = confirmMatch[1].split('|').map(s => s.trim());
-    const [name, phone, pickup, destination, datetime, vehicle, price] = parts;
+    const [name, phone, email, pickup, destination, datetime, vehicle, price] = parts;
 
     const timeMatch = (datetime || '').match(/\b(\d{1,2}:\d{2})\b/);
     const time = timeMatch ? timeMatch[1].padStart(5, '0') : '00:00';
     const date = new Date().toISOString().split('T')[0];
 
+    const cleanEmail = email && email.toLowerCase() !== 'skip' && email.includes('@') ? email : null;
+
     const booking = createBooking({
       business_id: business.business_id,
       name: name || 'Πελάτης',
-      email: null,
+      email: cleanEmail,
       phone: phone || null,
       service: `${pickup} → ${destination}`,
       date, time, status: 'confirmed',
@@ -158,6 +161,23 @@ async function aiChatFlow(message, history, business) {
 
     const year = new Date().getFullYear();
     const bookingNum = `#TXI-${year}-${String(booking.id).padStart(3, '0')}`;
+
+    if (cleanEmail) {
+      sendBookingConfirmation({
+        to: cleanEmail,
+        businessName: business.name,
+        bookingNum,
+        name: name || 'Πελάτης',
+        rows: [
+          { icon: '🚩', label: 'Αναχώρηση',       value: pickup },
+          { icon: '🏁', label: 'Προορισμός',       value: destination },
+          { icon: '📅', label: 'Ημερομηνία & Ώρα', value: datetime },
+          { icon: '🚗', label: 'Όχημα',            value: vehicle },
+          { icon: '💰', label: 'Τιμή',             value: price },
+        ],
+      }).catch(e => console.error('Email err:', e?.message));
+    }
+
     text = text.replace(confirmMatch[0], `\n🔖 **Αριθμός κράτησης: ${bookingNum}**`);
   }
 
@@ -218,9 +238,21 @@ function salonFlow(message, history, business) {
       if (slot?.available) {
         markSlotUnavailable(slot.id);
         const b = createBooking({ business_id: business.business_id, name, email, phone, service, date: slot.date, time: slot.time, status: 'confirmed' });
+        sendBookingConfirmation({
+          to: email, businessName: business.name, bookingNum: `#${b.id}`, name,
+          rows: [
+            { icon: '💇', label: 'Υπηρεσία',   value: service },
+            { icon: '📅', label: 'Ημερομηνία', value: slot.date },
+            { icon: '🕐', label: 'Ώρα',        value: slot.time },
+          ],
+        }).catch(e => console.error('Email err:', e?.message));
         return `✅ Επιβεβαιώθηκε!\n\n📋 ${service ?? '—'}\n📅 ${slot.date} · ${slot.time}\n👤 ${name} · 📱 ${phone ?? '—'} · 📧 ${email}\n🔖 #${b.id}\n\nΣε περιμένουμε! 🙂`;
       }
       const b = createBooking({ business_id: business.business_id, name, email, phone, service, date: '—', time: '—', status: 'pending' });
+      sendBookingConfirmation({
+        to: email, businessName: business.name, bookingNum: `#${b.id}`, name,
+        rows: [{ icon: '💇', label: 'Υπηρεσία', value: service }],
+      }).catch(e => console.error('Email err:', e?.message));
       return `✅ Καταχωρήθηκε!\n👤 ${name} · 📧 ${email}\n🔖 #${b.id}\n\nΘα επικοινωνήσουμε σύντομα!`;
     }
 
@@ -369,9 +401,21 @@ function clinicFlow(message, history, business) {
       if (slot?.available) {
         markSlotUnavailable(slot.id);
         const b = createBooking({ business_id: business.business_id, name, email, phone, service, date: slot.date, time: slot.time, status: 'confirmed' });
+        sendBookingConfirmation({
+          to: email, businessName: business.name, bookingNum: `#${b.id}`, name,
+          rows: [
+            { icon: '🏥', label: 'Ειδικότητα', value: specialty },
+            { icon: '📅', label: 'Ημερομηνία', value: slot.date },
+            { icon: '🕐', label: 'Ώρα',        value: slot.time },
+          ],
+        }).catch(e => console.error('Email err:', e?.message));
         return `✅ Το ραντεβού σας επιβεβαιώθηκε!\n\n🏥 ${specialty}\n📅 ${slot.date} · ${slot.time}\n👤 ${name} · 📱 ${phone}\n📧 ${email}\n🔖 #${b.id}\n\nΣας περιμένουμε!`;
       }
       const b = createBooking({ business_id: business.business_id, name, email, phone, service, date: '—', time: '—', status: 'pending' });
+      sendBookingConfirmation({
+        to: email, businessName: business.name, bookingNum: `#${b.id}`, name,
+        rows: [{ icon: '🏥', label: 'Ειδικότητα', value: specialty }],
+      }).catch(e => console.error('Email err:', e?.message));
       return `✅ Καταχωρήθηκε!\n👤 ${name} · 📧 ${email}\n🔖 #${b.id}\n\nΘα επικοινωνήσουμε για επιβεβαίωση.`;
     }
 
