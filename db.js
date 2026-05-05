@@ -185,57 +185,6 @@ export function seedIfEmpty() {
   // Always upsert businesses so type/config stay current
   const businesses = [
     {
-      business_id: 'eclat',
-      name: 'Éclat Hair Studio',
-      type: 'salon',
-      theme_color: '#1a1a2e',
-      services: JSON.stringify([
-        { name: 'Κούρεμα',         price: 25, duration: 45 },
-        { name: 'Βαφή',            price: 45, duration: 90 },
-        { name: 'Θεραπείες',       price: 35, duration: 60 },
-        { name: 'Νυφικό Χτένισμα', price: 80, duration: 120 },
-        { name: 'Μπούκλες',        price: 55, duration: 90 },
-        { name: 'Styling',         price: 20, duration: 30 },
-      ]),
-      hours: JSON.stringify({ 'Δευτέρα': '09:00–20:00', 'Τρίτη': '09:00–20:00', 'Τετάρτη': '09:00–20:00', 'Πέμπτη': '09:00–21:00', 'Παρασκευή': '09:00–21:00', 'Σάββατο': '09:00–18:00', 'Κυριακή': null }),
-      config: JSON.stringify({}),
-    },
-    {
-      business_id: 'nails-sofia',
-      name: 'Nails by Sofia',
-      type: 'salon',
-      theme_color: '#7c3aed',
-      services: JSON.stringify([
-        { name: 'Manicure',     price: 20, duration: 45 },
-        { name: 'Pedicure',     price: 25, duration: 60 },
-        { name: 'Gel Νυχιών',   price: 35, duration: 75 },
-        { name: 'Nail Art',     price: 15, duration: 30 },
-        { name: 'Αφαίρεση Gel', price: 10, duration: 20 },
-      ]),
-      hours: JSON.stringify({ 'Δευτέρα': '10:00–19:00', 'Τρίτη': '10:00–19:00', 'Τετάρτη': '10:00–19:00', 'Πέμπτη': '10:00–20:00', 'Παρασκευή': '10:00–20:00', 'Σάββατο': '10:00–17:00', 'Κυριακή': null }),
-      config: JSON.stringify({}),
-    },
-    {
-      business_id: 'taxi-thess',
-      name: 'ΤαξίApp Θεσσαλονίκη',
-      type: 'taxi',
-      theme_color: '#d97706',
-      services: JSON.stringify([]),
-      hours: JSON.stringify({ 'Δευτέρα': '24/7', 'Τρίτη': '24/7', 'Τετάρτη': '24/7', 'Πέμπτη': '24/7', 'Παρασκευή': '24/7', 'Σάββατο': '24/7', 'Κυριακή': '24/7' }),
-      config: JSON.stringify({
-        base_fare:    3.50,
-        price_per_km: 1.50,
-        min_fare:     4.50,
-        currency:     '€',
-        tariff_note:  'Τιμοκατάλογος Α εντός πόλης. Νυχτερινό +20%.',
-        fixed_routes: [
-          { origin: 'Αεροδρόμιο Θεσσαλονίκης', destination: 'Κέντρο Θεσσαλονίκης', price: 25 },
-          { origin: 'Κέντρο Θεσσαλονίκης',      destination: 'Αεροδρόμιο Θεσσαλονίκης', price: 25 },
-          { origin: 'Αεροδρόμιο Θεσσαλονίκης', destination: 'Χαλκιδική', price: 45 },
-        ],
-      }),
-    },
-    {
       business_id: 'taxi-crete',
       name: 'Crete Transfers',
       type: 'taxi',
@@ -281,22 +230,6 @@ CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{pr
 ΕΤΑΙΡΕΙΑ: Crete Transfers — 24/7 transfers σε όλη την Κρήτη.`,
       }),
     },
-    {
-      business_id: 'clinic-demo',
-      name: 'MediCare Κλινική',
-      type: 'clinic',
-      theme_color: '#0891b2',
-      services: JSON.stringify([
-        { name: 'Παθολόγος',    price: 50 },
-        { name: 'Καρδιολόγος',  price: 80 },
-        { name: 'Δερματολόγος', price: 60 },
-        { name: 'Ορθοπεδικός',  price: 70 },
-      ]),
-      hours: JSON.stringify({ 'Δευτέρα': '08:00–20:00', 'Τρίτη': '08:00–20:00', 'Τετάρτη': '08:00–20:00', 'Πέμπτη': '08:00–20:00', 'Παρασκευή': '08:00–18:00', 'Σάββατο': '09:00–14:00', 'Κυριακή': null }),
-      config: JSON.stringify({
-        specialties: ['Παθολόγος', 'Καρδιολόγος', 'Δερματολόγος', 'Ορθοπεδικός'],
-      }),
-    },
   ];
   businesses.forEach(b => {
     const existing = q.bizById.get(b.business_id);
@@ -314,31 +247,6 @@ CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{pr
     }
   });
 
-  // Slots — only seed once
-  if (q.slotCount.get().n === 0) {
-    const DATES = ['2026-05-10', '2026-05-11', '2026-05-12', '2026-05-13', '2026-05-14'];
-    const slotDefs = [
-      { business_id: 'eclat',       times: ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00'] },
-      { business_id: 'nails-sofia', times: ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'] },
-      { business_id: 'clinic-demo', times: ['08:30', '09:00', '09:30', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00'] },
-      // taxi has no slots — on-demand
-    ];
-    slotDefs.forEach(({ business_id, times }) => {
-      DATES.forEach(date => times.forEach(time => q.slotInsert.run({ business_id, date, time })));
-    });
-  }
-
-  // Demo bookings — only seed once
-  if (q.bookCount.get().n === 0) {
-    const seeds = [
-      { business_id: 'eclat',        name: 'Μαρία Παπαδοπούλου', email: 'maria@example.com',   phone: '6971234567', service: 'Βαφή',            date: '2026-05-10', time: '10:00', status: 'confirmed', notes: null },
-      { business_id: 'eclat',        name: 'Γιώργος Νικολάου',   email: 'giorgos@example.com', phone: '6982345678', service: 'Κούρεμα',         date: '2026-05-10', time: '11:00', status: 'pending',   notes: null },
-      { business_id: 'nails-sofia',  name: 'Σοφία Δημητρίου',    email: 'sofia@example.com',   phone: '6904567890', service: 'Gel Νυχιών',      date: '2026-05-10', time: '11:00', status: 'confirmed', notes: null },
-      { business_id: 'taxi-thess',   name: 'Νίκος Αλεξίου',      email: null,                  phone: '6915678901', service: 'Κέντρο → ΑΠΘ',   date: '2026-05-10', time: '09:00', status: 'confirmed', notes: JSON.stringify({ pickup: 'Πλατεία Αριστοτέλους', destination: 'ΑΠΘ', datetime: '10 Μαΐου 09:00' }) },
-      { business_id: 'clinic-demo',  name: 'Ελένη Κωστοπούλου',  email: 'eleni@example.com',   phone: '6993456789', service: 'Καρδιολόγος',    date: '2026-05-11', time: '10:00', status: 'pending',   notes: null },
-    ];
-    seeds.forEach(s => q.bookInsert.run(s));
-  }
 }
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
