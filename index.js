@@ -10,7 +10,7 @@ import {
   getAdminByUsername, createAdmin, verifyPassword,
   setupNewBusiness, updateBusinessConfig,
 } from './db.js';
-import { getBookingReply } from './flows.js';
+import { getBookingReply, applySettingsCommand } from './flows.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app  = express();
@@ -187,6 +187,37 @@ app.patch('/api/admin/business/:id/zones', requireAdmin, (req, res) => {
   res.json({ business: biz });
 });
 
+app.patch('/api/admin/business/:id/vehicles', requireAdmin, (req, res) => {
+  const bizId = req.params.id;
+  if (req.session.businessId && req.session.businessId !== bizId)
+    return res.status(403).json({ error: 'Forbidden' });
+  const { vehicles } = req.body;
+  if (!Array.isArray(vehicles))
+    return res.status(400).json({ error: 'vehicles array required' });
+  const biz = updateBusinessConfig(bizId, { vehicles });
+  if (!biz) return res.status(404).json({ error: 'Business not found' });
+  res.json({ business: biz });
+});
+
+app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) => {
+  const bizId = req.params.id;
+  if (req.session.businessId && req.session.businessId !== bizId)
+    return res.status(403).json({ error: 'Forbidden' });
+  const { message } = req.body;
+  if (!message) return res.status(400).json({ error: 'message required' });
+  const biz = getBusinessById(bizId);
+  if (!biz) return res.status(404).json({ error: 'Business not found' });
+  try {
+    const result = await applySettingsCommand(message, biz);
+    if (result.patch) updateBusinessConfig(bizId, result.patch);
+    const updated = getBusinessById(bizId);
+    res.json({ message: result.message, business: updated });
+  } catch (err) {
+    console.error('AI settings error:', err);
+    res.status(500).json({ error: 'Σφάλμα επεξεργασίας.' });
+  }
+});
+
 // ── Setup wizard ──────────────────────────────────────────────────────────────
 
 app.get('/setup', (_req, res) =>
@@ -204,6 +235,13 @@ app.post('/api/setup', (req, res) => {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .substring(0, 40) + '-' + Date.now().toString(36);
+
+  if (type === 'taxi' && config && !config.system_prompt) {
+    config.system_prompt = `Είσαι AI assistant για υπηρεσία ταξί και μεταφορές "${name}". Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες 5)Όχημα βάσει λίστας 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:
+CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{price}
+
+ΕΤΑΙΡΕΙΑ: ${name} — υπηρεσίες μεταφοράς 24/7.`;
+  }
 
   try {
     setupNewBusiness({

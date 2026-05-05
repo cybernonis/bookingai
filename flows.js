@@ -97,6 +97,22 @@ function buildZoneInstructions(zones) {
   return s;
 }
 
+function buildVehicleInstructions(vehicles) {
+  if (!Array.isArray(vehicles) || !vehicles.length) return '';
+  const enabled = vehicles.filter(v => v.enabled !== false);
+  if (!enabled.length) return '';
+  const lines = ['\n\nΟΧΗΜΑΤΑ — εμφάνισε ΠΑΝΤΑ αυτή τη λίστα:'];
+  enabled.forEach((v, i) => {
+    let surcharge = '';
+    if (v.surcharge_type === 'fixed' && v.surcharge_value > 0) surcharge = ` (+€${v.surcharge_value})`;
+    else if (v.surcharge_type === 'pct'   && v.surcharge_value > 0) surcharge = ` (+${v.surcharge_value}%)`;
+    lines.push(`${i + 1}. ${v.icon || ''} ${v.label} (${v.capacity} άτομα)${surcharge}`);
+  });
+  lines.push(`${enabled.length + 1}. Δεν ξέρω ακόμα`);
+  lines.push('Αν επιβάτες > 4 → πρότεινε αυτόματα Van. Ρώτα ΠΑΝΤΑ για επιλογή οχήματος ΠΡΙΝ υπολογίσεις τελική τιμή. Η επιλογή οχήματος επηρεάζει το τελικό ποσό.');
+  return lines.join('\n');
+}
+
 // ── AI Chat Flow (Claude-powered) ─────────────────────────────────────────────
 
 async function aiChatFlow(message, history, business) {
@@ -108,12 +124,13 @@ async function aiChatFlow(message, history, business) {
   msgs.push({ role: 'user', content: message === '__init__' ? 'Γεια σου.' : message });
 
   const today = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const pricingRules = buildPricingInstructions(business.config.pricing);
-  const zoneRules    = buildZoneInstructions(business.config.zones);
+  const pricingRules  = buildPricingInstructions(business.config.pricing);
+  const vehicleRules  = buildVehicleInstructions(business.config.vehicles);
+  const zoneRules     = buildZoneInstructions(business.config.zones);
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${pricingRules}${zoneRules}`,
+    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}`,
     messages: msgs,
   });
 
@@ -421,5 +438,45 @@ function restaurantFlow(message, history, business) {
     }
 
     default: return `Μπορώ να σας βοηθήσω με νέα κράτηση;`;
+  }
+}
+
+// ── AI Settings Command ───────────────────────────────────────────────────────
+
+export async function applySettingsCommand(message, business) {
+  const configJson = JSON.stringify(business.config, null, 2);
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 2048,
+    system: `Είσαι AI assistant για διαχείριση ρυθμίσεων επιχείρησης ταξί.
+Ο διαχειριστής γράφει εντολή στα ελληνικά. Εσύ την μετατρέπεις σε JSON patch για ενημέρωση του config.
+
+ΤΡΕΧΟΥΣΑ ΔΙΑΜΟΡΦΩΣΗ:
+${configJson}
+
+ΔΟΜΗ CONFIG:
+- zones: { mode: "whitelist"|"blacklist"|"open", areas: string[], intra_zone: boolean }
+- pricing: { mode, base_fare, price_per_km, min_fare, currency, rounding, two_way_enabled, two_way_discount_pct, night_surcharge_enabled, night_surcharge_pct, night_from, night_to, extras:{child_seat,extra_luggage,pet}, fixed_routes:[{origin,destination,price}] }
+- vehicles: [{ id, label, icon, capacity, surcharge_type:"none"|"fixed"|"pct", surcharge_value, enabled }]
+
+ΚΑΝΟΝΕΣ:
+1. Επέστρεψε ΜΟΝΟ έγκυρο JSON: {"message":"...ελληνικά...","patch":{...} ή null}
+2. Στο patch βάλε ΜΟΝΟ τα top-level keys που αλλάζουν (zones, pricing, ή vehicles)
+3. Αν αλλάζεις μέρος του zones/pricing/vehicles, στείλε ΟΛΟ το object εκείνο (όχι partial)
+4. Χρήση παραδειγμάτων:
+   - "Πρόσθεσε Ρέθυμνο στις περιοχές" → patch: { zones: { ...currentZones, areas: [...currentAreas, "Ρέθυμνο"] } }
+   - "Άλλαξε τιμή Ηράκλειο-Ρέθυμνο σε €60" → patch: { pricing: { ...currentPricing, fixed_routes: [...updatedRoutes] } }
+   - "Ενεργοποίησε νυχτερινή +25%" → patch: { pricing: { ...currentPricing, night_surcharge_enabled:true, night_surcharge_pct:25 } }
+5. Μη γράψεις τίποτα εκτός JSON`,
+    messages: [{ role: 'user', content: message }],
+  });
+
+  const text = response.content[0].text.trim();
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return { message: 'Δεν κατάλαβα την εντολή. Δοκίμασε ξανά.', patch: null };
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch {
+    return { message: 'Σφάλμα ανάλυσης. Δοκίμασε ξανά.', patch: null };
   }
 }

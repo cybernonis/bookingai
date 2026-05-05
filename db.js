@@ -270,11 +270,15 @@ export function seedIfEmpty() {
             { origin: 'Αεροδρόμιο Χανίων', destination: 'Ρέθυμνο', price: 40 },
           ],
         },
-        system_prompt: `Είσαι AI assistant για υπηρεσία ταξί και airport transfers. Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες (>4 → VAN) 5)Όχημα: Economy/Van/VIP 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:
+        vehicles: [
+          { id: 'economy', label: 'Economy',      icon: '🚗', capacity: '1-4', surcharge_type: 'none',  surcharge_value: 0,  enabled: true },
+          { id: 'van',     label: 'Van',           icon: '🚐', capacity: '5-8', surcharge_type: 'fixed', surcharge_value: 10, enabled: true },
+          { id: 'vip',     label: 'VIP/Mercedes',  icon: '🚘', capacity: '1-4', surcharge_type: 'pct',   surcharge_value: 50, enabled: true },
+        ],
+        system_prompt: `Είσαι AI assistant για υπηρεσία ταξί και airport transfers. Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες 5)Όχημα βάσει λίστας 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:
 CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{price}
 
-ΕΤΑΙΡΕΙΑ: Crete Transfers — 24/7 transfers σε όλη την Κρήτη.
-ΤΥΠΟΙ ΟΧΗΜΑΤΩΝ: Economy (1-4 άτομα), Van (5-8 άτομα, +€10), VIP/Mercedes (1-4 άτομα, +50%)`,
+ΕΤΑΙΡΕΙΑ: Crete Transfers — 24/7 transfers σε όλη την Κρήτη.`,
       }),
     },
     {
@@ -303,6 +307,7 @@ CONFIRMED_BOOKING:{name}|{phone}|{pickup}|{destination}|{datetime}|{vehicle}|{pr
       const merged = { ...seed };
       if (cur.zones    !== undefined) merged.zones    = cur.zones;
       if (cur.pricing  !== undefined) merged.pricing  = cur.pricing;
+      if (cur.vehicles !== undefined) merged.vehicles = cur.vehicles;
       q.bizUpsert.run({ ...b, config: JSON.stringify(merged) });
     } else {
       q.bizUpsert.run(b);

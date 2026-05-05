@@ -37,7 +37,6 @@
     .nav-item.active { background: rgba(255,255,255,0.14); color: #fff; font-weight: 600; }
     .nav-icon { font-size: 0.9rem; width: 18px; text-align: center; }
 
-    /* Business switcher in sidebar */
     .biz-list { padding: 6px 10px; }
     .biz-item {
       display: flex; align-items: center; gap: 8px;
@@ -69,14 +68,16 @@
     .btn-sm.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
     .btn-sm.primary:hover { opacity: 0.88; }
 
+    /* ── Tab nav ── */
+    .tab-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 26px; display: flex; flex-shrink: 0; }
+    .main-tab { padding: 13px 18px; font-size: 0.83rem; font-weight: 500; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color 0.15s, border-color 0.15s; margin-bottom: -1px; }
+    .main-tab:hover { color: var(--text); }
+    .main-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
     .content { padding: 22px 26px; overflow-y: auto; flex: 1; }
 
-    /* ── Active business banner ── */
-    .biz-banner {
-      display: flex; align-items: center; gap: 10px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px 16px; margin-bottom: 20px;
-    }
+    /* ── Business banner ── */
+    .biz-banner { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
     .biz-banner-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .biz-banner h3 { font-size: 0.88rem; font-weight: 600; }
     .biz-banner p { font-size: 0.75rem; color: var(--muted); }
@@ -98,7 +99,7 @@
     .stat-card.cancelled .stat-value { color: var(--red); }
     .stat-label { font-size: 0.68rem; color: var(--muted); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
 
-    /* ── Table ── */
+    /* ── Bookings table ── */
     .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
     .table-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
     .table-header h2 { font-size: 0.88rem; font-weight: 600; }
@@ -108,9 +109,9 @@
     .search-wrap input:focus { border-color: var(--accent); }
     .search-wrap::before { content: '🔍'; position: absolute; left: 7px; top: 50%; transform: translateY(-50%); font-size: 0.68rem; pointer-events: none; }
     .filter-tabs { display: flex; gap: 3px; }
-    .tab { padding: 4px 11px; border-radius: 5px; font-size: 0.73rem; cursor: pointer; border: 1px solid transparent; color: var(--muted); transition: background 0.15s; }
-    .tab:hover { background: var(--bg); }
-    .tab.active { background: var(--accent); color: #fff; }
+    .ftab { padding: 4px 11px; border-radius: 5px; font-size: 0.73rem; cursor: pointer; border: 1px solid transparent; color: var(--muted); transition: background 0.15s; }
+    .ftab:hover { background: var(--bg); }
+    .ftab.active { background: var(--accent); color: #fff; }
 
     table { width: 100%; border-collapse: collapse; }
     thead th { text-align: left; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding: 9px 16px; border-bottom: 1px solid var(--border); background: #fafbfc; white-space: nowrap; }
@@ -118,12 +119,10 @@
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: #fafbfc; }
     td { padding: 11px 16px; font-size: 0.82rem; vertical-align: middle; }
-
     .customer-name { font-weight: 500; font-size: 0.84rem; }
     .customer-meta { font-size: 0.71rem; color: var(--muted); margin-top: 1px; }
     .service-chip { display: inline-block; background: var(--blue-bg); color: var(--blue); padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
     .biz-chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
-
     .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; white-space: nowrap; }
     .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
     .badge-confirmed { background: var(--green-bg); color: var(--green); }
@@ -132,7 +131,6 @@
     .badge-pending::before   { background: var(--yellow); }
     .badge-cancelled { background: var(--red-bg);   color: var(--red); }
     .badge-cancelled::before { background: var(--red); }
-
     .actions { display: flex; gap: 5px; }
     .btn-action { padding: 4px 9px; border-radius: 5px; font-size: 0.7rem; font-weight: 500; cursor: pointer; border: 1.5px solid; background: transparent; transition: background 0.15s, color 0.15s; }
     .btn-confirm { border-color: var(--green); color: var(--green); }
@@ -140,7 +138,6 @@
     .btn-cancel  { border-color: #e5e7eb; color: var(--muted); }
     .btn-cancel:hover { border-color: var(--red); color: var(--red); }
     .btn-action:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
-
     .empty { text-align: center; padding: 48px 24px; color: var(--muted); }
     .empty-icon { font-size: 2rem; margin-bottom: 8px; }
 
@@ -163,12 +160,20 @@
     .modal-btn.danger:hover { opacity: 0.88; }
     .modal-btn:not(.danger):hover { background: var(--bg); }
 
-    /* ── Pricing card ── */
-    .pricing-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
-    .pricing-header { padding: 14px 18px; border-bottom: 1px solid var(--border); }
-    .pricing-header h2 { font-size: 0.88rem; font-weight: 600; }
-    .pricing-header p  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
-    .pricing-body { padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+    /* ── Settings shared ── */
+    .settings-placeholder { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 56px 24px; text-align: center; color: var(--muted); }
+    .settings-placeholder .ph-icon { font-size: 2.2rem; margin-bottom: 10px; }
+    .settings-placeholder p { font-size: 0.88rem; }
+
+    .s-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+    .s-card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .s-card-header h2 { font-size: 0.88rem; font-weight: 600; }
+    .s-card-header p  { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .s-card-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+    .s-footer { display: flex; align-items: center; gap: 12px; padding-top: 2px; }
+    .s-hint { font-size: 0.72rem; color: var(--muted); flex: 1; }
+
+    /* ── Form fields (shared) ── */
     .p-section { display: flex; flex-direction: column; gap: 8px; }
     .p-label { font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
     .p-fields { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
@@ -182,6 +187,19 @@
     .p-input:focus { border-color: var(--accent); }
     .p-unit { font-size: 0.76rem; color: var(--muted); }
     .p-divider { height: 1px; background: var(--border); }
+    .mode-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mode-option { display: flex; align-items: center; gap: 7px; padding: 7px 13px; border: 1.5px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 0.8rem; transition: border-color 0.15s, background 0.15s; user-select: none; }
+    .mode-option:has(input:checked) { border-color: var(--accent); background: #f0f1ff; font-weight: 600; }
+    .mode-option input { width: 14px; height: 14px; accent-color: var(--accent); }
+    .toggle-label { display: flex; align-items: center; gap: 9px; font-size: 0.83rem; cursor: pointer; }
+    .toggle-label input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+    /* ── Zones ── */
+    .zones-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 0.82rem; font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s; line-height: 1.6; }
+    .zones-textarea:focus { border-color: var(--accent); }
+    .zones-textarea::placeholder { color: #bbb; }
+
+    /* ── Routes table ── */
     .p-routes-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
     .p-routes-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
     .p-routes-table th { text-align: left; font-size: 0.66rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 8px 10px; background: #fafbfc; border-bottom: 1px solid var(--border); }
@@ -192,26 +210,30 @@
     .p-route-price { width: 65px; }
     .btn-del { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 1rem; padding: 2px 4px; border-radius: 4px; transition: color 0.15s, background 0.15s; line-height: 1; }
     .btn-del:hover { color: var(--red); background: var(--red-bg); }
-    .pricing-footer { display: flex; align-items: center; gap: 12px; }
 
-    /* ── Zones card ── */
-    .zones-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
-    .zones-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .zones-header h2 { font-size: 0.88rem; font-weight: 600; }
-    .zones-header p { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
-    .zones-body { padding: 18px; display: flex; flex-direction: column; gap: 16px; }
-    .zones-row label:first-child { display: block; font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .mode-options { display: flex; gap: 8px; flex-wrap: wrap; }
-    .mode-option { display: flex; align-items: center; gap: 7px; padding: 7px 13px; border: 1.5px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 0.8rem; transition: border-color 0.15s, background 0.15s; user-select: none; }
-    .mode-option:has(input:checked) { border-color: var(--accent); background: #f0f1ff; font-weight: 600; }
-    .mode-option input { width: 14px; height: 14px; accent-color: var(--accent); }
-    .zones-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 0.82rem; font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s; line-height: 1.6; }
-    .zones-textarea:focus { border-color: var(--accent); }
-    .zones-textarea::placeholder { color: #bbb; }
-    .intra-toggle { display: flex; align-items: center; gap: 9px; font-size: 0.83rem; cursor: pointer; }
-    .intra-toggle input { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
-    .zones-footer { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
-    .zones-hint { font-size: 0.72rem; color: var(--muted); flex: 1; }
+    /* ── Vehicles table ── */
+    .v-table { width: 100%; border-collapse: collapse; font-size: 0.81rem; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; margin-bottom: 12px; }
+    .v-table th { text-align: left; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 8px 10px; background: #fafbfc; border-bottom: 1px solid var(--border); }
+    .v-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .v-table tr:last-child td { border-bottom: none; }
+    .v-input { border: 1px solid var(--border); border-radius: 5px; padding: 5px 8px; font-size: 0.8rem; outline: none; width: 100%; transition: border-color 0.2s; font-family: inherit; background: #fff; }
+    .v-input:focus { border-color: var(--accent); }
+    .v-input-icon { width: 46px; text-align: center; }
+    .v-input-cap  { width: 70px; }
+    .v-input-val  { width: 62px; }
+    .v-select { border: 1px solid var(--border); border-radius: 5px; padding: 5px 6px; font-size: 0.79rem; outline: none; font-family: inherit; background: #fff; transition: border-color 0.2s; width: 100%; }
+    .v-select:focus { border-color: var(--accent); }
+    .v-toggle { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+    /* ── AI assistant ── */
+    .ai-examples { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .ai-examples > span { font-size: 0.72rem; color: var(--muted); }
+    .ai-chip { padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg); font-size: 0.73rem; cursor: pointer; color: var(--text); transition: background 0.15s, border-color 0.15s, color 0.15s; }
+    .ai-chip:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .ai-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 10px 13px; font-size: 0.85rem; font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s; }
+    .ai-textarea:focus { border-color: var(--accent); }
+    .ai-response { margin-top: 4px; padding: 11px 14px; background: var(--green-bg); border: 1px solid #bbf7d0; border-radius: 7px; font-size: 0.82rem; color: var(--green); }
+    .ai-response.error { background: var(--red-bg); border-color: #fca5a5; color: var(--red); }
 
     @media (max-width: 900px) {
       .sidebar { display: none; }
@@ -230,28 +252,23 @@
       <p>Admin Panel</p>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-section">Κρατήσεις</div>
+      <div class="nav-section">Πλοήγηση</div>
       <a class="nav-item active" href="/admin/dashboard">
-        <span class="nav-icon">📋</span> Όλες οι κρατήσεις
+        <span class="nav-icon">📋</span> Dashboard
       </a>
 
       <div class="nav-section" style="margin-top:12px;">Επιχειρήσεις</div>
-      <div class="biz-list" id="sidebar-biz-list">
-        <!-- populated by JS -->
-      </div>
+      <div class="biz-list" id="sidebar-biz-list"></div>
 
-      <div class="nav-section" style="margin-top:12px;">Links</div>
-      <a class="nav-item" href="/test.html" target="_blank">
-        <span class="nav-icon">💇</span> Éclat Hair Studio
-      </a>
-      <a class="nav-item" href="/nails-sofia.html" target="_blank">
-        <span class="nav-icon">💅</span> Nails by Sofia
+      <div class="nav-section" style="margin-top:12px;">Demo</div>
+      <a class="nav-item" href="/taxi-crete.html" target="_blank">
+        <span class="nav-icon">🚕</span> Taxi Crete
       </a>
     </nav>
     <div class="sidebar-user">
       <div class="user-avatar">👤</div>
       <div class="user-info">
-        <div class="user-name">admin</div>
+        <div class="user-name" id="sidebar-username">admin</div>
         <div class="user-role">Διαχειριστής</div>
       </div>
       <button class="btn-logout" title="Αποσύνδεση" onclick="confirmLogout()">⏻</button>
@@ -265,261 +282,337 @@
         <p id="topbar-date"></p>
       </div>
       <div class="topbar-right">
-        <button class="btn-sm" onclick="loadAll()">↻ Ανανέωση</button>
+        <button class="btn-sm" onclick="refreshAll()">↻ Ανανέωση</button>
         <button class="btn-sm primary" onclick="confirmLogout()">Αποσύνδεση</button>
       </div>
     </header>
 
+    <!-- Main tab bar -->
+    <div class="tab-nav">
+      <button class="main-tab active" id="tab-btn-bookings" onclick="switchTab('bookings')">📋 Κρατήσεις</button>
+      <button class="main-tab" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Ρυθμίσεις</button>
+    </div>
+
     <div class="content">
 
-      <!-- Active business banner -->
-      <div class="biz-banner" id="biz-banner">
-        <div class="biz-banner-dot" id="biz-banner-dot"></div>
-        <div>
-          <h3 id="biz-banner-name">Φόρτωση...</h3>
-          <p id="biz-banner-services"></p>
-        </div>
-        <div class="biz-banner-right" id="biz-banner-right"></div>
-      </div>
+      <!-- ══════════ Tab: Κρατήσεις ══════════ -->
+      <div id="tab-bookings">
 
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card all">
-          <div class="stat-top"><div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Σύνολο</div></div><div class="stat-icon-wrap">📊</div></div>
-        </div>
-        <div class="stat-card confirmed">
-          <div class="stat-top"><div><div class="stat-value" id="stat-confirmed">—</div><div class="stat-label">Επιβεβαιωμένες</div></div><div class="stat-icon-wrap">✅</div></div>
-        </div>
-        <div class="stat-card pending">
-          <div class="stat-top"><div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Αναμονή</div></div><div class="stat-icon-wrap">⏳</div></div>
-        </div>
-        <div class="stat-card cancelled">
-          <div class="stat-top"><div><div class="stat-value" id="stat-cancelled">—</div><div class="stat-label">Ακυρωμένες</div></div><div class="stat-icon-wrap">❌</div></div>
-        </div>
-      </div>
-
-      <!-- Zones Management -->
-      <div class="zones-card" id="zones-card" style="display:none;">
-        <div class="zones-header">
+        <div class="biz-banner">
+          <div class="biz-banner-dot" id="biz-banner-dot"></div>
           <div>
+            <h3 id="biz-banner-name">Φόρτωση...</h3>
+            <p id="biz-banner-services"></p>
+          </div>
+          <div class="biz-banner-right" id="biz-banner-right"></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card all">
+            <div class="stat-top"><div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Σύνολο</div></div><div class="stat-icon-wrap">📊</div></div>
+          </div>
+          <div class="stat-card confirmed">
+            <div class="stat-top"><div><div class="stat-value" id="stat-confirmed">—</div><div class="stat-label">Επιβεβαιωμένες</div></div><div class="stat-icon-wrap">✅</div></div>
+          </div>
+          <div class="stat-card pending">
+            <div class="stat-top"><div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Αναμονή</div></div><div class="stat-icon-wrap">⏳</div></div>
+          </div>
+          <div class="stat-card cancelled">
+            <div class="stat-top"><div><div class="stat-value" id="stat-cancelled">—</div><div class="stat-label">Ακυρωμένες</div></div><div class="stat-icon-wrap">❌</div></div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header">
+            <h2>Λίστα Κρατήσεων</h2>
+            <div class="table-controls">
+              <div class="search-wrap">
+                <input type="text" id="search" placeholder="Αναζήτηση..." oninput="renderTable()" />
+              </div>
+              <div class="filter-tabs">
+                <div class="ftab active" data-filter="all">Όλες</div>
+                <div class="ftab" data-filter="pending">Αναμονή</div>
+                <div class="ftab" data-filter="confirmed">Επιβεβαιωμένες</div>
+                <div class="ftab" data-filter="cancelled">Ακυρωμένες</div>
+              </div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Πελάτης</th>
+                <th class="hide-sm">Επιχείρηση</th>
+                <th class="hide-sm">Υπηρεσία</th>
+                <th>Ημ/νία</th>
+                <th class="hide-sm">Καταχ.</th>
+                <th>Κατάσταση</th>
+                <th>Ενέργειες</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-body"></tbody>
+          </table>
+          <div class="empty" id="empty-state" style="display:none;">
+            <div class="empty-icon">📭</div>
+            Δεν βρέθηκαν κρατήσεις.
+          </div>
+        </div>
+
+      </div><!-- /tab-bookings -->
+
+      <!-- ══════════ Tab: Ρυθμίσεις ══════════ -->
+      <div id="tab-settings" style="display:none;">
+
+        <!-- Placeholder when no biz selected -->
+        <div class="settings-placeholder" id="settings-placeholder">
+          <div class="ph-icon">🏢</div>
+          <p>Επέλεξε μια επιχείρηση από την πλαϊνή μπάρα για να δεις τις ρυθμίσεις.</p>
+        </div>
+
+        <!-- ── Zones ── -->
+        <div class="s-card" id="zones-card" style="display:none;">
+          <div class="s-card-header">
             <h2>🗺️ Ζώνες Εξυπηρέτησης</h2>
             <p>Ορίστε ποιες περιοχές εξυπηρετεί αυτή η επιχείρηση</p>
           </div>
+          <div class="s-card-body">
+            <div class="p-section">
+              <label class="p-label">Κανόνας</label>
+              <div class="mode-options">
+                <label class="mode-option"><input type="radio" name="zone-mode" value="open" /> 🌍 Παγκόσμιο</label>
+                <label class="mode-option"><input type="radio" name="zone-mode" value="whitelist" /> ✅ Whitelist — μόνο αυτές</label>
+                <label class="mode-option"><input type="radio" name="zone-mode" value="blacklist" /> 🚫 Blacklist — εκτός αυτών</label>
+              </div>
+            </div>
+            <div class="p-section" id="areas-row">
+              <label class="p-label">Περιοχές <span style="font-weight:400;text-transform:none">(μία ανά γραμμή)</span></label>
+              <textarea id="zones-areas" class="zones-textarea" rows="5"
+                placeholder="Κρήτη&#10;Αεροδρόμιο Ηρακλείου&#10;Χανιά&#10;Ρέθυμνο"></textarea>
+            </div>
+            <div class="p-section">
+              <label class="p-label">Intra-zone Transfers</label>
+              <label class="toggle-label">
+                <input type="checkbox" id="zones-intra" />
+                Επιτρέπονται transfers εντός της ίδιας πόλης/περιοχής
+              </label>
+              <p style="margin-top:5px;font-size:0.71rem;color:var(--muted);line-height:1.5;">
+                <strong>Απενεργοποιημένο (προτεινόμενο):</strong> Χανιά → Χανιά ΟΧΙ · Νέα Υόρκη → Νέα Υόρκη ΟΧΙ<br>
+                <strong>Ενεργοποιημένο:</strong> Επιτρέπονται διαδρομές εντός της ίδιας πόλης
+              </p>
+            </div>
+            <div class="s-footer">
+              <button class="btn-sm primary" onclick="saveZones()">💾 Αποθήκευση</button>
+              <span class="s-hint" id="zones-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
+            </div>
+          </div>
         </div>
-        <div class="zones-body">
-          <div class="zones-row">
-            <label>Κανόνας</label>
-            <div class="mode-options">
-              <label class="mode-option"><input type="radio" name="zone-mode" value="open" /> 🌍 Παγκόσμιο (χωρίς περιορισμό)</label>
-              <label class="mode-option"><input type="radio" name="zone-mode" value="whitelist" /> ✅ Whitelist — μόνο αυτές οι περιοχές</label>
-              <label class="mode-option"><input type="radio" name="zone-mode" value="blacklist" /> 🚫 Blacklist — εκτός αυτών</label>
-            </div>
-          </div>
-          <div class="zones-row" id="areas-row">
-            <label>Περιοχές <span style="font-weight:400">(μία ανά γραμμή — πόλη, χώρα, αεροδρόμιο, custom κείμενο)</span></label>
-            <textarea id="zones-areas" class="zones-textarea" rows="5"
-              placeholder="Κρήτη&#10;Αεροδρόμιο Ηρακλείου&#10;Χανιά&#10;Ρέθυμνο&#10;Greece&#10;Larnaca Airport"></textarea>
-          </div>
-          <div class="zones-row">
-            <label>Intra-zone Transfers</label>
-            <label class="intra-toggle">
-              <input type="checkbox" id="zones-intra" />
-              Επιτρέπονται transfers εντός της ίδιας πόλης/περιοχής
-            </label>
-            <p style="margin-top:6px;font-size:0.71rem;color:var(--muted);line-height:1.5;">
-              <strong>Απενεργοποιημένο (προτεινόμενο):</strong> Χανιά → Χανιά ΟΧΙ · Νέα Υόρκη → Νέα Υόρκη ΟΧΙ<br>
-              <strong>Ενεργοποιημένο:</strong> Επιτρέπονται διαδρομές εντός της ίδιας πόλης/περιοχής
-            </p>
-          </div>
-          <div class="zones-footer">
-            <button class="btn-sm primary" onclick="saveZones()">💾 Αποθήκευση</button>
-            <span class="zones-hint" id="zones-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
-          </div>
-        </div>
-      </div>
 
-      <!-- Pricing Management -->
-      <div class="pricing-card" id="pricing-card" style="display:none;">
-        <div class="pricing-header">
-          <h2>💰 Τιμολόγηση</h2>
-          <p>Ορίστε τιμοκατάλογο, extras και κανόνες χρέωσης</p>
-        </div>
-        <div class="pricing-body">
-
-          <!-- Mode -->
-          <div class="p-section">
-            <label class="p-label">Τρόπος χρέωσης</label>
-            <div class="mode-options">
-              <label class="mode-option"><input type="radio" name="p-mode" value="per_km" onchange="togglePricingMode()" /> 📏 Ανά χιλιόμετρο</label>
-              <label class="mode-option"><input type="radio" name="p-mode" value="fixed"  onchange="togglePricingMode()" /> 📌 Σταθερές τιμές</label>
-              <label class="mode-option"><input type="radio" name="p-mode" value="combined" onchange="togglePricingMode()" /> ⚡ Συνδυασμός</label>
-            </div>
+        <!-- ── Pricing ── -->
+        <div class="s-card" id="pricing-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>💰 Τιμολόγηση</h2>
+            <p>Τρόπος χρέωσης, τιμοκατάλογος και σταθερές διαδρομές</p>
           </div>
+          <div class="s-card-body">
 
-          <!-- Per-km -->
-          <div class="p-section" id="p-perkm-section">
-            <label class="p-label">Τιμοκατάλογος ανά χλμ</label>
-            <div class="p-fields">
-              <div class="p-field">
-                <label>Εκκίνηση</label>
-                <div class="p-input-wrap"><input type="number" id="p-base-fare" class="p-input p-input-sm" step="0.01" min="0" value="2.00" /><span class="p-unit" id="p-cur-lbl1">€</span></div>
-              </div>
-              <div class="p-field">
-                <label>Τιμή / χλμ</label>
-                <div class="p-input-wrap"><input type="number" id="p-per-km" class="p-input p-input-sm" step="0.01" min="0" value="0.92" /><span class="p-unit" id="p-cur-lbl2">€</span></div>
-              </div>
-              <div class="p-field">
-                <label>Ελάχιστο</label>
-                <div class="p-input-wrap"><input type="number" id="p-min-fare" class="p-input p-input-sm" step="0.01" min="0" value="5.00" /><span class="p-unit" id="p-cur-lbl3">€</span></div>
-              </div>
-              <div class="p-field">
-                <label>Νόμισμα</label>
-                <input type="text" id="p-currency" class="p-input p-input-xs" maxlength="3" value="€" oninput="updateCurrencyLabels()" />
+            <div class="p-section">
+              <label class="p-label">Τρόπος χρέωσης</label>
+              <div class="mode-options">
+                <label class="mode-option"><input type="radio" name="p-mode" value="per_km"   onchange="togglePricingMode()" /> 📏 Ανά χιλιόμετρο</label>
+                <label class="mode-option"><input type="radio" name="p-mode" value="fixed"    onchange="togglePricingMode()" /> 📌 Σταθερές τιμές</label>
+                <label class="mode-option"><input type="radio" name="p-mode" value="combined" onchange="togglePricingMode()" /> ⚡ Συνδυασμός</label>
               </div>
             </div>
-          </div>
 
-          <div class="p-divider"></div>
-
-          <!-- Rounding -->
-          <div class="p-section">
-            <label class="p-label">Στρογγυλοποίηση τιμής</label>
-            <div class="mode-options">
-              <label class="mode-option"><input type="radio" name="p-rounding" value="0" /> Καμία</label>
-              <label class="mode-option"><input type="radio" name="p-rounding" value="1" /> ±€1</label>
-              <label class="mode-option"><input type="radio" name="p-rounding" value="2" /> ±€2</label>
-              <label class="mode-option"><input type="radio" name="p-rounding" value="5" /> ±€5</label>
-            </div>
-          </div>
-
-          <div class="p-divider"></div>
-
-          <!-- Two-way -->
-          <div class="p-section">
-            <label class="p-label">Μετ' επιστροφής (Two-way)</label>
-            <label class="intra-toggle">
-              <input type="checkbox" id="p-twoway" onchange="toggleTwoway()" />
-              Ρώτα αν θέλει επιστροφή &amp; δίνε έκπτωση
-            </label>
-            <div id="p-twoway-extra" style="display:none;">
-              <div class="p-field" style="margin-top:6px;">
-                <label>Έκπτωση two-way</label>
-                <div class="p-input-wrap"><input type="number" id="p-twoway-pct" class="p-input p-input-sm" min="0" max="50" value="10" /><span class="p-unit">%</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-divider"></div>
-
-          <!-- Night surcharge -->
-          <div class="p-section">
-            <label class="p-label">Νυχτερινή χρέωση</label>
-            <label class="intra-toggle">
-              <input type="checkbox" id="p-night" onchange="toggleNight()" />
-              Εφάρμοσε επιπλέον χρέωση νύχτας
-            </label>
-            <div id="p-night-extra" style="display:none;">
-              <div class="p-fields" style="margin-top:6px;">
+            <div class="p-section" id="p-perkm-section">
+              <label class="p-label">Τιμοκατάλογος ανά χλμ</label>
+              <div class="p-fields">
                 <div class="p-field">
-                  <label>Επιπλέον %</label>
-                  <div class="p-input-wrap"><input type="number" id="p-night-pct" class="p-input p-input-sm" min="0" max="100" value="20" /><span class="p-unit">%</span></div>
+                  <label>Εκκίνηση</label>
+                  <div class="p-input-wrap"><input type="number" id="p-base-fare" class="p-input p-input-sm" step="0.01" min="0" value="2.00" /><span class="p-unit" id="p-cur-lbl1">€</span></div>
                 </div>
                 <div class="p-field">
-                  <label>Από</label>
-                  <input type="time" id="p-night-from" class="p-input p-input-time" value="22:00" />
+                  <label>Τιμή / χλμ</label>
+                  <div class="p-input-wrap"><input type="number" id="p-per-km" class="p-input p-input-sm" step="0.01" min="0" value="0.92" /><span class="p-unit" id="p-cur-lbl2">€</span></div>
                 </div>
                 <div class="p-field">
-                  <label>Έως</label>
-                  <input type="time" id="p-night-to" class="p-input p-input-time" value="06:00" />
+                  <label>Ελάχιστο</label>
+                  <div class="p-input-wrap"><input type="number" id="p-min-fare" class="p-input p-input-sm" step="0.01" min="0" value="5.00" /><span class="p-unit" id="p-cur-lbl3">€</span></div>
+                </div>
+                <div class="p-field">
+                  <label>Νόμισμα</label>
+                  <input type="text" id="p-currency" class="p-input p-input-xs" maxlength="3" value="€" oninput="updateCurrencyLabels()" />
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="p-divider"></div>
+            <div class="p-divider"></div>
 
-          <!-- Extras -->
-          <div class="p-section">
-            <label class="p-label">Extras</label>
-            <div class="p-fields">
-              <div class="p-field">
-                <label>Παιδικό κάθισμα</label>
-                <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex1">€</span><input type="number" id="p-extra-child" class="p-input p-input-sm" step="0.50" min="0" value="5" /></div>
-              </div>
-              <div class="p-field">
-                <label>Αποσκευή (+/τεμ.)</label>
-                <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex2">€</span><input type="number" id="p-extra-luggage" class="p-input p-input-sm" step="0.50" min="0" value="3" /></div>
-              </div>
-              <div class="p-field">
-                <label>Κατοικίδιο</label>
-                <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex3">€</span><input type="number" id="p-extra-pet" class="p-input p-input-sm" step="0.50" min="0" value="5" /></div>
+            <div class="p-section">
+              <label class="p-label">Στρογγυλοποίηση τιμής</label>
+              <div class="mode-options">
+                <label class="mode-option"><input type="radio" name="p-rounding" value="0" /> Καμία</label>
+                <label class="mode-option"><input type="radio" name="p-rounding" value="1" /> ±€1</label>
+                <label class="mode-option"><input type="radio" name="p-rounding" value="2" /> ±€2</label>
+                <label class="mode-option"><input type="radio" name="p-rounding" value="5" /> ±€5</label>
               </div>
             </div>
-          </div>
 
-          <div class="p-divider" id="p-routes-divider"></div>
+            <div class="p-divider"></div>
 
-          <!-- Fixed routes -->
-          <div class="p-section" id="p-routes-section">
-            <div class="p-routes-header">
-              <label class="p-label">Σταθερές Διαδρομές</label>
-              <button class="btn-sm" onclick="addRoute()">+ Προσθήκη</button>
+            <div class="p-section">
+              <label class="p-label">Μετ' επιστροφής (Two-way)</label>
+              <label class="toggle-label">
+                <input type="checkbox" id="p-twoway" onchange="toggleTwoway()" />
+                Ρώτα αν θέλει επιστροφή &amp; δίνε έκπτωση
+              </label>
+              <div id="p-twoway-extra" style="display:none;margin-top:6px;">
+                <div class="p-field">
+                  <label>Έκπτωση two-way</label>
+                  <div class="p-input-wrap"><input type="number" id="p-twoway-pct" class="p-input p-input-sm" min="0" max="50" value="10" /><span class="p-unit">%</span></div>
+                </div>
+              </div>
             </div>
-            <table class="p-routes-table">
-              <thead><tr><th style="width:42%">Αναχώρηση</th><th style="width:42%">Προορισμός</th><th style="width:10%">Τιμή</th><th style="width:6%"></th></tr></thead>
-              <tbody id="p-routes-body"></tbody>
+
+            <div class="p-divider" id="p-routes-divider"></div>
+
+            <div class="p-section" id="p-routes-section">
+              <div class="p-routes-header">
+                <label class="p-label">Σταθερές Διαδρομές</label>
+                <button class="btn-sm" onclick="addRoute()">+ Προσθήκη</button>
+              </div>
+              <table class="p-routes-table">
+                <thead><tr><th style="width:42%">Αναχώρηση</th><th style="width:42%">Προορισμός</th><th style="width:10%">Τιμή</th><th style="width:6%"></th></tr></thead>
+                <tbody id="p-routes-body"></tbody>
+              </table>
+            </div>
+
+            <div class="s-footer">
+              <button class="btn-sm primary" onclick="savePricing()">💾 Αποθήκευση</button>
+              <span class="s-hint" id="pricing-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Extras & Night ── -->
+        <div class="s-card" id="extras-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>🌙 Extras &amp; Νυχτερινή Χρέωση</h2>
+            <p>Extras επιλογές για τον πελάτη και νυχτερινό τιμολόγιο</p>
+          </div>
+          <div class="s-card-body">
+
+            <div class="p-section">
+              <label class="p-label">Νυχτερινή χρέωση</label>
+              <label class="toggle-label">
+                <input type="checkbox" id="p-night" onchange="toggleNight()" />
+                Εφάρμοσε επιπλέον χρέωση νύχτας
+              </label>
+              <div id="p-night-extra" style="display:none;margin-top:8px;">
+                <div class="p-fields">
+                  <div class="p-field">
+                    <label>Επιπλέον %</label>
+                    <div class="p-input-wrap"><input type="number" id="p-night-pct" class="p-input p-input-sm" min="0" max="100" value="20" /><span class="p-unit">%</span></div>
+                  </div>
+                  <div class="p-field">
+                    <label>Από</label>
+                    <input type="time" id="p-night-from" class="p-input p-input-time" value="22:00" />
+                  </div>
+                  <div class="p-field">
+                    <label>Έως</label>
+                    <input type="time" id="p-night-to" class="p-input p-input-time" value="06:00" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-divider"></div>
+
+            <div class="p-section">
+              <label class="p-label">Extras (εμφανίζονται στον πελάτη)</label>
+              <div class="p-fields">
+                <div class="p-field">
+                  <label>Παιδικό κάθισμα</label>
+                  <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex1">€</span><input type="number" id="p-extra-child" class="p-input p-input-sm" step="0.50" min="0" value="5" /></div>
+                </div>
+                <div class="p-field">
+                  <label>Αποσκευή (+/τεμ.)</label>
+                  <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex2">€</span><input type="number" id="p-extra-luggage" class="p-input p-input-sm" step="0.50" min="0" value="3" /></div>
+                </div>
+                <div class="p-field">
+                  <label>Κατοικίδιο</label>
+                  <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex3">€</span><input type="number" id="p-extra-pet" class="p-input p-input-sm" step="0.50" min="0" value="5" /></div>
+                </div>
+              </div>
+              <p style="font-size:0.71rem;color:var(--muted);">Βάλε 0 για να αποκλείσεις ένα extra από τον πελάτη.</p>
+            </div>
+
+            <div class="s-footer">
+              <button class="btn-sm primary" onclick="savePricing()">💾 Αποθήκευση</button>
+              <span class="s-hint" id="extras-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Vehicles ── -->
+        <div class="s-card" id="vehicles-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>🚗 Τύποι Οχημάτων</h2>
+            <p>Ορίστε τα διαθέσιμα οχήματα και την επιπλέον χρέωση καθενός</p>
+          </div>
+          <div class="s-card-body">
+            <table class="v-table">
+              <thead>
+                <tr>
+                  <th style="width:7%">Icon</th>
+                  <th style="width:22%">Τίτλος</th>
+                  <th style="width:13%">Άτομα</th>
+                  <th style="width:20%">Επιπλέον χρέωση</th>
+                  <th style="width:12%">Ποσό</th>
+                  <th style="width:10%;text-align:center">Ενεργό</th>
+                  <th style="width:6%"></th>
+                </tr>
+              </thead>
+              <tbody id="vehicles-tbody"></tbody>
             </table>
-          </div>
-
-          <!-- Footer -->
-          <div class="pricing-footer">
-            <button class="btn-sm primary" onclick="savePricing()">💾 Αποθήκευση</button>
-            <span class="zones-hint" id="pricing-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Table -->
-      <div class="table-card">
-        <div class="table-header">
-          <h2>Λίστα Κρατήσεων</h2>
-          <div class="table-controls">
-            <div class="search-wrap">
-              <input type="text" id="search" placeholder="Αναζήτηση..." oninput="renderTable()" />
-            </div>
-            <div class="filter-tabs">
-              <div class="tab active" data-filter="all">Όλες</div>
-              <div class="tab" data-filter="pending">Αναμονή</div>
-              <div class="tab" data-filter="confirmed">Επιβεβαιωμένες</div>
-              <div class="tab" data-filter="cancelled">Ακυρωμένες</div>
+            <button class="btn-sm" onclick="addVehicleRow()" style="align-self:flex-start;">+ Προσθήκη οχήματος</button>
+            <div class="s-footer">
+              <button class="btn-sm primary" onclick="saveVehicles()">💾 Αποθήκευση</button>
+              <span class="s-hint" id="vehicles-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
             </div>
           </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Πελάτης</th>
-              <th class="hide-sm">Επιχείρηση</th>
-              <th class="hide-sm">Υπηρεσία</th>
-              <th>Ημ/νία</th>
-              <th class="hide-sm">Ώρα</th>
-              <th>Κατάσταση</th>
-              <th>Ενέργειες</th>
-            </tr>
-          </thead>
-          <tbody id="bookings-body"></tbody>
-        </table>
-        <div class="empty" id="empty-state" style="display:none;">
-          <div class="empty-icon">📭</div>
-          Δεν βρέθηκαν κρατήσεις.
-        </div>
-      </div>
 
-    </div>
-  </div>
-</div>
+        <!-- ── AI Assistant ── -->
+        <div class="s-card" id="ai-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>🤖 AI Assistant Ρυθμίσεων</h2>
+            <p>Γράψε εντολή στα ελληνικά και το AI θα ενημερώσει τις ρυθμίσεις αυτόματα</p>
+          </div>
+          <div class="s-card-body">
+            <div class="ai-examples">
+              <span>Παραδείγματα:</span>
+              <button class="ai-chip" onclick="fillAI(this)">Πρόσθεσε Ρέθυμνο στις περιοχές</button>
+              <button class="ai-chip" onclick="fillAI(this)">Ενεργοποίησε νυχτερινή +25%</button>
+              <button class="ai-chip" onclick="fillAI(this)">Άλλαξε τιμή Ηράκλειο→Χανιά σε €55</button>
+              <button class="ai-chip" onclick="fillAI(this)">Απενεργοποίησε το VIP όχημα</button>
+              <button class="ai-chip" onclick="fillAI(this)">Βάλε παιδικό κάθισμα στα €8</button>
+            </div>
+            <textarea id="ai-input" class="ai-textarea" rows="3"
+              placeholder="π.χ. Πρόσθεσε Αθήνα στις whitelist περιοχές και αύξησε τη βασική εκκίνηση σε €3"></textarea>
+            <div class="s-footer">
+              <button class="btn-sm primary" id="ai-btn" onclick="sendAICommand()">▶ Εκτέλεση</button>
+              <span class="s-hint" id="ai-hint"></span>
+            </div>
+            <div id="ai-response" class="ai-response" style="display:none;"></div>
+          </div>
+        </div>
+
+      </div><!-- /tab-settings -->
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
 
 <div class="modal-overlay" id="logout-modal">
   <div class="modal">
@@ -535,13 +628,25 @@
 <div id="toast"></div>
 
 <script>
-  let allBookings  = [];
+  let allBookings   = [];
   let allBusinesses = [];
-  let activeFilter = 'all';
-  let activeBizId  = null; // null = show all
+  let activeFilter  = 'all';
+  let activeBizId   = null;
+  let activeTab     = 'bookings';
 
   document.getElementById('topbar-date').textContent =
     new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tab-bookings').style.display = tab === 'bookings' ? '' : 'none';
+    document.getElementById('tab-settings').style.display = tab === 'settings' ? '' : 'none';
+    document.getElementById('tab-btn-bookings').classList.toggle('active', tab === 'bookings');
+    document.getElementById('tab-btn-settings').classList.toggle('active', tab === 'settings');
+    if (tab === 'settings') loadSettings(activeBizId);
+  }
 
   // ── Data loading ──────────────────────────────────────────────────────────
 
@@ -568,6 +673,11 @@
     }
   }
 
+  function refreshAll() {
+    loadAll();
+    if (activeTab === 'settings') loadSettings(activeBizId);
+  }
+
   function renderStats(s) {
     document.getElementById('stat-total').textContent     = s.total     ?? 0;
     document.getElementById('stat-confirmed').textContent = s.confirmed ?? 0;
@@ -575,12 +685,11 @@
     document.getElementById('stat-cancelled').textContent = s.cancelled ?? 0;
   }
 
-  // ── Sidebar business list ─────────────────────────────────────────────────
-
-  const BIZ_COLORS = ['#1a1a2e','#7c3aed','#0891b2','#16a34a','#b45309','#dc2626'];
+  // ── Sidebar ───────────────────────────────────────────────────────────────
 
   function bizColor(biz) {
-    return biz.theme_color || BIZ_COLORS[allBusinesses.indexOf(biz) % BIZ_COLORS.length];
+    const defaults = ['#1a1a2e','#7c3aed','#0891b2','#16a34a','#b45309','#dc2626'];
+    return biz.theme_color || defaults[allBusinesses.indexOf(biz) % defaults.length];
   }
 
   function renderSidebarBiz() {
@@ -609,33 +718,31 @@
       ? (allBusinesses.find(b => b.business_id === bizId)?.name ?? bizId)
       : 'Όλες οι Κρατήσεις';
     loadAll();
-    loadZones(bizId);
-    loadPricing(bizId);
+    if (activeTab === 'settings') loadSettings(bizId);
   }
 
-  // ── Business banner ───────────────────────────────────────────────────────
+  // ── Banner ────────────────────────────────────────────────────────────────
 
   function renderBanner() {
-    const biz = activeBizId ? allBusinesses.find(b => b.business_id === activeBizId) : null;
-    const dot  = document.getElementById('biz-banner-dot');
-    const name = document.getElementById('biz-banner-name');
-    const subs = document.getElementById('biz-banner-services');
+    const biz   = activeBizId ? allBusinesses.find(b => b.business_id === activeBizId) : null;
+    const dot   = document.getElementById('biz-banner-dot');
+    const name  = document.getElementById('biz-banner-name');
+    const subs  = document.getElementById('biz-banner-services');
     const right = document.getElementById('biz-banner-right');
-
     if (biz) {
       dot.style.background = biz.theme_color || '#6b7280';
-      name.textContent = biz.name;
-      subs.textContent = biz.services.slice(0, 4).map(s => s.name).join(' · ');
+      name.textContent  = biz.name;
+      subs.textContent  = biz.services.slice(0, 4).map(s => s.name).join(' · ');
       right.textContent = `${biz.services.length} υπηρεσίες`;
     } else {
       dot.style.background = '#6b7280';
-      name.textContent = 'Όλες οι επιχειρήσεις';
-      subs.textContent = allBusinesses.map(b => b.name).join(' · ');
+      name.textContent  = 'Όλες οι επιχειρήσεις';
+      subs.textContent  = allBusinesses.map(b => b.name).join(' · ');
       right.textContent = `${allBusinesses.length} επιχειρήσεις`;
     }
   }
 
-  // ── Table ─────────────────────────────────────────────────────────────────
+  // ── Bookings table ────────────────────────────────────────────────────────
 
   function renderTable() {
     const q = document.getElementById('search').value.toLowerCase();
@@ -644,16 +751,13 @@
       if (!q) return true;
       return [b.name, b.email, b.phone, b.service, b.date, b.business_id].some(v => v && String(v).toLowerCase().includes(q));
     });
-
     const tbody = document.getElementById('bookings-body');
     const empty = document.getElementById('empty-state');
     if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
     empty.style.display = 'none';
-
     const statusLabel = { confirmed: 'Επιβεβαιωμένη', pending: 'Αναμονή', cancelled: 'Ακυρωμένη' };
-
     tbody.innerHTML = filtered.map(b => {
-      const biz = allBusinesses.find(x => x.business_id === b.business_id);
+      const biz   = allBusinesses.find(x => x.business_id === b.business_id);
       const color = biz?.theme_color || '#6b7280';
       return `
         <tr id="row-${b.id}">
@@ -662,12 +766,8 @@
             <div class="customer-name">${esc(b.name)}</div>
             <div class="customer-meta">${esc(b.email)}${b.phone ? ' · ' + esc(b.phone) : ''}</div>
           </td>
-          <td class="hide-sm">
-            <span class="biz-chip" style="background:${color}22;color:${color};">${esc(biz?.name ?? b.business_id ?? '—')}</span>
-          </td>
-          <td class="hide-sm">
-            ${b.service ? `<span class="service-chip">${esc(b.service)}</span>` : '<span style="color:var(--muted);font-style:italic;font-size:0.75rem;">—</span>'}
-          </td>
+          <td class="hide-sm"><span class="biz-chip" style="background:${color}22;color:${color};">${esc(biz?.name ?? b.business_id ?? '—')}</span></td>
+          <td class="hide-sm">${b.service ? `<span class="service-chip">${esc(b.service)}</span>` : '<span style="color:var(--muted);font-style:italic;font-size:0.75rem;">—</span>'}</td>
           <td style="white-space:nowrap;">
             <div style="font-size:0.82rem;">${formatDate(b.date)}</div>
             <div style="font-size:0.7rem;color:var(--muted);">${b.time}</div>
@@ -684,13 +784,10 @@
     }).join('');
   }
 
-  // ── Actions ───────────────────────────────────────────────────────────────
-
   async function updateStatus(id, status) {
     try {
       const res = await fetch(`/api/bookings/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
       if (res.status === 401) { location.href = '/admin/login'; return; }
@@ -699,13 +796,334 @@
       const idx = allBookings.findIndex(b => b.id === id);
       if (idx !== -1) allBookings[idx] = data.booking;
       const bizParam = activeBizId ? `?businessId=${activeBizId}` : '';
-      const sRes = await fetch(`/api/bookings/stats${bizParam}`);
-      renderStats(await sRes.json());
+      renderStats(await (await fetch(`/api/bookings/stats${bizParam}`)).json());
       renderSidebarBiz();
       renderTable();
       showToast(status === 'confirmed' ? '✅ Επιβεβαιώθηκε!' : '❌ Ακυρώθηκε.', status === 'confirmed' ? 'success' : 'info');
     } catch {
       showToast('Σφάλμα ενημέρωσης', 'error');
+    }
+  }
+
+  // ── Settings: load all cards ──────────────────────────────────────────────
+
+  async function loadSettings(bizId) {
+    const placeholder = document.getElementById('settings-placeholder');
+    const settingCards = ['zones-card','pricing-card','extras-card','vehicles-card','ai-card'];
+
+    if (!bizId) {
+      placeholder.style.display = '';
+      settingCards.forEach(id => document.getElementById(id).style.display = 'none');
+      return;
+    }
+
+    placeholder.style.display = 'none';
+
+    try {
+      const res = await fetch(`/api/business/${bizId}`);
+      if (!res.ok) return;
+      const biz = await res.json();
+      const isTaxi = biz.type === 'taxi';
+
+      document.getElementById('zones-card').style.display    = '';
+      document.getElementById('pricing-card').style.display  = isTaxi ? '' : 'none';
+      document.getElementById('extras-card').style.display   = isTaxi ? '' : 'none';
+      document.getElementById('vehicles-card').style.display = isTaxi ? '' : 'none';
+      document.getElementById('ai-card').style.display       = isTaxi ? '' : 'none';
+
+      // Zones
+      const z = biz.config?.zones || { mode: 'open', areas: [], intra_zone: false };
+      document.querySelectorAll('input[name="zone-mode"]').forEach(r => { r.checked = r.value === (z.mode || 'open'); });
+      document.getElementById('zones-areas').value = (z.areas || []).join('\n');
+      document.getElementById('zones-intra').checked = z.intra_zone === true;
+      toggleAreasRow();
+
+      if (!isTaxi) return;
+
+      // Pricing
+      const p   = biz.config?.pricing || {};
+      const cur = p.currency || '€';
+      document.querySelectorAll('input[name="p-mode"]').forEach(r => { r.checked = r.value === (p.mode || 'combined'); });
+      document.getElementById('p-base-fare').value  = p.base_fare    ?? 2.00;
+      document.getElementById('p-per-km').value     = p.price_per_km ?? 0.92;
+      document.getElementById('p-min-fare').value   = p.min_fare     ?? 5.00;
+      document.getElementById('p-currency').value   = cur;
+      document.querySelectorAll('input[name="p-rounding"]').forEach(r => { r.checked = String(r.value) === String(p.rounding ?? 0); });
+      document.getElementById('p-twoway').checked   = !!p.two_way_enabled;
+      document.getElementById('p-twoway-pct').value = p.two_way_discount_pct ?? 10;
+      document.getElementById('p-night').checked    = !!p.night_surcharge_enabled;
+      document.getElementById('p-night-pct').value  = p.night_surcharge_pct  ?? 20;
+      document.getElementById('p-night-from').value = p.night_from ?? '22:00';
+      document.getElementById('p-night-to').value   = p.night_to   ?? '06:00';
+      document.getElementById('p-extra-child').value   = p.extras?.child_seat    ?? 5;
+      document.getElementById('p-extra-luggage').value = p.extras?.extra_luggage ?? 3;
+      document.getElementById('p-extra-pet').value     = p.extras?.pet           ?? 5;
+      updateCurrencyLabels();
+      toggleTwoway();
+      toggleNight();
+      togglePricingMode();
+      renderRoutesTable(p.fixed_routes || []);
+
+      // Vehicles
+      renderVehiclesTable(biz.config?.vehicles || []);
+
+    } catch { /* ignore */ }
+  }
+
+  // ── Zones ─────────────────────────────────────────────────────────────────
+
+  function toggleAreasRow() {
+    const mode = document.querySelector('input[name="zone-mode"]:checked')?.value;
+    document.getElementById('areas-row').style.display = mode === 'open' ? 'none' : '';
+  }
+  document.querySelectorAll('input[name="zone-mode"]').forEach(r => r.addEventListener('change', toggleAreasRow));
+
+  async function saveZones() {
+    if (!activeBizId) return;
+    const mode      = document.querySelector('input[name="zone-mode"]:checked')?.value || 'open';
+    const areas     = document.getElementById('zones-areas').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const intra_zone = document.getElementById('zones-intra').checked;
+    const hint = document.getElementById('zones-hint');
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/zones`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zones: { mode, areas, intra_zone } }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error();
+      hint.textContent = '✅ Αποθηκεύτηκε!'; hint.style.color = 'var(--green)';
+      showToast('✅ Ζώνες αποθηκεύτηκαν!', 'success');
+      setTimeout(() => { hint.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; hint.style.color = ''; }, 3000);
+    } catch { showToast('Σφάλμα αποθήκευσης ζωνών', 'error'); }
+  }
+
+  // ── Pricing ───────────────────────────────────────────────────────────────
+
+  function updateCurrencyLabels() {
+    const cur = document.getElementById('p-currency').value || '€';
+    ['p-cur-lbl1','p-cur-lbl2','p-cur-lbl3','p-cur-ex1','p-cur-ex2','p-cur-ex3'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.textContent = cur;
+    });
+  }
+
+  function togglePricingMode() {
+    const mode = document.querySelector('input[name="p-mode"]:checked')?.value || 'combined';
+    document.getElementById('p-perkm-section').style.display  = mode === 'fixed'  ? 'none' : 'flex';
+    document.getElementById('p-routes-section').style.display = mode === 'per_km' ? 'none' : 'block';
+    document.getElementById('p-routes-divider').style.display = mode === 'per_km' ? 'none' : 'block';
+  }
+  function toggleTwoway() {
+    document.getElementById('p-twoway-extra').style.display = document.getElementById('p-twoway').checked ? 'block' : 'none';
+  }
+  function toggleNight() {
+    document.getElementById('p-night-extra').style.display = document.getElementById('p-night').checked ? 'block' : 'none';
+  }
+
+  function renderRoutesTable(routes) {
+    const tbody = document.getElementById('p-routes-body');
+    if (!routes.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);font-style:italic;font-size:0.78rem;text-align:center;padding:14px;">Δεν υπάρχουν σταθερές διαδρομές</td></tr>';
+      return;
+    }
+    tbody.innerHTML = routes.map((r, i) => `
+      <tr>
+        <td><input class="p-route-input" value="${esc(r.origin)}"      placeholder="Αναχώρηση..." /></td>
+        <td><input class="p-route-input" value="${esc(r.destination)}" placeholder="Προορισμός..." /></td>
+        <td><input class="p-route-input p-route-price" type="number" step="0.50" min="0" value="${r.price}" /></td>
+        <td><button class="btn-del" onclick="removeRoute(${i})">🗑</button></td>
+      </tr>`).join('');
+  }
+
+  function collectRoutes() {
+    return [...document.querySelectorAll('#p-routes-body tr')].map(tr => {
+      const inputs = tr.querySelectorAll('input');
+      if (inputs.length < 3) return null;
+      return { origin: inputs[0].value.trim(), destination: inputs[1].value.trim(), price: parseFloat(inputs[2].value) || 0 };
+    }).filter(r => r && (r.origin || r.destination));
+  }
+
+  function addRoute() {
+    const routes = collectRoutes();
+    routes.push({ origin: '', destination: '', price: 0 });
+    renderRoutesTable(routes);
+    document.querySelectorAll('#p-routes-body tr').at(-1)?.querySelector('input')?.focus();
+  }
+
+  function removeRoute(idx) {
+    const routes = collectRoutes(); routes.splice(idx, 1); renderRoutesTable(routes);
+  }
+
+  function collectPricing() {
+    return {
+      mode:                    document.querySelector('input[name="p-mode"]:checked')?.value || 'combined',
+      base_fare:               parseFloat(document.getElementById('p-base-fare').value)  || 0,
+      price_per_km:            parseFloat(document.getElementById('p-per-km').value)     || 0,
+      min_fare:                parseFloat(document.getElementById('p-min-fare').value)   || 0,
+      currency:                document.getElementById('p-currency').value               || '€',
+      rounding:                parseInt(document.querySelector('input[name="p-rounding"]:checked')?.value || '0'),
+      two_way_enabled:         document.getElementById('p-twoway').checked,
+      two_way_discount_pct:    parseFloat(document.getElementById('p-twoway-pct').value) || 0,
+      night_surcharge_enabled: document.getElementById('p-night').checked,
+      night_surcharge_pct:     parseFloat(document.getElementById('p-night-pct').value)  || 0,
+      night_from:              document.getElementById('p-night-from').value || '22:00',
+      night_to:                document.getElementById('p-night-to').value   || '06:00',
+      extras: {
+        child_seat:    parseFloat(document.getElementById('p-extra-child').value)   || 0,
+        extra_luggage: parseFloat(document.getElementById('p-extra-luggage').value) || 0,
+        pet:           parseFloat(document.getElementById('p-extra-pet').value)     || 0,
+      },
+      fixed_routes: collectRoutes(),
+    };
+  }
+
+  async function savePricing() {
+    if (!activeBizId) return;
+    const pricing = collectPricing();
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/pricing`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pricing }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const idx = allBusinesses.findIndex(b => b.business_id === activeBizId);
+      if (idx !== -1) allBusinesses[idx] = data.business;
+      ['pricing-hint','extras-hint'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = '✅ Αποθηκεύτηκε!'; el.style.color = 'var(--green)'; }
+      });
+      showToast('✅ Τιμολόγιο αποθηκεύτηκε!', 'success');
+      setTimeout(() => ['pricing-hint','extras-hint'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; el.style.color = ''; }
+      }), 3000);
+    } catch (e) { showToast('Σφάλμα αποθήκευσης: ' + e.message, 'error'); }
+  }
+
+  // ── Vehicles ──────────────────────────────────────────────────────────────
+
+  function renderVehiclesTable(vehicles) {
+    const tbody = document.getElementById('vehicles-tbody');
+    if (!vehicles.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);font-style:italic;font-size:0.78rem;padding:16px;">Δεν υπάρχουν οχήματα. Πάτα "+ Προσθήκη".</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = vehicles.map((v, i) => `
+      <tr>
+        <td><input class="v-input v-input-icon" data-col="icon"     value="${esc(v.icon || '')}"     placeholder="🚗" /></td>
+        <td><input class="v-input"              data-col="label"    value="${esc(v.label || '')}"    placeholder="Economy" /></td>
+        <td><input class="v-input v-input-cap"  data-col="capacity" value="${esc(v.capacity || '')}" placeholder="1-4" /></td>
+        <td>
+          <select class="v-select" data-col="surcharge_type" onchange="onSurchargeTypeChange(this)">
+            <option value="none"  ${v.surcharge_type === 'none'  ? 'selected':''}>Κανένα</option>
+            <option value="fixed" ${v.surcharge_type === 'fixed' ? 'selected':''}>+€ σταθερό</option>
+            <option value="pct"   ${v.surcharge_type === 'pct'   ? 'selected':''}>+% ποσοστό</option>
+          </select>
+        </td>
+        <td>
+          <input class="v-input v-input-val" data-col="surcharge_value" type="number" step="0.5" min="0"
+            value="${v.surcharge_value || 0}"
+            style="${v.surcharge_type === 'none' ? 'opacity:0.3;pointer-events:none;' : ''}" />
+        </td>
+        <td style="text-align:center;">
+          <input type="checkbox" class="v-toggle" data-col="enabled" ${v.enabled !== false ? 'checked' : ''} />
+        </td>
+        <td><button class="btn-del" onclick="removeVehicleRow(${i})">🗑</button></td>
+      </tr>`).join('');
+  }
+
+  function onSurchargeTypeChange(sel) {
+    const valInput = sel.closest('tr').querySelector('[data-col="surcharge_value"]');
+    if (valInput) {
+      const isNone = sel.value === 'none';
+      valInput.style.opacity       = isNone ? '0.3' : '1';
+      valInput.style.pointerEvents = isNone ? 'none' : '';
+    }
+  }
+
+  function collectVehicles() {
+    return [...document.querySelectorAll('#vehicles-tbody tr')].map(tr => {
+      const label = tr.querySelector('[data-col="label"]')?.value.trim() || '';
+      if (!label) return null;
+      return {
+        id:              label.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        label,
+        icon:            tr.querySelector('[data-col="icon"]')?.value.trim() || '',
+        capacity:        tr.querySelector('[data-col="capacity"]')?.value.trim() || '',
+        surcharge_type:  tr.querySelector('[data-col="surcharge_type"]')?.value || 'none',
+        surcharge_value: parseFloat(tr.querySelector('[data-col="surcharge_value"]')?.value) || 0,
+        enabled:         tr.querySelector('[data-col="enabled"]')?.checked ?? true,
+      };
+    }).filter(Boolean);
+  }
+
+  function addVehicleRow() {
+    const vehicles = collectVehicles();
+    vehicles.push({ id: '', label: '', icon: '🚗', capacity: '1-4', surcharge_type: 'none', surcharge_value: 0, enabled: true });
+    renderVehiclesTable(vehicles);
+    document.querySelectorAll('#vehicles-tbody tr').at(-1)?.querySelector('input')?.focus();
+  }
+
+  function removeVehicleRow(idx) {
+    const v = collectVehicles(); v.splice(idx, 1); renderVehiclesTable(v);
+  }
+
+  async function saveVehicles() {
+    if (!activeBizId) return;
+    const vehicles = collectVehicles();
+    const hint = document.getElementById('vehicles-hint');
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/vehicles`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vehicles }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const idx = allBusinesses.findIndex(b => b.business_id === activeBizId);
+      if (idx !== -1) allBusinesses[idx] = data.business;
+      hint.textContent = '✅ Αποθηκεύτηκε!'; hint.style.color = 'var(--green)';
+      showToast('✅ Οχήματα αποθηκεύτηκαν!', 'success');
+      setTimeout(() => { hint.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; hint.style.color = ''; }, 3000);
+    } catch (e) { showToast('Σφάλμα αποθήκευσης: ' + e.message, 'error'); }
+  }
+
+  // ── AI Assistant ──────────────────────────────────────────────────────────
+
+  function fillAI(btn) {
+    document.getElementById('ai-input').value = btn.textContent.trim();
+    document.getElementById('ai-input').focus();
+  }
+
+  async function sendAICommand() {
+    if (!activeBizId) return;
+    const message = document.getElementById('ai-input').value.trim();
+    if (!message) return;
+    const btn  = document.getElementById('ai-btn');
+    const resp = document.getElementById('ai-response');
+    btn.disabled = true; btn.textContent = '⏳ Επεξεργασία…';
+    resp.style.display = 'none';
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/ai-settings`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      const data = await res.json();
+      resp.textContent   = data.message || (res.ok ? 'Εκτελέστηκε.' : 'Σφάλμα.');
+      resp.className     = 'ai-response' + (res.ok ? '' : ' error');
+      resp.style.display = '';
+      if (res.ok) {
+        showToast('✅ Ρυθμίσεις ενημερώθηκαν!', 'success');
+        await loadSettings(activeBizId);
+      }
+    } catch {
+      resp.textContent = 'Σφάλμα επικοινωνίας.';
+      resp.className   = 'ai-response error';
+      resp.style.display = '';
+    } finally {
+      btn.disabled = false; btn.textContent = '▶ Εκτέλεση';
     }
   }
 
@@ -731,203 +1149,14 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
   }
 
-  document.querySelectorAll('.tab').forEach(tab => {
+  document.querySelectorAll('.ftab').forEach(tab => {
     tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       activeFilter = tab.dataset.filter;
       renderTable();
     });
   });
-
-  // ── Zones ─────────────────────────────────────────────────────────────────
-
-  async function loadZones(bizId) {
-    const card = document.getElementById('zones-card');
-    if (!bizId) { card.style.display = 'none'; return; }
-    card.style.display = 'block';
-    try {
-      const res = await fetch(`/api/business/${bizId}`);
-      if (!res.ok) return;
-      const biz = await res.json();
-      const z = biz.config?.zones || { mode: 'open', areas: [], intra_zone: false };
-      document.querySelectorAll('input[name="zone-mode"]').forEach(r => { r.checked = r.value === (z.mode || 'open'); });
-      document.getElementById('zones-areas').value = (z.areas || []).join('\n');
-      document.getElementById('zones-intra').checked = z.intra_zone === true;
-      toggleAreasRow();
-    } catch { /* ignore */ }
-  }
-
-  function toggleAreasRow() {
-    const mode = document.querySelector('input[name="zone-mode"]:checked')?.value;
-    document.getElementById('areas-row').style.display = mode === 'open' ? 'none' : 'block';
-  }
-
-  document.querySelectorAll('input[name="zone-mode"]').forEach(r =>
-    r.addEventListener('change', toggleAreasRow));
-
-  async function saveZones() {
-    if (!activeBizId) return;
-    const mode = document.querySelector('input[name="zone-mode"]:checked')?.value || 'open';
-    const areas = document.getElementById('zones-areas').value
-      .split('\n').map(s => s.trim()).filter(Boolean);
-    const intra_zone = document.getElementById('zones-intra').checked;
-    const hint = document.getElementById('zones-hint');
-    try {
-      const res = await fetch(`/api/admin/business/${activeBizId}/zones`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zones: { mode, areas, intra_zone } }),
-      });
-      if (res.status === 401) { location.href = '/admin/login'; return; }
-      if (!res.ok) throw new Error();
-      hint.textContent = '✅ Αποθηκεύτηκε!';
-      hint.style.color = 'var(--green)';
-      showToast('✅ Ζώνες αποθηκεύτηκαν!', 'success');
-      setTimeout(() => { hint.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; hint.style.color = ''; }, 3000);
-    } catch {
-      showToast('Σφάλμα αποθήκευσης ζωνών', 'error');
-    }
-  }
-
-  // ── Pricing ───────────────────────────────────────────────────────────────
-
-  async function loadPricing(bizId) {
-    const card = document.getElementById('pricing-card');
-    if (!bizId) { card.style.display = 'none'; return; }
-    const biz = allBusinesses.find(b => b.business_id === bizId);
-    if (!biz || biz.type !== 'taxi') { card.style.display = 'none'; return; }
-    card.style.display = 'block';
-    const p = biz.config?.pricing || {};
-    const cur = p.currency || '€';
-
-    document.querySelectorAll('input[name="p-mode"]').forEach(r => { r.checked = r.value === (p.mode || 'combined'); });
-    document.getElementById('p-base-fare').value    = p.base_fare    ?? 2.00;
-    document.getElementById('p-per-km').value       = p.price_per_km ?? 0.92;
-    document.getElementById('p-min-fare').value     = p.min_fare     ?? 5.00;
-    document.getElementById('p-currency').value     = cur;
-    document.querySelectorAll('input[name="p-rounding"]').forEach(r => { r.checked = String(r.value) === String(p.rounding ?? 0); });
-    document.getElementById('p-twoway').checked     = !!p.two_way_enabled;
-    document.getElementById('p-twoway-pct').value   = p.two_way_discount_pct ?? 10;
-    document.getElementById('p-night').checked      = !!p.night_surcharge_enabled;
-    document.getElementById('p-night-pct').value    = p.night_surcharge_pct  ?? 20;
-    document.getElementById('p-night-from').value   = p.night_from ?? '22:00';
-    document.getElementById('p-night-to').value     = p.night_to   ?? '06:00';
-    document.getElementById('p-extra-child').value   = p.extras?.child_seat    ?? 5;
-    document.getElementById('p-extra-luggage').value = p.extras?.extra_luggage ?? 3;
-    document.getElementById('p-extra-pet').value     = p.extras?.pet           ?? 5;
-
-    updateCurrencyLabels();
-    toggleTwoway();
-    toggleNight();
-    togglePricingMode();
-    renderRoutesTable(p.fixed_routes || []);
-  }
-
-  function updateCurrencyLabels() {
-    const cur = document.getElementById('p-currency').value || '€';
-    ['p-cur-lbl1','p-cur-lbl2','p-cur-lbl3','p-cur-ex1','p-cur-ex2','p-cur-ex3'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = cur;
-    });
-  }
-
-  function togglePricingMode() {
-    const mode = document.querySelector('input[name="p-mode"]:checked')?.value || 'combined';
-    document.getElementById('p-perkm-section').style.display  = mode === 'fixed'  ? 'none' : 'flex';
-    document.getElementById('p-routes-section').style.display = mode === 'per_km' ? 'none' : 'block';
-    document.getElementById('p-routes-divider').style.display = mode === 'per_km' ? 'none' : 'block';
-  }
-
-  function toggleTwoway() {
-    document.getElementById('p-twoway-extra').style.display = document.getElementById('p-twoway').checked ? 'block' : 'none';
-  }
-  function toggleNight() {
-    document.getElementById('p-night-extra').style.display = document.getElementById('p-night').checked ? 'block' : 'none';
-  }
-
-  function renderRoutesTable(routes) {
-    const tbody = document.getElementById('p-routes-body');
-    if (!routes.length) {
-      tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);font-style:italic;font-size:0.78rem;text-align:center;padding:14px;">Δεν υπάρχουν σταθερές διαδρομές</td></tr>';
-      return;
-    }
-    tbody.innerHTML = routes.map((r, i) => `
-      <tr>
-        <td><input class="p-route-input" data-col="origin" data-idx="${i}" value="${esc(r.origin)}" placeholder="Αναχώρηση..." /></td>
-        <td><input class="p-route-input" data-col="destination" data-idx="${i}" value="${esc(r.destination)}" placeholder="Προορισμός..." /></td>
-        <td><input class="p-route-input p-route-price" data-col="price" data-idx="${i}" type="number" step="0.50" min="0" value="${r.price}" /></td>
-        <td><button class="btn-del" onclick="removeRoute(${i})" title="Διαγραφή">🗑</button></td>
-      </tr>`).join('');
-  }
-
-  function collectRoutes() {
-    return [...document.querySelectorAll('#p-routes-body tr')].map(tr => {
-      const inputs = tr.querySelectorAll('input');
-      if (inputs.length < 3) return null;
-      return { origin: inputs[0].value.trim(), destination: inputs[1].value.trim(), price: parseFloat(inputs[2].value) || 0 };
-    }).filter(r => r && (r.origin || r.destination));
-  }
-
-  function addRoute() {
-    const routes = collectRoutes();
-    routes.push({ origin: '', destination: '', price: 0 });
-    renderRoutesTable(routes);
-    const rows = document.querySelectorAll('#p-routes-body tr');
-    rows[rows.length - 1]?.querySelector('input')?.focus();
-  }
-
-  function removeRoute(idx) {
-    const routes = collectRoutes();
-    routes.splice(idx, 1);
-    renderRoutesTable(routes);
-  }
-
-  async function savePricing() {
-    if (!activeBizId) return;
-    const mode     = document.querySelector('input[name="p-mode"]:checked')?.value || 'combined';
-    const rounding = parseInt(document.querySelector('input[name="p-rounding"]:checked')?.value || '0');
-    const pricing = {
-      mode,
-      base_fare:    parseFloat(document.getElementById('p-base-fare').value)  || 0,
-      price_per_km: parseFloat(document.getElementById('p-per-km').value)     || 0,
-      min_fare:     parseFloat(document.getElementById('p-min-fare').value)   || 0,
-      currency:     document.getElementById('p-currency').value               || '€',
-      rounding,
-      two_way_enabled:      document.getElementById('p-twoway').checked,
-      two_way_discount_pct: parseFloat(document.getElementById('p-twoway-pct').value) || 0,
-      night_surcharge_enabled: document.getElementById('p-night').checked,
-      night_surcharge_pct:  parseFloat(document.getElementById('p-night-pct').value)  || 0,
-      night_from: document.getElementById('p-night-from').value || '22:00',
-      night_to:   document.getElementById('p-night-to').value   || '06:00',
-      extras: {
-        child_seat:    parseFloat(document.getElementById('p-extra-child').value)   || 0,
-        extra_luggage: parseFloat(document.getElementById('p-extra-luggage').value) || 0,
-        pet:           parseFloat(document.getElementById('p-extra-pet').value)     || 0,
-      },
-      fixed_routes: collectRoutes(),
-    };
-    const hint = document.getElementById('pricing-hint');
-    try {
-      const res = await fetch(`/api/admin/business/${activeBizId}/pricing`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pricing }),
-      });
-      if (res.status === 401) { location.href = '/admin/login'; return; }
-      if (!res.ok) throw new Error(await res.text());
-      // update local cache
-      const data = await res.json();
-      const idx = allBusinesses.findIndex(b => b.business_id === activeBizId);
-      if (idx !== -1) allBusinesses[idx] = data.business;
-      hint.textContent = '✅ Αποθηκεύτηκε!';
-      hint.style.color = 'var(--green)';
-      showToast('✅ Τιμολόγιο αποθηκεύτηκε!', 'success');
-      setTimeout(() => { hint.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; hint.style.color = ''; }, 3000);
-    } catch (e) {
-      showToast('Σφάλμα αποθήκευσης: ' + e.message, 'error');
-    }
-  }
 
   function confirmLogout() { document.getElementById('logout-modal').classList.add('open'); }
   function closeModal()    { document.getElementById('logout-modal').classList.remove('open'); }

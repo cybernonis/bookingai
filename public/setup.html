@@ -119,6 +119,44 @@
     .section-subtitle { font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; }
     .service-row.fix-route-row { grid-template-columns: 1fr 1fr 90px 36px; }
 
+    /* ── Zones (setup) ── */
+    .zone-mode-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .zone-mode-card {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 13px; border: 1.5px solid var(--border); border-radius: 7px;
+      cursor: pointer; font-size: 0.82rem; color: var(--text);
+      transition: border-color 0.15s, background 0.15s; user-select: none;
+    }
+    .zone-mode-card:has(input:checked) { border-color: var(--accent); background: rgba(47,129,247,0.12); }
+    .zone-mode-card input { width: 14px; height: 14px; accent-color: var(--accent); }
+    .zone-toggle-row { display: flex; align-items: center; gap: 9px; font-size: 0.84rem; margin-top: 10px; }
+    .zone-toggle-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+    textarea.zone-ta {
+      width: 100%; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 0.88rem; font-family: inherit;
+      resize: vertical; outline: none; transition: border-color 0.15s; line-height: 1.6;
+    }
+    textarea.zone-ta:focus { border-color: var(--accent); }
+    textarea.zone-ta::placeholder { color: var(--muted); }
+
+    /* ── Vehicles (setup) ── */
+    .v-setup-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 8px; }
+    .v-setup-table th { text-align: left; font-size: 0.72rem; font-weight: 600; color: var(--muted); padding: 4px 6px 8px; }
+    .v-setup-table td { padding: 4px 5px; vertical-align: middle; }
+    .v-setup-input {
+      width: 100%; padding: 7px 10px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 0.84rem; font-family: inherit;
+      outline: none; transition: border-color 0.15s;
+    }
+    .v-setup-input:focus { border-color: var(--accent); }
+    .v-setup-input.v-icon { width: 54px; text-align: center; }
+    .v-setup-input.v-cap  { width: 68px; }
+    .v-setup-input.v-val  { width: 64px; }
+    .v-setup-select {
+      width: 100%; padding: 7px 6px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 0.82rem; font-family: inherit; outline: none;
+    }
+
     /* ── Restaurant config ── */
     .rest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
@@ -347,6 +385,44 @@
           </div>
         </div>
         <button class="btn-add" onclick="addFixRouteRow()">+ Προσθήκη σταθερής διαδρομής</button>
+
+        <!-- Zones -->
+        <div class="section-divider"></div>
+        <div class="section-title">Ζώνες Εξυπηρέτησης</div>
+        <div class="section-subtitle">Ορίστε τις περιοχές που καλύπτει η υπηρεσία σας.</div>
+        <div class="zone-mode-options">
+          <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="whitelist" checked /> ✅ Whitelist — μόνο αυτές</label>
+          <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="blacklist" /> 🚫 Blacklist — εκτός αυτών</label>
+          <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="open" /> 🌍 Παγκόσμιο</label>
+        </div>
+        <div class="form-group" id="setup-areas-row">
+          <label>Περιοχές εξυπηρέτησης <span style="font-weight:400">(μία ανά γραμμή)</span></label>
+          <textarea class="zone-ta" id="setupZoneAreas" rows="4"
+            placeholder="Κρήτη&#10;Αεροδρόμιο Ηρακλείου&#10;Χανιά&#10;Ρέθυμνο&#10;Ηράκλειο"></textarea>
+        </div>
+        <label class="zone-toggle-row">
+          <input type="checkbox" id="setupIntraZone" />
+          Να επιτρέπονται transfers εντός της ίδιας πόλης/περιοχής
+        </label>
+
+        <!-- Vehicles -->
+        <div class="section-divider"></div>
+        <div class="section-title">Τύποι Οχημάτων</div>
+        <div class="section-subtitle">Ορίστε τα οχήματα που προσφέρετε και τυχόν επιπλέον χρέωση.</div>
+        <table class="v-setup-table" id="setupVehiclesTable">
+          <thead>
+            <tr>
+              <th style="width:8%">Icon</th>
+              <th style="width:28%">Τίτλος</th>
+              <th style="width:14%">Άτομα</th>
+              <th style="width:22%">Επιπλέον</th>
+              <th style="width:14%">Ποσό</th>
+              <th style="width:8%"></th>
+            </tr>
+          </thead>
+          <tbody id="setupVehiclesList"></tbody>
+        </table>
+        <button class="btn-add" onclick="addSetupVehicleRow()">+ Προσθήκη οχήματος</button>
       </div>
 
       <!-- Restaurant -->
@@ -486,6 +562,26 @@ function showTypeConfig() {
 
   if (selectedType === 'salon' && document.querySelectorAll('.salon-data-row').length === 0) addSalonRow();
   if (selectedType === 'clinic' && document.querySelectorAll('.clinic-data-row').length === 0) addClinicRow();
+  if (selectedType === 'taxi') {
+    // Wire zone mode toggle
+    document.querySelectorAll('input[name="setup-zone-mode"]').forEach(r =>
+      r.addEventListener('change', toggleSetupAreasRow));
+    toggleSetupAreasRow();
+    // Default vehicles if empty
+    if (document.querySelectorAll('.setup-vehicle-row').length === 0) {
+      [
+        { icon: '🚗', label: 'Economy',     capacity: '1-4', surcharge_type: 'none',  surcharge_value: 0 },
+        { icon: '🚐', label: 'Van',          capacity: '5-8', surcharge_type: 'fixed', surcharge_value: 10 },
+        { icon: '🚘', label: 'VIP/Mercedes', capacity: '1-4', surcharge_type: 'pct',   surcharge_value: 50 },
+      ].forEach(v => addSetupVehicleRow(v));
+    }
+  }
+}
+
+function toggleSetupAreasRow() {
+  const mode = document.querySelector('input[name="setup-zone-mode"]:checked')?.value;
+  const row  = document.getElementById('setup-areas-row');
+  if (row) row.style.display = mode === 'open' ? 'none' : '';
 }
 
 // ── Salon services ────────────────────────────────────────────────────────────
@@ -512,6 +608,38 @@ function addFixRouteRow() {
     <button class="btn-icon" onclick="this.closest('.service-row').remove()" title="Διαγραφή">×</button>
   `;
   document.getElementById('fixRoutesList').appendChild(row);
+}
+
+// ── Setup vehicles ────────────────────────────────────────────────────────────
+function addSetupVehicleRow(v = {}) {
+  const row = document.createElement('tr');
+  row.className = 'setup-vehicle-row';
+  const stype = v.surcharge_type || 'none';
+  const valStyle = stype === 'none' ? 'opacity:0.3;pointer-events:none;' : '';
+  row.innerHTML = `
+    <td><input class="v-setup-input v-icon" placeholder="🚗" value="${v.icon || ''}" /></td>
+    <td><input class="v-setup-input" placeholder="Economy" value="${v.label || ''}" /></td>
+    <td><input class="v-setup-input v-cap" placeholder="1-4" value="${v.capacity || ''}" /></td>
+    <td>
+      <select class="v-setup-select" onchange="onSetupSurchargeChange(this)">
+        <option value="none"  ${stype==='none'  ?'selected':''}>Κανένα</option>
+        <option value="fixed" ${stype==='fixed' ?'selected':''}>+€ σταθερό</option>
+        <option value="pct"   ${stype==='pct'   ?'selected':''}>+% ποσοστό</option>
+      </select>
+    </td>
+    <td><input class="v-setup-input v-val" type="number" step="0.5" min="0" value="${v.surcharge_value || 0}" style="${valStyle}" /></td>
+    <td><button class="btn-icon" onclick="this.closest('tr').remove()" title="Διαγραφή">×</button></td>
+  `;
+  document.getElementById('setupVehiclesList').appendChild(row);
+}
+
+function onSetupSurchargeChange(sel) {
+  const valInput = sel.closest('tr').querySelector('input[type="number"]');
+  if (valInput) {
+    const isNone = sel.value === 'none';
+    valInput.style.opacity       = isNone ? '0.3' : '1';
+    valInput.style.pointerEvents = isNone ? 'none' : '';
+  }
 }
 
 // ── Clinic specialties ────────────────────────────────────────────────────────
@@ -575,13 +703,40 @@ function collectPayload() {
       const price       = parseFloat(row.querySelector('.fix-price').value) || 0;
       if (origin && destination && price > 0) fixedRoutes.push({ origin, destination, price });
     });
+
+    const zoneMode  = document.querySelector('input[name="setup-zone-mode"]:checked')?.value || 'whitelist';
+    const zoneAreas = (document.getElementById('setupZoneAreas')?.value || '')
+      .split('\n').map(s => s.trim()).filter(Boolean);
+    const intraZone = document.getElementById('setupIntraZone')?.checked ?? false;
+
+    const vehicles = [];
+    document.querySelectorAll('.setup-vehicle-row').forEach(row => {
+      const inputs  = row.querySelectorAll('input');
+      const sel     = row.querySelector('select');
+      const label   = inputs[1]?.value.trim() || '';
+      if (!label) return;
+      vehicles.push({
+        id:              label.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        icon:            inputs[0]?.value.trim() || '',
+        label,
+        capacity:        inputs[2]?.value.trim() || '',
+        surcharge_type:  sel?.value || 'none',
+        surcharge_value: parseFloat(inputs[3]?.value) || 0,
+        enabled:         true,
+      });
+    });
+
     config = {
-      base_fare:    parseFloat(document.getElementById('taxiBase').value)    || 3.50,
-      price_per_km: parseFloat(document.getElementById('taxiPerKm').value)   || 1.50,
-      min_fare:     parseFloat(document.getElementById('taxiMin').value)     || 4.50,
-      currency:     document.getElementById('taxiCurrency').value.trim()     || '€',
-      tariff_note:  document.getElementById('taxiNote').value.trim()         || '',
-      fixed_routes: fixedRoutes,
+      pricing: {
+        mode:         'combined',
+        base_fare:    parseFloat(document.getElementById('taxiBase').value)    || 3.50,
+        price_per_km: parseFloat(document.getElementById('taxiPerKm').value)   || 1.50,
+        min_fare:     parseFloat(document.getElementById('taxiMin').value)     || 4.50,
+        currency:     document.getElementById('taxiCurrency').value.trim()     || '€',
+        fixed_routes: fixedRoutes,
+      },
+      zones:    { mode: zoneMode, areas: zoneAreas, intra_zone: intraZone },
+      vehicles,
     };
 
   } else if (selectedType === 'restaurant') {
