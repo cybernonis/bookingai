@@ -143,7 +143,7 @@ app.patch('/api/bookings/:id', (req, res) => {
 // ── Chat ──────────────────────────────────────────────────────────────────────
 
 app.post('/api/chat', async (req, res) => {
-  const { message, history, businessId = 'eclat' } = req.body;
+  const { message, history, businessId = 'eclat', lang } = req.body;
   if (!message) return res.status(400).json({ error: 'message is required' });
 
   const business = getBusinessById(businessId);
@@ -152,7 +152,7 @@ app.post('/api/chat', async (req, res) => {
   const safeHistory = Array.isArray(history) ? history : [];
   const messages = [...safeHistory, { role: 'user', content: message }];
   try {
-    const reply = await getBookingReply(message, safeHistory, business);
+    const reply = await getBookingReply(message, safeHistory, business, { lang: lang || null });
     messages.push({ role: 'assistant', content: reply });
     res.json({ reply, history: messages });
   } catch (err) {
@@ -279,8 +279,8 @@ app.post('/api/setup', (req, res) => {
     if (wl?.mode === 'single' && wl.lang) {
       langInstruction = `\nΓΛΩΣΣΑ: Απάντα ΠΑΝΤΑ στα ${LANG_NAMES[wl.lang] || wl.lang}. Μην αλλάζεις γλώσσα.`;
     } else if (wl?.mode === 'multi') {
-      const list = (wl.langs || ['el', 'en']).map(l => LANG_NAMES[l] || l).join(' / ');
-      langInstruction = `\nΓΛΩΣΣΑ: Στο πρώτο μήνυμα ρώτα ποια γλώσσα προτιμά (${list}). Έπειτα χρησιμοποίησε αυτή τη γλώσσα.`;
+      const list = (wl.langs || ['el', 'en']).map(l => LANG_NAMES[l] || l).join(', ');
+      langInstruction = `\nΓΛΩΣΣΑ: Υποστηριζόμενες γλώσσες: ${list}. Απάντα στη γλώσσα που σου δηλώνεται ανά συνεδρία.`;
     }
 
     config.system_prompt = `Είσαι AI assistant για υπηρεσία ταξί και μεταφορές "${name}". Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες 5)Όχημα βάσει λίστας 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Email για επιβεβαίωση (αν δεν θέλει πες "skip") 13)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:

@@ -11,9 +11,9 @@ import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic();
 
-export async function getBookingReply(message, history, business) {
+export async function getBookingReply(message, history, business, options = {}) {
   if (business.config?.system_prompt) {
-    return await aiChatFlow(message, history, business);
+    return await aiChatFlow(message, history, business, options.lang || null);
   }
   switch (business.type) {
     case 'taxi':       return await taxiFlow(message, history, business);
@@ -134,7 +134,9 @@ function buildPricingZoneInstructions(pricingZones) {
 
 // ── AI Chat Flow (Claude-powered) ─────────────────────────────────────────────
 
-async function aiChatFlow(message, history, business) {
+const LANG_NAMES = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', ru:'Русский' };
+
+async function aiChatFlow(message, history, business, lang) {
   const msgs = history.map(m => ({
     role: m.role,
     content: m.content === '__init__' ? 'Γεια σου.' : m.content,
@@ -147,10 +149,16 @@ async function aiChatFlow(message, history, business) {
   const vehicleRules      = buildVehicleInstructions(business.config.vehicles);
   const zoneRules         = buildZoneInstructions(business.config.zones);
   const pricingZoneRules  = buildPricingZoneInstructions(business.config.pricing_zones);
+
+  // Session language override: customer selected a specific language in the widget
+  const sessionLang = lang && LANG_NAMES[lang]
+    ? `\n\nΓΛΩΣΣΑ ΣΥΝΕΔΡΙΑΣ: Ο πελάτης επέλεξε ${LANG_NAMES[lang]}. Απάντα ΠΑΝΤΑ στα ${LANG_NAMES[lang]}. Μην αλλάξεις γλώσσα σε κανένα μήνυμα.`
+    : '';
+
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}`,
+    system: `Σήμερα είναι ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${sessionLang}`,
     messages: msgs,
   });
 
