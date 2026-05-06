@@ -611,9 +611,10 @@
               <button class="ai-chip" onclick="fillAI(this)">Άλλαξε τιμή Ηράκλειο→Χανιά σε €55</button>
               <button class="ai-chip" onclick="fillAI(this)">Απενεργοποίησε το VIP όχημα</button>
               <button class="ai-chip" onclick="fillAI(this)">Βάλε παιδικό κάθισμα στα €8</button>
-              <button class="ai-chip" onclick="fillAI(this)">Νότια ζώνη Ηρακλείου +15%</button>
+              <button class="ai-chip" onclick="fillAI(this)" title="Γεωγραφική ζώνη — αναγνωρίζει αυτόματα τα χωριά">🗺 Χωριά νότιου Ρεθύμνου +€10</button>
+              <button class="ai-chip" onclick="fillAI(this)" title="Γεωγραφική ζώνη — αναγνωρίζει αυτόματα τα χωριά">🗺 Ορεινές περιοχές βόρειας Κρήτης +20%</button>
+              <button class="ai-chip" onclick="fillAI(this)" title="Γεωγραφική ζώνη — αναγνωρίζει αυτόματα τα χωριά">🗺 Ιεράπετρα και γύρω χωριά x1.3</button>
               <button class="ai-chip" onclick="fillAI(this)">Περιοχή Λασιθίου τιμή x1.2</button>
-              <button class="ai-chip" onclick="fillAI(this)">Χωριά νότιου Ρεθύμνου +€10 επιπλέον</button>
               <button class="ai-chip" onclick="fillAI(this)">Εμφάνισε τις ζώνες χρέωσης</button>
             </div>
             <textarea id="ai-input" class="ai-textarea" rows="3"
@@ -1120,25 +1121,34 @@
       return;
     }
     const surchargeLabel = z => {
-      if (z.surcharge_type === 'pct')         return `+${z.surcharge_value}%`;
-      if (z.surcharge_type === 'fixed')       return `+€${z.surcharge_value}`;
-      if (z.surcharge_type === 'multiplier')  return `×${z.surcharge_value}`;
+      if (z.surcharge_type === 'pct')        return `+${z.surcharge_value}%`;
+      if (z.surcharge_type === 'fixed')      return `+€${z.surcharge_value}`;
+      if (z.surcharge_type === 'multiplier') return `×${z.surcharge_value}`;
       return String(z.surcharge_value);
+    };
+    const kwdPreview = (kws) => {
+      if (!Array.isArray(kws) || !kws.length) return '—';
+      const shown = kws.slice(0, 5).map(k => esc(k)).join(', ');
+      return kws.length > 5
+        ? `${shown} <span style="color:var(--accent);font-size:0.7rem;cursor:default;" title="${esc(kws.join(', '))}">+${kws.length - 5} ακόμα ℹ</span>`
+        : shown;
     };
     content.innerHTML = `
       <table class="p-routes-table" style="margin-bottom:10px;">
         <thead><tr>
           <th style="width:28%">Ζώνη</th>
-          <th style="width:13%">Χρέωση</th>
-          <th>Keywords αναγνώρισης</th>
-          <th style="width:7%"></th>
+          <th style="width:12%">Χρέωση</th>
+          <th style="width:10%">Τοποθ.</th>
+          <th>Περιοχές (preview)</th>
+          <th style="width:6%"></th>
         </tr></thead>
         <tbody>
           ${zones.map((z, i) => `
             <tr>
               <td style="font-weight:500;">${esc(z.name)}</td>
               <td><span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700;">${surchargeLabel(z)}</span></td>
-              <td style="font-size:0.74rem;color:var(--muted);">${esc((z.keywords || []).join(', '))}</td>
+              <td style="font-size:0.78rem;color:var(--muted);text-align:center;">${(z.keywords||[]).length}</td>
+              <td style="font-size:0.74rem;color:var(--muted);">${kwdPreview(z.keywords)}</td>
               <td><button class="btn-del" onclick="deletePricingZone(${i})" title="Διαγραφή">🗑</button></td>
             </tr>`).join('')}
         </tbody>

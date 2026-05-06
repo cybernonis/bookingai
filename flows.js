@@ -506,7 +506,86 @@ function restaurantFlow(message, history, business) {
 
 // ── AI Settings Command ───────────────────────────────────────────────────────
 
+// Detects commands that describe a geographic area for a pricing zone
+// (directional word + surcharge indicator)
+const GEO_DIRECTION_RE = /νότι|βόρει|ανατολι|δυτι|χωριά|χωριό|χωρι[οό]\b|ορειν|παραλι|γύρω|γυρω|κοντά|κοντα|κοντιν|ημιορειν/i;
+const SURCHARGE_RE     = /\+\s*[€$]?\s*\d|\d+\s*%|x\s*\d+[.,]?\d*|×\s*\d+|επιπλέον.*\d|\d.*επιπλέον/i;
+
+function isGeographicZoneCommand(msg) {
+  return GEO_DIRECTION_RE.test(msg) && SURCHARGE_RE.test(msg);
+}
+
+// Two-call path: Claude identifies which specific Greek places match the
+// geographic description and generates comprehensive keywords.
+async function applyGeographicZone(message, business) {
+  const existingZones = Array.isArray(business.config?.pricing_zones)
+    ? business.config.pricing_zones : [];
+
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1500,
+    system: `Είσαι ειδικός ελληνικής γεωγραφίας που βοηθά εταιρεία ταξί να ορίσει ζώνες χρέωσης.
+Ο διαχειριστής περιγράφει μια γεωγραφική ζώνη με φυσική γλώσσα.
+
+Δουλειά σου:
+1. Αναγνώρισε ποια συγκεκριμένα χωριά / περιοχές / πόλεις ανήκουν στη γεωγραφική περιγραφή
+2. Εξήγε τη χρέωση που ζητήθηκε
+3. Δημιούργησε πλήρη λίστα keywords για αναγνώριση αυτών των τοποθεσιών
+
+Επέστρεψε ΜΟΝΟ valid JSON (χωρίς markdown, χωρίς εξηγήσεις):
+{
+  "zone_name": "Σύντομο εμφανιζόμενο όνομα ζώνης",
+  "surcharge_type": "pct" ή "fixed" ή "multiplier",
+  "surcharge_value": αριθμός,
+  "keywords": ["τοποθεσία1", "τοποθεσία2", ...],
+  "preview": "5-6 κύριες τοποθεσίες χωρισμένες με κόμμα"
+}
+
+Κανόνες:
+- keywords: 10-25 ονόματα χωριών/περιοχών, μικρά γράμματα, ελληνικά, με τόνους
+- Πρόσθεσε και παραλλαγές γραφής για κάθε τοποθεσία αν χρειάζεται
+- surcharge_type "pct": +N% → surcharge_value = N (π.χ. 20 για +20%)
+- surcharge_type "fixed": +€N → surcharge_value = N (π.χ. 10 για +€10)
+- surcharge_type "multiplier": ×N → surcharge_value = N (π.χ. 1.3 για x1.3)`,
+    messages: [{ role: 'user', content: message }],
+  });
+
+  const raw = response.content[0].text.trim();
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) return { message: 'Δεν κατάφερα να αναλύσω τη γεωγραφική περιοχή. Δοκίμασε πιο συγκεκριμένα.', patch: null };
+
+  let zone;
+  try { zone = JSON.parse(match[0]); }
+  catch { return { message: 'Σφάλμα ανάλυσης γεωγραφίας. Δοκίμασε ξανά.', patch: null }; }
+
+  const newZone = {
+    id:              'geo_' + Date.now().toString(36),
+    name:            zone.zone_name,
+    surcharge_type:  zone.surcharge_type,
+    surcharge_value: zone.surcharge_value,
+    keywords:        Array.isArray(zone.keywords) ? zone.keywords : [],
+  };
+
+  let surchargeLabel;
+  if (zone.surcharge_type === 'pct')        surchargeLabel = `+${zone.surcharge_value}%`;
+  else if (zone.surcharge_type === 'fixed') surchargeLabel = `+€${zone.surcharge_value}`;
+  else                                      surchargeLabel = `×${zone.surcharge_value}`;
+
+  const preview = zone.preview || newZone.keywords.slice(0, 6).join(', ');
+  const extra   = newZone.keywords.length > 6 ? ` +${newZone.keywords.length - 6} ακόμα` : '';
+
+  return {
+    message: `✅ Ζώνη "${zone.zone_name}" (${surchargeLabel}) — ${newZone.keywords.length} τοποθεσίες\n📍 ${preview}${extra}`,
+    patch: { pricing_zones: [...existingZones, newZone] },
+  };
+}
+
 export async function applySettingsCommand(message, business) {
+  // Geographic zone commands get a dedicated two-call flow for accurate place lists
+  if (isGeographicZoneCommand(message)) {
+    return await applyGeographicZone(message, business);
+  }
+
   const configJson = JSON.stringify(business.config, null, 2);
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
@@ -522,25 +601,19 @@ ${configJson}
 - pricing: { mode, base_fare, price_per_km, min_fare, currency, rounding, two_way_enabled, two_way_discount_pct, night_surcharge_enabled, night_surcharge_pct, night_from, night_to, extras:{child_seat,extra_luggage,pet}, fixed_routes:[{origin,destination,price}] }
 - vehicles: [{ id, label, icon, capacity, surcharge_type:"none"|"fixed"|"pct", surcharge_value, enabled }]
 - pricing_zones: [{ id, name, surcharge_type:"pct"|"fixed"|"multiplier", surcharge_value, keywords:string[] }]
-  Εξήγηση pricing_zones:
-  • id: μοναδικό string (π.χ. "zone_1"), name: εμφανιζόμενο όνομα
-  • surcharge_type "pct": +N% επί της βασικής τιμής, surcharge_value = το N
-  • surcharge_type "fixed": +€N σταθερό ποσό, surcharge_value = το N
-  • surcharge_type "multiplier": τιμή × N, surcharge_value = το N (π.χ. 1.2 για x1.2)
-  • keywords: λίστα λέξεων/φράσεων (μικρά γράμματα, ελληνικά) για αναγνώριση της περιοχής
+  • surcharge_type "pct": +N%, "fixed": +€N, "multiplier": ×N
+  • keywords: λίστα λέξεων (μικρά, ελληνικά) για αναγνώριση περιοχής
 
 ΚΑΝΟΝΕΣ:
 1. Επέστρεψε ΜΟΝΟ έγκυρο JSON: {"message":"...ελληνικά...","patch":{...} ή null}
-2. Στο patch βάλε ΜΟΝΟ τα top-level keys που αλλάζουν (zones, pricing, vehicles, ή pricing_zones)
-3. Αν αλλάζεις μέρος του zones/pricing/vehicles/pricing_zones, στείλε ΟΛΟ το object/array εκείνο (όχι partial)
-4. Χρήση παραδειγμάτων:
+2. Στο patch βάλε ΜΟΝΟ τα top-level keys που αλλάζουν
+3. Αν αλλάζεις array/object στείλε ΟΛΟ το στοιχείο (όχι partial)
+4. Παραδείγματα:
    - "Πρόσθεσε Ρέθυμνο στις περιοχές" → patch: { zones: { ...currentZones, areas: [...currentAreas, "Ρέθυμνο"] } }
    - "Άλλαξε τιμή Ηράκλειο-Ρέθυμνο σε €60" → patch: { pricing: { ...currentPricing, fixed_routes: [...updatedRoutes] } }
    - "Ενεργοποίησε νυχτερινή +25%" → patch: { pricing: { ...currentPricing, night_surcharge_enabled:true, night_surcharge_pct:25 } }
-   - "Νότια ζώνη Ηρακλείου +15%" → patch: { pricing_zones: [...currentZones, { id:"zone_1", name:"Νότια ζώνη Ηρακλείου", surcharge_type:"pct", surcharge_value:15, keywords:["νότια ηράκλειο","νότιο ηράκλειο","νότια ηρακλείου"] }] }
-   - "Περιοχή Λασιθίου τιμή x1.2" → patch: { pricing_zones: [...currentZones, { id:"zone_2", name:"Περιοχή Λασιθίου", surcharge_type:"multiplier", surcharge_value:1.2, keywords:["λασίθι","λασιθίου","περιοχή λασιθίου"] }] }
-   - "Χωριά νότιου Ρεθύμνου +€10" → patch: { pricing_zones: [...currentZones, { id:"zone_3", name:"Χωριά νότιου Ρεθύμνου", surcharge_type:"fixed", surcharge_value:10, keywords:["νότιο ρέθυμνο","νότιο ρεθύμνου","χωριά ρεθύμνου"] }] }
-   - "Διέγραψε ζώνη Λασιθίου" → φιλτράρισε το pricing_zones array και patch: { pricing_zones: [filteredArray] }
+   - "Περιοχή Λασιθίου τιμή x1.2" → patch: { pricing_zones: [...currentZones, { id:"zone_1", name:"Περιοχή Λασιθίου", surcharge_type:"multiplier", surcharge_value:1.2, keywords:["λασίθι","λασιθίου","ιεράπετρα","σητεία","άγιος νικόλαος"] }] }
+   - "Διέγραψε ζώνη Λασιθίου" → φιλτράρισε το pricing_zones array, patch: { pricing_zones: [filteredArray] }
    - "Εμφάνισε ζώνες χρέωσης" → message με λίστα, patch: null
 5. Μη γράψεις τίποτα εκτός JSON`,
     messages: [{ role: 'user', content: message }],
