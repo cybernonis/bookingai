@@ -135,23 +135,6 @@
       color: #fff;
     }
 
-    #bw-lang-picker {
-      flex: 1; display: none; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 28px 24px; gap: 10px;
-    }
-    .bw-lang-title { font-size: 0.95rem; font-weight: 700; color: #1a1a2e; text-align: center; margin-bottom: 4px; }
-    .bw-lang-sub   { font-size: 0.78rem; color: #888; text-align: center; margin-bottom: 10px; }
-    .bw-lang-btn {
-      width: 100%; padding: 11px 16px; border-radius: 10px;
-      border: 1.5px solid #e0e0e0; background: #f8f9fa;
-      font-size: 0.9rem; cursor: pointer; text-align: left;
-      transition: border-color 0.15s, background 0.15s, color 0.15s;
-      display: flex; align-items: center; gap: 10px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-    .bw-lang-btn:hover { border-color: var(--bw-accent,#1a1a2e); background: var(--bw-accent,#1a1a2e); color: #fff; }
-
     @media (max-width: 420px) {
       #bw-panel { width: calc(100vw - 16px); right: 8px; bottom: 80px; }
       #bw-bubble { right: 16px; bottom: 16px; }
@@ -182,7 +165,6 @@
       </div>
       <button id="bw-close" aria-label="Close">✕</button>
     </div>
-    <div id="bw-lang-picker"></div>
     <div id="bw-messages"></div>
     <div id="bw-quick-replies"></div>
     <div id="bw-input-area">
@@ -205,10 +187,8 @@
   let widgetLangConfig = null;
   let selectedLang     = null;
 
-  const langPickerEl   = panel.querySelector('#bw-lang-picker');
   const messagesEl     = panel.querySelector('#bw-messages');
   const quickRepliesEl = panel.querySelector('#bw-quick-replies');
-  const inputAreaEl    = panel.querySelector('#bw-input-area');
   const inputEl        = panel.querySelector('#bw-input');
   const sendBtn        = panel.querySelector('#bw-send');
 
@@ -300,43 +280,35 @@
   }
 
   const LANG_INFO = {
-    el: { flag: '🇬🇷', name: 'Ελληνικά' },
     en: { flag: '🇬🇧', name: 'English' },
-    fr: { flag: '🇫🇷', name: 'Français' },
+    el: { flag: '🇬🇷', name: 'Ελληνικά' },
     de: { flag: '🇩🇪', name: 'Deutsch' },
+    fr: { flag: '🇫🇷', name: 'Français' },
     it: { flag: '🇮🇹', name: 'Italiano' },
     es: { flag: '🇪🇸', name: 'Español' },
     ru: { flag: '🇷🇺', name: 'Русский' },
   };
 
-  function showLangPicker() {
-    const langs = widgetLangConfig?.langs?.length ? widgetLangConfig.langs : ['el', 'en'];
-    langPickerEl.innerHTML =
-      `<div class="bw-lang-title">🌍 Select language</div>` +
-      `<div class="bw-lang-sub">Επιλέξτε γλώσσα / Choose your language</div>` +
-      langs.map(l => {
-        const { flag, name } = LANG_INFO[l] || { flag: '🌐', name: l };
-        return `<button class="bw-lang-btn" data-lang="${l}">${flag} ${name}</button>`;
-      }).join('');
-    langPickerEl.querySelectorAll('.bw-lang-btn').forEach(btn =>
+  function showLangSelection() {
+    const langs = widgetLangConfig?.langs?.length
+      ? widgetLangConfig.langs
+      : Object.keys(LANG_INFO);
+    addMessage('assistant', '🌍 Select language / Επιλέξτε γλώσσα:');
+    quickRepliesEl.innerHTML = '';
+    langs.forEach(l => {
+      const { flag, name } = LANG_INFO[l] || { flag: '🌐', name: l };
+      const btn = document.createElement('button');
+      btn.className = 'bw-quick-reply';
+      btn.textContent = `${flag} ${name}`;
       btn.addEventListener('click', () => {
-        selectedLang = btn.getAttribute('data-lang');
-        hideLangPicker();
+        selectedLang = l;
+        quickRepliesEl.innerHTML = '';
         greet();
         setTimeout(() => inputEl.focus(), 250);
-      })
-    );
-    langPickerEl.style.display = 'flex';
-    messagesEl.style.display   = 'none';
-    quickRepliesEl.style.display = 'none';
-    inputAreaEl.style.display  = 'none';
-  }
-
-  function hideLangPicker() {
-    langPickerEl.style.display   = 'none';
-    messagesEl.style.display     = '';
-    quickRepliesEl.style.display = '';
-    inputAreaEl.style.display    = '';
+      });
+      quickRepliesEl.appendChild(btn);
+    });
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
   async function sendMessage(text) {
@@ -379,6 +351,13 @@
 
   async function greet() {
     if (greeted) return;
+
+    // Multi-mode: show language buttons in the first message before greeting
+    if (widgetLangConfig?.mode === 'multi' && !selectedLang) {
+      showLangSelection();
+      return;
+    }
+
     greeted = true;
     const typing = addTyping();
     try {
@@ -407,14 +386,7 @@
     isOpen = !isOpen;
     panel.classList.toggle('bw-open', isOpen);
     bubble.setAttribute('aria-expanded', isOpen);
-    if (isOpen) {
-      if (widgetLangConfig?.mode === 'multi' && !selectedLang && !greeted) {
-        showLangPicker();
-      } else {
-        greet();
-        setTimeout(() => inputEl.focus(), 250);
-      }
-    }
+    if (isOpen) { greet(); setTimeout(() => inputEl.focus(), 250); }
   });
 
   panel.querySelector('#bw-close').addEventListener('click', () => {
