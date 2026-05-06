@@ -571,12 +571,11 @@ async function applyGeographicZone(message, business) {
   else if (zone.surcharge_type === 'fixed') surchargeLabel = `+€${zone.surcharge_value}`;
   else                                      surchargeLabel = `×${zone.surcharge_value}`;
 
-  const preview = zone.preview || newZone.keywords.slice(0, 6).join(', ');
-  const extra   = newZone.keywords.length > 6 ? ` +${newZone.keywords.length - 6} ακόμα` : '';
-
+  // Always preview-first: return pending_zone without saving
   return {
-    message: `✅ Ζώνη "${zone.zone_name}" (${surchargeLabel}) — ${newZone.keywords.length} τοποθεσίες\n📍 ${preview}${extra}`,
-    patch: { pricing_zones: [...existingZones, newZone] },
+    message: `🗺 Βρήκα **${newZone.keywords.length} τοποθεσίες** για τη ζώνη "${zone.zone_name}" (${surchargeLabel}). Να αποθηκευτεί;`,
+    pending_zone: newZone,
+    patch: null,
   };
 }
 

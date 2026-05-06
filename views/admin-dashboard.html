@@ -233,7 +233,9 @@
     .ai-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 7px; padding: 10px 13px; font-size: 0.85rem; font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s; }
     .ai-textarea:focus { border-color: var(--accent); }
     .ai-response { margin-top: 4px; padding: 11px 14px; background: var(--green-bg); border: 1px solid #bbf7d0; border-radius: 7px; font-size: 0.82rem; color: var(--green); }
-    .ai-response.error { background: var(--red-bg); border-color: #fca5a5; color: var(--red); }
+    .ai-response.error   { background: var(--red-bg);    border-color: #fca5a5; color: var(--red); }
+    .ai-response.pending { background: var(--yellow-bg); border-color: #fcd34d; color: var(--yellow); }
+    .kw-chip { display: inline-block; background: rgba(0,0,0,0.06); border-radius: 4px; padding: 1px 6px; margin: 2px 2px; font-size: 0.73rem; }
 
     @media (max-width: 900px) {
       .sidebar { display: none; }
@@ -1183,6 +1185,8 @@
     document.getElementById('ai-input').focus();
   }
 
+  let _pendingZone = null;
+
   async function sendAICommand() {
     if (!activeBizId) return;
     const message = document.getElementById('ai-input').value.trim();
@@ -1191,6 +1195,7 @@
     const resp = document.getElementById('ai-response');
     btn.disabled = true; btn.textContent = '⏳ Επεξεργασία…';
     resp.style.display = 'none';
+    _pendingZone = null;
     try {
       const res = await fetch(`/api/admin/business/${activeBizId}/ai-settings`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1198,12 +1203,17 @@
       });
       if (res.status === 401) { location.href = '/admin/login'; return; }
       const data = await res.json();
-      resp.textContent   = data.message || (res.ok ? 'Εκτελέστηκε.' : 'Σφάλμα.');
-      resp.className     = 'ai-response' + (res.ok ? '' : ' error');
-      resp.style.display = '';
-      if (res.ok) {
-        showToast('✅ Ρυθμίσεις ενημερώθηκαν!', 'success');
-        await loadSettings(activeBizId);
+      if (data.pending_zone) {
+        _pendingZone = data.pending_zone;
+        showPendingZone(data.pending_zone);
+      } else {
+        resp.textContent   = data.message || (res.ok ? 'Εκτελέστηκε.' : 'Σφάλμα.');
+        resp.className     = 'ai-response' + (res.ok ? '' : ' error');
+        resp.style.display = '';
+        if (res.ok) {
+          showToast('✅ Ρυθμίσεις ενημερώθηκαν!', 'success');
+          await loadSettings(activeBizId);
+        }
       }
     } catch {
       resp.textContent = 'Σφάλμα επικοινωνίας.';
@@ -1212,6 +1222,63 @@
     } finally {
       btn.disabled = false; btn.textContent = '▶ Εκτέλεση';
     }
+  }
+
+  function showPendingZone(zone) {
+    const resp = document.getElementById('ai-response');
+    const s = zone.surcharge_type, v = zone.surcharge_value;
+    const label = s === 'pct' ? `+${v}%` : s === 'fixed' ? `+€${v}` : `×${v}`;
+    const shown = zone.keywords.slice(0, 18);
+    const rest  = zone.keywords.length - shown.length;
+    const chips = shown.map(k => `<span class="kw-chip">${esc(k)}</span>`).join('') +
+      (rest > 0 ? ` <em style="font-size:0.72rem;color:var(--muted);">+${rest} ακόμα</em>` : '');
+    resp.innerHTML = `
+      <div style="margin-bottom:8px;font-size:0.85rem;">
+        <strong>🗺 ${esc(zone.name)}</strong>
+        <span style="margin-left:6px;opacity:0.75;">${label}</span>
+        <span style="margin-left:6px;font-size:0.75rem;opacity:0.6;">${zone.keywords.length} τοποθεσίες</span>
+      </div>
+      <div style="margin-bottom:12px;line-height:1.9;">${chips}</div>
+      <div style="font-size:0.8rem;margin-bottom:10px;opacity:0.85;">Να αποθηκευτεί αυτή η ζώνη;</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-sm primary" onclick="confirmZone()">✅ Ναι, αποθήκευσε</button>
+        <button class="btn-sm" onclick="cancelZone()">✗ Άκυρο</button>
+      </div>`;
+    resp.className   = 'ai-response pending';
+    resp.style.display = '';
+  }
+
+  async function confirmZone() {
+    if (!_pendingZone || !activeBizId) return;
+    const [yesBtn, noBtn] = document.querySelectorAll('#ai-response button');
+    yesBtn.disabled = true; yesBtn.textContent = '⏳…';
+    if (noBtn) noBtn.disabled = true;
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/ai-settings`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm_zone: _pendingZone }),
+      });
+      const data = await res.json();
+      const resp = document.getElementById('ai-response');
+      resp.textContent   = data.message || (res.ok ? 'Αποθηκεύτηκε.' : 'Σφάλμα.');
+      resp.className     = 'ai-response' + (res.ok ? '' : ' error');
+      _pendingZone = null;
+      if (res.ok) {
+        showToast('✅ Ζώνη αποθηκεύτηκε!', 'success');
+        await loadSettings(activeBizId);
+      }
+    } catch {
+      document.getElementById('ai-response').textContent = 'Σφάλμα αποθήκευσης.';
+      document.getElementById('ai-response').className   = 'ai-response error';
+    }
+  }
+
+  function cancelZone() {
+    _pendingZone = null;
+    const resp = document.getElementById('ai-response');
+    resp.textContent   = 'Άκυρο — η ζώνη δεν αποθηκεύτηκε.';
+    resp.className     = 'ai-response';
+    resp.style.color   = 'var(--muted)';
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

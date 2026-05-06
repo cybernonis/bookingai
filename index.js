@@ -217,7 +217,21 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
   const bizId = req.params.id;
   if (req.session.businessId && req.session.businessId !== bizId)
     return res.status(403).json({ error: 'Forbidden' });
-  const { message } = req.body;
+
+  const { message, confirm_zone } = req.body;
+
+  // Confirmation path: save a pending geographic zone without another Claude call
+  if (confirm_zone && typeof confirm_zone === 'object') {
+    const biz = getBusinessById(bizId);
+    if (!biz) return res.status(404).json({ error: 'Business not found' });
+    const existingZones = Array.isArray(biz.config?.pricing_zones) ? biz.config.pricing_zones : [];
+    updateBusinessConfig(bizId, { pricing_zones: [...existingZones, confirm_zone] });
+    const s = confirm_zone.surcharge_type;
+    const v = confirm_zone.surcharge_value;
+    const label = s === 'pct' ? `+${v}%` : s === 'fixed' ? `+€${v}` : `×${v}`;
+    return res.json({ message: `✅ Ζώνη "${confirm_zone.name}" (${label}) αποθηκεύτηκε — ${confirm_zone.keywords?.length || 0} τοποθεσίες`, business: getBusinessById(bizId) });
+  }
+
   if (!message) return res.status(400).json({ error: 'message required' });
   const biz = getBusinessById(bizId);
   if (!biz) return res.status(404).json({ error: 'Business not found' });
@@ -225,7 +239,7 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
     const result = await applySettingsCommand(message, biz);
     if (result.patch) updateBusinessConfig(bizId, result.patch);
     const updated = getBusinessById(bizId);
-    res.json({ message: result.message, business: updated });
+    res.json({ message: result.message, pending_zone: result.pending_zone || null, business: updated });
   } catch (err) {
     console.error('AI settings error:', err);
     res.status(500).json({ error: 'Σφάλμα επεξεργασίας.' });
