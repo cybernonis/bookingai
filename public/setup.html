@@ -180,6 +180,12 @@
     .step-panel { display: none; }
     .step-panel.active { display: block; }
 
+    /* ── Language checkboxes ── */
+    .lang-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .lang-check-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 0.82rem; cursor: pointer; transition: border-color 0.15s, background 0.15s; user-select: none; }
+    .lang-check-item:has(input:checked) { border-color: var(--accent); background: var(--accent-dim); }
+    .lang-check-item input { accent-color: var(--accent); cursor: pointer; }
+
     @media (max-width: 520px) {
       .card { padding: 20px; }
       .form-row { grid-template-columns: 1fr; }
@@ -217,6 +223,7 @@
     <div class="card">
       <h2>Στοιχεία επιχείρησης</h2>
       <p class="subtitle">Βασικές πληροφορίες για την εταιρεία ταξί / μεταφορών σου.</p>
+
       <div class="form-group">
         <label>Όνομα εταιρείας *</label>
         <input type="text" id="bizName" placeholder="π.χ. Crete Transfers" />
@@ -231,10 +238,122 @@
           <input type="color" id="themeColor" value="#0ea5e9" />
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email επιχείρησης *</label>
+          <input type="email" id="bizEmail" placeholder="info@company.com" />
+        </div>
+        <div class="form-group">
+          <label>Διεύθυνση έδρας</label>
+          <input type="text" id="bizOfficeAddress" placeholder="π.χ. Λεωφ. Κνωσού 5, Ηράκλειο" />
+        </div>
+      </div>
       <div class="form-group">
-        <label>Έδρα / Περιοχή εξυπηρέτησης</label>
+        <label>Περιοχή εξυπηρέτησης</label>
         <input type="text" id="bizAddress" placeholder="π.χ. Ηράκλειο, Κρήτη" />
       </div>
+
+      <!-- Activity Region -->
+      <div class="section-divider"></div>
+      <div class="section-title">Περιοχή Δραστηριότητας</div>
+      <div class="section-subtitle">Χρησιμοποιείται από τον AI assistant για προτάσεις ζωνών και τιμολόγησης.</div>
+      <div class="zone-mode-options">
+        <label class="zone-mode-card"><input type="radio" name="setup-country" value="greece" checked /> 🇬🇷 Ελλάδα</label>
+        <label class="zone-mode-card"><input type="radio" name="setup-country" value="cyprus" /> 🇨🇾 Κύπρος</label>
+        <label class="zone-mode-card"><input type="radio" name="setup-country" value="other" /> 🌍 Άλλη χώρα</label>
+      </div>
+      <div id="grRegionRow" class="form-group" style="margin-top:10px;">
+        <label>Περιφέρεια</label>
+        <select id="grRegion">
+          <option value="">— Επιλέξτε —</option>
+          <option>Αττική</option>
+          <option>Κεντρική Μακεδονία</option>
+          <option>Δυτική Μακεδονία</option>
+          <option>Ανατολική Μακεδονία &amp; Θράκη</option>
+          <option>Ήπειρος</option>
+          <option>Θεσσαλία</option>
+          <option>Δυτική Ελλάδα</option>
+          <option>Στερεά Ελλάδα</option>
+          <option>Πελοπόννησος</option>
+          <option>Ιόνια Νησιά</option>
+          <option>Βόρειο Αιγαίο</option>
+          <option>Νότιο Αιγαίο</option>
+          <option>Κρήτη</option>
+        </select>
+      </div>
+      <div id="otherCountryRow" class="form-group" style="display:none;margin-top:10px;">
+        <label>Χώρα</label>
+        <input type="text" id="otherCountry" placeholder="π.χ. Italy" />
+      </div>
+
+      <!-- Languages -->
+      <div class="section-divider"></div>
+      <div class="section-title">Γλώσσες</div>
+      <div class="form-row" style="margin-bottom:16px;">
+        <div class="form-group">
+          <label>Γλώσσα Dashboard</label>
+          <select id="dashLang">
+            <option value="el">🇬🇷 Ελληνικά</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="ru">🇷🇺 Русский</option>
+          </select>
+        </div>
+      </div>
+      <div class="section-subtitle">Γλώσσα Chat Widget</div>
+      <div class="zone-mode-options" style="flex-direction:column;gap:6px;margin-top:8px;">
+        <label class="zone-mode-card">
+          <input type="radio" name="widget-lang-mode" value="auto" checked />
+          <div>
+            <div>🌐 Αυτόματη ανίχνευση</div>
+            <div style="font-size:0.73rem;color:var(--muted);margin-top:2px;">Ο AI απαντά στη γλώσσα του πελάτη</div>
+          </div>
+        </label>
+        <label class="zone-mode-card">
+          <input type="radio" name="widget-lang-mode" value="single" />
+          <div>
+            <div>🔤 Συγκεκριμένη γλώσσα</div>
+            <div style="font-size:0.73rem;color:var(--muted);margin-top:2px;">Ο AI απαντά πάντα στην ίδια γλώσσα</div>
+          </div>
+        </label>
+        <label class="zone-mode-card">
+          <input type="radio" name="widget-lang-mode" value="multi" />
+          <div>
+            <div>🌍 Πολλαπλές γλώσσες</div>
+            <div style="font-size:0.73rem;color:var(--muted);margin-top:2px;">Ο πελάτης επιλέγει γλώσσα στην αρχή</div>
+          </div>
+        </label>
+      </div>
+      <div id="widgetSingleLangRow" style="display:none;margin-top:10px;">
+        <div class="form-group">
+          <label>Γλώσσα widget</label>
+          <select id="widgetSingleLang">
+            <option value="el">🇬🇷 Ελληνικά</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="ru">🇷🇺 Русский</option>
+          </select>
+        </div>
+      </div>
+      <div id="widgetMultiLangRow" style="display:none;margin-top:10px;">
+        <label style="display:block;font-size:0.82rem;font-weight:600;color:var(--muted);margin-bottom:8px;">Διαθέσιμες γλώσσες</label>
+        <div class="lang-checks">
+          <label class="lang-check-item"><input type="checkbox" class="widget-lang-check" value="el" checked /> Ελληνικά</label>
+          <label class="lang-check-item"><input type="checkbox" class="widget-lang-check" value="en" /> English</label>
+          <label class="lang-check-item"><input type="checkbox" class="widget-lang-check" value="fr" /> Français</label>
+          <label class="lang-check-item"><input type="checkbox" class="widget-lang-check" value="de" /> Deutsch</label>
+          <label class="lang-check-item"><input type="checkbox" class="widget-lang-check" value="it" /> Italiano</label>
+          <label class="lang-check-item"><input type="checkbox" class="widget-lang-check" value="es" /> Español</label>
+          <label class="lang-check-item"><input type="checkbox" class="widget-lang-check" value="ru" /> Русский</label>
+        </div>
+      </div>
+
       <div class="nav-btns">
         <button class="btn btn-primary" onclick="goTo(2)">Επόμενο →</button>
       </div>
@@ -385,8 +504,10 @@ let currentStep = 1;
 // ── Step navigation ───────────────────────────────────────────────────────────
 function goTo(n) {
   if (n === 2) {
-    const name = document.getElementById('bizName').value.trim();
-    if (!name) { document.getElementById('bizName').focus(); return; }
+    const name  = document.getElementById('bizName').value.trim();
+    const email = document.getElementById('bizEmail').value.trim();
+    if (!name)  { document.getElementById('bizName').focus();  return; }
+    if (!email || !email.includes('@')) { document.getElementById('bizEmail').focus(); return; }
     if (document.querySelectorAll('.setup-vehicle-row').length === 0) initVehicles();
     wireZoneToggle();
   }
@@ -411,6 +532,30 @@ function updateProgress(n) {
       line.className = i < n ? 'prog-line done' : 'prog-line';
     }
   }
+}
+
+// ── Country / Region toggle ───────────────────────────────────────────────────
+function wireCountryToggle() {
+  document.querySelectorAll('input[name="setup-country"]').forEach(r =>
+    r.addEventListener('change', toggleCountryFields));
+  toggleCountryFields();
+}
+function toggleCountryFields() {
+  const c = document.querySelector('input[name="setup-country"]:checked')?.value;
+  document.getElementById('grRegionRow').style.display    = c === 'greece' ? '' : 'none';
+  document.getElementById('otherCountryRow').style.display = c === 'other'  ? '' : 'none';
+}
+
+// ── Widget language toggle ────────────────────────────────────────────────────
+function wireWidgetLangToggle() {
+  document.querySelectorAll('input[name="widget-lang-mode"]').forEach(r =>
+    r.addEventListener('change', toggleWidgetLangFields));
+  toggleWidgetLangFields();
+}
+function toggleWidgetLangFields() {
+  const m = document.querySelector('input[name="widget-lang-mode"]:checked')?.value;
+  document.getElementById('widgetSingleLangRow').style.display = m === 'single' ? '' : 'none';
+  document.getElementById('widgetMultiLangRow').style.display  = m === 'multi'  ? '' : 'none';
 }
 
 // ── Zone toggle ───────────────────────────────────────────────────────────────
@@ -494,6 +639,23 @@ function checkStrength() {
   fill.style.background = colors[score - 1] || 'transparent';
 }
 
+// ── Collect helpers ───────────────────────────────────────────────────────────
+function collectRegion() {
+  const country = document.querySelector('input[name="setup-country"]:checked')?.value || 'greece';
+  if (country === 'greece') return { country, prefecture: document.getElementById('grRegion').value };
+  if (country === 'other')  return { country, custom: document.getElementById('otherCountry').value.trim() };
+  return { country };
+}
+function collectWidgetLang() {
+  const mode = document.querySelector('input[name="widget-lang-mode"]:checked')?.value || 'auto';
+  if (mode === 'single') return { mode, lang: document.getElementById('widgetSingleLang').value };
+  if (mode === 'multi') {
+    const langs = [...document.querySelectorAll('.widget-lang-check:checked')].map(c => c.value);
+    return { mode, langs: langs.length ? langs : ['el'] };
+  }
+  return { mode };
+}
+
 // ── Collect & submit ──────────────────────────────────────────────────────────
 function collectPayload() {
   const fixedRoutes = [];
@@ -534,6 +696,11 @@ function collectPayload() {
     theme_color: document.getElementById('themeColor').value,
     services: [],
     config: {
+      email:          document.getElementById('bizEmail').value.trim(),
+      office_address: document.getElementById('bizOfficeAddress').value.trim() || null,
+      region:         collectRegion(),
+      dashboard_lang: document.getElementById('dashLang').value,
+      widget_lang:    collectWidgetLang(),
       pricing: {
         mode:         'combined',
         base_fare:    parseFloat(document.getElementById('taxiBase').value)  || 3.50,
@@ -606,6 +773,10 @@ function copyEmbed() {
     setTimeout(() => msg.style.display = 'none', 2500);
   });
 }
+
+// Init Step 1 conditional toggles on page load
+wireCountryToggle();
+wireWidgetLangToggle();
 </script>
 </body>
 </html>

@@ -254,8 +254,8 @@ app.get('/setup', (_req, res) =>
 app.post('/api/setup', (req, res) => {
   const { name, phone, address, theme_color, config, admin_username, admin_password } = req.body;
 
-  if (!name || !admin_username || !admin_password)
-    return res.status(400).json({ error: 'name, admin_username and admin_password are required' });
+  if (!name || !config?.email || !admin_username || !admin_password)
+    return res.status(400).json({ error: 'name, email, admin_username and admin_password are required' });
 
   const business_id = name
     .toLowerCase()
@@ -265,10 +265,28 @@ app.post('/api/setup', (req, res) => {
     .substring(0, 40) + '-' + Date.now().toString(36);
 
   if (config && !config.system_prompt) {
-    config.system_prompt = `Είσαι AI assistant για υπηρεσία ταξί και μεταφορές "${name}". Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες 5)Όχημα βάσει λίστας 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Email για επιβεβαίωση (αν δεν θέλει πες "skip") 13)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:
-CONFIRMED_BOOKING:{name}|{phone}|{email}|{pickup}|{destination}|{datetime}|{vehicle}|{price}
+    const LANG_NAMES = { el:'Ελληνικά', en:'English', fr:'Français', de:'Deutsch', it:'Italiano', es:'Español', ru:'Русский' };
 
-ΕΤΑΙΡΕΙΑ: ${name} — υπηρεσίες μεταφοράς 24/7.`;
+    const r = config.region;
+    const regionDesc = r
+      ? r.country === 'greece' ? `Ελλάδα${r.prefecture ? ` (${r.prefecture})` : ''}`
+        : r.country === 'cyprus' ? 'Κύπρος'
+        : r.custom || 'Άλλη χώρα'
+      : 'Ελλάδα';
+
+    let langInstruction = '';
+    const wl = config.widget_lang;
+    if (wl?.mode === 'single' && wl.lang) {
+      langInstruction = `\nΓΛΩΣΣΑ: Απάντα ΠΑΝΤΑ στα ${LANG_NAMES[wl.lang] || wl.lang}. Μην αλλάζεις γλώσσα.`;
+    } else if (wl?.mode === 'multi') {
+      const list = (wl.langs || ['el', 'en']).map(l => LANG_NAMES[l] || l).join(' / ');
+      langInstruction = `\nΓΛΩΣΣΑ: Στο πρώτο μήνυμα ρώτα ποια γλώσσα προτιμά (${list}). Έπειτα χρησιμοποίησε αυτή τη γλώσσα.`;
+    }
+
+    config.system_prompt = `Είσαι AI assistant για υπηρεσία ταξί και μεταφορές "${name}". Βοήθα τον πελάτη να κλείσει, αλλάξει ή ακυρώσει διαδρομή γρήγορα. ΚΑΝΟΝΕΣ: Μίλα απλά, φιλικά, επαγγελματικά. Κάνε ΜΙΑ ερώτηση κάθε φορά. ΜΟΡΦΟΠΟΙΗΣΗ: Επιλογές ως αριθμημένη λίστα. Επιβεβαίωση με (Ναι/Όχι). BOOKING FLOW: 1)Pickup 2)Προορισμός 3)Ημερομηνία+ώρα 4)Επιβάτες 5)Όχημα βάσει λίστας 6)Two-way & Extras σύμφωνα με τιμολόγιο 7)Υπολόγισε τιμή βάσει τιμολογίου 8)Σύνοψη 9)Επιβεβαίωση (Ναι/Όχι) 10)Όνομα 11)Τηλέφωνο 12)Email για επιβεβαίωση (αν δεν θέλει πες "skip") 13)Αποστολή. ΑΡΙΘΜΟΣ ΚΡΑΤΗΣΗΣ: ΠΟΤΕ μην γράψεις αριθμό μόνος σου. Μόλις έχεις ΟΛΑ τα στοιχεία γράψε ΑΚΡΙΒΩΣ:
+CONFIRMED_BOOKING:{name}|{phone}|{email}|{pickup}|{destination}|{datetime}|{vehicle}|{price}${langInstruction}
+
+ΕΤΑΙΡΕΙΑ: ${name} — υπηρεσίες μεταφοράς 24/7. ΠΕΡΙΟΧΗ ΔΡΑΣΤΗΡΙΟΤΗΤΑΣ: ${regionDesc}.`;
   }
 
   try {

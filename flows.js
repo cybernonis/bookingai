@@ -596,6 +596,14 @@ export async function applySettingsCommand(message, business) {
 ${configJson}
 
 ΔΟΜΗ CONFIG:
+- email: string (email επιχείρησης)
+- office_address: string (φυσική διεύθυνση έδρας)
+- region: { country:"greece"|"cyprus"|"other", prefecture?:string, custom?:string }
+- dashboard_lang: "el"|"en"|"fr"|"de"|"it"|"es"|"ru"
+- widget_lang: { mode:"auto"|"single"|"multi", lang?:string, langs?:string[] }
+  • "auto": απαντά στη γλώσσα του πελάτη
+  • "single": πάντα στη γλώσσα lang
+  • "multi": ο πελάτης επιλέγει από langs
 - zones: { mode: "whitelist"|"blacklist"|"open", areas: string[], intra_zone: boolean }
 - pricing: { mode, base_fare, price_per_km, min_fare, currency, rounding, two_way_enabled, two_way_discount_pct, night_surcharge_enabled, night_surcharge_pct, night_from, night_to, extras:{child_seat,extra_luggage,pet}, fixed_routes:[{origin,destination,price}] }
 - vehicles: [{ id, label, icon, capacity, surcharge_type:"none"|"fixed"|"pct", surcharge_value, enabled }]
