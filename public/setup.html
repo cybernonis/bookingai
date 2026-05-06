@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BookingAI — Δημιουργία Επιχείρησης</title>
+  <title>BookingAI — Νέα εταιρεία μεταφορών</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -25,16 +25,13 @@
     .container { width: 100%; max-width: 680px; }
 
     /* ── Header ── */
-    .logo { font-size: 1.1rem; font-weight: 800; color: var(--text); margin-bottom: 36px; }
+    .logo { font-size: 1.1rem; font-weight: 800; color: var(--text); margin-bottom: 8px; }
     .logo span { color: var(--accent); }
+    .logo-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 36px; }
 
     /* ── Progress ── */
-    .progress {
-      display: flex; align-items: center; gap: 0; margin-bottom: 40px;
-    }
-    .prog-step {
-      display: flex; align-items: center; gap: 8px; flex: 1;
-    }
+    .progress { display: flex; align-items: center; gap: 0; margin-bottom: 40px; }
+    .prog-step { display: flex; align-items: center; gap: 8px; flex: 1; }
     .prog-step:last-child { flex: none; }
     .prog-dot {
       width: 32px; height: 32px; border-radius: 50%;
@@ -58,22 +55,6 @@
     .card h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
     .card .subtitle { font-size: 0.88rem; color: var(--muted); margin-bottom: 28px; }
 
-    /* ── Type cards ── */
-    .type-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;
-    }
-    .type-card {
-      border: 2px solid var(--border); border-radius: var(--radius);
-      padding: 20px 16px; text-align: center; cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-      background: transparent;
-    }
-    .type-card:hover { border-color: var(--accent); background: var(--accent-dim); }
-    .type-card.selected { border-color: var(--accent); background: var(--accent-dim); }
-    .type-icon { font-size: 2rem; display: block; margin-bottom: 10px; }
-    .type-label { font-size: 0.85rem; font-weight: 600; color: var(--text); }
-    .type-desc  { font-size: 0.73rem; color: var(--muted); margin-top: 4px; }
-
     /* ── Form ── */
     .form-group { margin-bottom: 20px; }
     label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
@@ -88,14 +69,17 @@
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .hint { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
 
-    /* ── Services editor ── */
+    /* ── Taxi config ── */
+    .taxi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .section-divider { border-top: 1px solid var(--border); margin: 24px 0 20px; }
+    .section-title { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .section-subtitle { font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; }
+
+    /* ── Fix routes ── */
     .services-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-    .service-row {
-      display: grid; gap: 8px; align-items: center;
-    }
-    .service-row.salon-row    { grid-template-columns: 1fr 90px 90px 36px; }
-    .service-row.clinic-row   { grid-template-columns: 1fr 100px 36px; }
-    .service-row.header-row   { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+    .service-row { display: grid; gap: 8px; align-items: center; }
+    .service-row.fix-route-row { grid-template-columns: 1fr 1fr 90px 36px; }
+    .service-row.header-row { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
     .btn-icon {
       width: 36px; height: 36px; border-radius: 6px;
       background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.3);
@@ -112,14 +96,7 @@
     }
     .btn-add:hover { background: rgba(47,129,247,0.25); }
 
-    /* ── Taxi config ── */
-    .taxi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .section-divider { border-top: 1px solid var(--border); margin: 24px 0 20px; }
-    .section-title { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .section-subtitle { font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; }
-    .service-row.fix-route-row { grid-template-columns: 1fr 1fr 90px 36px; }
-
-    /* ── Zones (setup) ── */
+    /* ── Zones ── */
     .zone-mode-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
     .zone-mode-card {
       display: flex; align-items: center; gap: 8px;
@@ -139,7 +116,7 @@
     textarea.zone-ta:focus { border-color: var(--accent); }
     textarea.zone-ta::placeholder { color: var(--muted); }
 
-    /* ── Vehicles (setup) ── */
+    /* ── Vehicles ── */
     .v-setup-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 8px; }
     .v-setup-table th { text-align: left; font-size: 0.72rem; font-weight: 600; color: var(--muted); padding: 4px 6px 8px; }
     .v-setup-table td { padding: 4px 5px; vertical-align: middle; }
@@ -157,14 +134,8 @@
       border-radius: 6px; color: var(--text); font-size: 0.82rem; font-family: inherit; outline: none;
     }
 
-    /* ── Restaurant config ── */
-    .rest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
     /* ── Password strength ── */
-    .strength-bar {
-      height: 4px; border-radius: 2px; background: var(--border); margin-top: 6px;
-      overflow: hidden;
-    }
+    .strength-bar { height: 4px; border-radius: 2px; background: var(--border); margin-top: 6px; overflow: hidden; }
     .strength-fill { height: 100%; border-radius: 2px; transition: width 0.3s, background 0.3s; width: 0; }
 
     /* ── Nav buttons ── */
@@ -175,10 +146,7 @@
     }
     .btn:hover { opacity: 0.85; }
     .btn-primary { background: var(--accent); color: #fff; }
-    .btn-secondary {
-      background: transparent; border: 1px solid var(--border);
-      color: var(--text);
-    }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     /* ── Final screen ── */
@@ -186,8 +154,7 @@
     .embed-box {
       background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
       padding: 16px; font-family: 'Courier New', monospace; font-size: 0.82rem;
-      color: #79c0ff; word-break: break-all; margin: 16px 0;
-      white-space: pre-wrap;
+      color: #79c0ff; word-break: break-all; margin: 16px 0; white-space: pre-wrap;
     }
     .copy-row { display: flex; gap: 10px; align-items: center; }
     .btn-copy {
@@ -201,7 +168,6 @@
       background: var(--accent-dim); border: 1px solid rgba(47,129,247,0.3);
       border-radius: 6px; font-size: 0.83rem; margin-bottom: 10px;
     }
-    .info-row a { color: var(--accent); }
 
     /* ── Error ── */
     .error-box {
@@ -218,8 +184,6 @@
       .card { padding: 20px; }
       .form-row { grid-template-columns: 1fr; }
       .taxi-grid { grid-template-columns: 1fr; }
-      .rest-grid { grid-template-columns: 1fr; }
-      .service-row.salon-row { grid-template-columns: 1fr 72px 72px 36px; }
       .service-row.fix-route-row { grid-template-columns: 1fr 1fr 72px 36px; }
     }
   </style>
@@ -228,91 +192,137 @@
 <div class="container">
 
   <div class="logo">Booking<span>AI</span></div>
+  <div class="logo-sub">🚕 Δημιουργία εταιρείας ταξί & μεταφορών</div>
 
-  <!-- Progress bar -->
+  <!-- Progress bar (3 steps) -->
   <div class="progress" id="progressBar">
     <div class="prog-step">
       <div class="prog-dot active" id="dot1">1</div>
-      <div class="prog-label active" id="lbl1">Τύπος</div>
+      <div class="prog-label active" id="lbl1">Στοιχεία</div>
     </div>
     <div class="prog-line" id="line1"></div>
     <div class="prog-step">
       <div class="prog-dot" id="dot2">2</div>
-      <div class="prog-label" id="lbl2">Στοιχεία</div>
+      <div class="prog-label" id="lbl2">Ρυθμίσεις</div>
     </div>
     <div class="prog-line" id="line2"></div>
     <div class="prog-step">
       <div class="prog-dot" id="dot3">3</div>
-      <div class="prog-label" id="lbl3">Ρυθμίσεις</div>
-    </div>
-    <div class="prog-line" id="line3"></div>
-    <div class="prog-step">
-      <div class="prog-dot" id="dot4">4</div>
-      <div class="prog-label" id="lbl4">Λογαριασμός</div>
+      <div class="prog-label" id="lbl3">Λογαριασμός</div>
     </div>
   </div>
 
-  <!-- Step 1: Business type -->
+  <!-- Step 1: Basic info -->
   <div class="step-panel active" id="step1">
     <div class="card">
-      <h2>Τι είδους επιχείρηση έχεις;</h2>
-      <p class="subtitle">Επέλεξε τον τύπο για να προσαρμοστεί το AI assistant σου.</p>
-      <div class="type-grid">
-        <div class="type-card" data-type="salon">
-          <span class="type-icon">💇</span>
-          <div class="type-label">Κομμωτήριο</div>
-          <div class="type-desc">Κουρείο, nail bar, spa</div>
-        </div>
-        <div class="type-card" data-type="clinic">
-          <span class="type-icon">🏥</span>
-          <div class="type-label">Κλινική</div>
-          <div class="type-desc">Ιατρείο, κέντρο υγείας</div>
-        </div>
-        <div class="type-card" data-type="restaurant">
-          <span class="type-icon">🍽️</span>
-          <div class="type-label">Εστιατόριο</div>
-          <div class="type-desc">Εστιατόριο, καφέ, μπαρ</div>
-        </div>
-        <div class="type-card" data-type="taxi">
-          <span class="type-icon">🚕</span>
-          <div class="type-label">Ταξί</div>
-          <div class="type-desc">Ταξί, μεταφορές</div>
-        </div>
-        <div class="type-card" data-type="salon">
-          <span class="type-icon">🏢</span>
-          <div class="type-label">Άλλο</div>
-          <div class="type-desc">Γενικές κρατήσεις</div>
-        </div>
-      </div>
-      <div class="nav-btns">
-        <button class="btn btn-primary" id="next1" disabled onclick="goTo(2)">Επόμενο →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step 2: Basic info -->
-  <div class="step-panel" id="step2">
-    <div class="card">
-      <h2>Βασικές πληροφορίες</h2>
-      <p class="subtitle">Πες μας λίγα πράγματα για την επιχείρησή σου.</p>
+      <h2>Στοιχεία επιχείρησης</h2>
+      <p class="subtitle">Βασικές πληροφορίες για την εταιρεία ταξί / μεταφορών σου.</p>
       <div class="form-group">
-        <label>Όνομα επιχείρησης *</label>
-        <input type="text" id="bizName" placeholder="π.χ. Éclat Hair Studio" />
+        <label>Όνομα εταιρείας *</label>
+        <input type="text" id="bizName" placeholder="π.χ. Crete Transfers" />
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Τηλέφωνο</label>
-          <input type="tel" id="bizPhone" placeholder="2310 123456" />
+          <input type="tel" id="bizPhone" placeholder="2810 123456" />
         </div>
         <div class="form-group">
           <label>Χρώμα θέματος</label>
-          <input type="color" id="themeColor" value="#2f81f7" />
+          <input type="color" id="themeColor" value="#0ea5e9" />
         </div>
       </div>
       <div class="form-group">
-        <label>Διεύθυνση</label>
-        <input type="text" id="bizAddress" placeholder="π.χ. Εγνατία 45, Θεσσαλονίκη" />
+        <label>Έδρα / Περιοχή εξυπηρέτησης</label>
+        <input type="text" id="bizAddress" placeholder="π.χ. Ηράκλειο, Κρήτη" />
       </div>
+      <div class="nav-btns">
+        <button class="btn btn-primary" onclick="goTo(2)">Επόμενο →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Taxi settings -->
+  <div class="step-panel" id="step2">
+    <div class="card">
+      <h2>Τιμοκατάλογος & Ρυθμίσεις</h2>
+      <p class="subtitle">Ορίσε τιμές, διαδρομές, ζώνες εξυπηρέτησης και οχήματα.</p>
+
+      <!-- Per-km pricing -->
+      <div class="section-title">Χρέωση ανά χιλιόμετρο</div>
+      <div class="taxi-grid" style="margin-top:12px">
+        <div class="form-group">
+          <label>Βασική εκκίνηση (€)</label>
+          <input type="number" id="taxiBase" value="3.50" step="0.10" min="0" />
+          <div class="hint">π.χ. €2.00 εκκίνηση</div>
+        </div>
+        <div class="form-group">
+          <label>Τιμή ανά χλμ (€)</label>
+          <input type="number" id="taxiPerKm" value="1.50" step="0.10" min="0" />
+          <div class="hint">π.χ. €0.80/χλμ</div>
+        </div>
+        <div class="form-group">
+          <label>Ελάχιστη χρέωση (€)</label>
+          <input type="number" id="taxiMin" value="4.50" step="0.10" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Νόμισμα</label>
+          <input type="text" id="taxiCurrency" value="€" maxlength="3" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Σημείωση τιμοκαταλόγου (προαιρετικό)</label>
+        <input type="text" id="taxiNote" placeholder="π.χ. Τιμοκατάλογος Α. Νυχτερινό +20%." />
+      </div>
+
+      <!-- Fixed routes -->
+      <div class="section-divider"></div>
+      <div class="section-title">Σταθερές τιμές διαδρομών</div>
+      <div class="section-subtitle">Προαιρετικό. Έχουν προτεραιότητα έναντι της χρέωσης ανά χλμ.</div>
+      <div class="services-list" id="fixRoutesList">
+        <div class="service-row fix-route-row header-row">
+          <span>Αφετηρία</span><span>Προορισμός</span><span>Τιμή (€)</span><span></span>
+        </div>
+      </div>
+      <button class="btn-add" onclick="addFixRouteRow()">+ Προσθήκη σταθερής διαδρομής</button>
+
+      <!-- Zones -->
+      <div class="section-divider"></div>
+      <div class="section-title">Ζώνες Εξυπηρέτησης</div>
+      <div class="section-subtitle">Ορίστε τις περιοχές που καλύπτει η υπηρεσία σας.</div>
+      <div class="zone-mode-options">
+        <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="whitelist" checked /> ✅ Whitelist — μόνο αυτές</label>
+        <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="blacklist" /> 🚫 Blacklist — εκτός αυτών</label>
+        <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="open" /> 🌍 Παγκόσμιο</label>
+      </div>
+      <div class="form-group" id="setup-areas-row">
+        <label>Περιοχές <span style="font-weight:400">(μία ανά γραμμή)</span></label>
+        <textarea class="zone-ta" id="setupZoneAreas" rows="4"
+          placeholder="Κρήτη&#10;Αεροδρόμιο Ηρακλείου&#10;Χανιά&#10;Ρέθυμνο&#10;Ηράκλειο"></textarea>
+      </div>
+      <label class="zone-toggle-row">
+        <input type="checkbox" id="setupIntraZone" />
+        Να επιτρέπονται transfers εντός της ίδιας πόλης/περιοχής
+      </label>
+
+      <!-- Vehicles -->
+      <div class="section-divider"></div>
+      <div class="section-title">Τύποι Οχημάτων</div>
+      <div class="section-subtitle">Ορίστε τα οχήματα που προσφέρετε και τυχόν επιπλέον χρέωση.</div>
+      <table class="v-setup-table">
+        <thead>
+          <tr>
+            <th style="width:8%">Icon</th>
+            <th style="width:28%">Τίτλος</th>
+            <th style="width:14%">Άτομα</th>
+            <th style="width:22%">Επιπλέον</th>
+            <th style="width:14%">Ποσό</th>
+            <th style="width:8%"></th>
+          </tr>
+        </thead>
+        <tbody id="setupVehiclesList"></tbody>
+      </table>
+      <button class="btn-add" onclick="addSetupVehicleRow()">+ Προσθήκη οχήματος</button>
+
       <div class="nav-btns">
         <button class="btn btn-secondary" onclick="goTo(1)">← Πίσω</button>
         <button class="btn btn-primary" onclick="goTo(3)">Επόμενο →</button>
@@ -320,138 +330,8 @@
     </div>
   </div>
 
-  <!-- Step 3: Type-specific settings -->
+  <!-- Step 3: Admin account -->
   <div class="step-panel" id="step3">
-    <div class="card">
-      <h2>Ρυθμίσεις υπηρεσιών</h2>
-      <p class="subtitle" id="step3Subtitle">Πρόσθεσε τις υπηρεσίες και τιμές σου.</p>
-
-      <!-- Salon / other -->
-      <div id="cfg-salon">
-        <div class="services-list" id="salonList">
-          <div class="service-row salon-row header-row">
-            <span>Υπηρεσία</span><span>Τιμή (€)</span><span>Διάρκεια (λεπτά)</span><span></span>
-          </div>
-        </div>
-        <button class="btn-add" onclick="addSalonRow()">+ Προσθήκη υπηρεσίας</button>
-      </div>
-
-      <!-- Clinic -->
-      <div id="cfg-clinic" style="display:none">
-        <div class="services-list" id="clinicList">
-          <div class="service-row clinic-row header-row">
-            <span>Ειδικότητα</span><span>Διάρκεια (λεπτά)</span><span></span>
-          </div>
-        </div>
-        <button class="btn-add" onclick="addClinicRow()">+ Προσθήκη ειδικότητας</button>
-      </div>
-
-      <!-- Taxi -->
-      <div id="cfg-taxi" style="display:none">
-        <!-- Per-km pricing -->
-        <div class="section-title">Χρέωση ανά χιλιόμετρο</div>
-        <div class="taxi-grid" style="margin-top:12px">
-          <div class="form-group">
-            <label>Βασική εκκίνηση (€)</label>
-            <input type="number" id="taxiBase" value="3.50" step="0.10" min="0" />
-            <div class="hint">π.χ. €2.00 εκκίνηση</div>
-          </div>
-          <div class="form-group">
-            <label>Τιμή ανά χλμ (€)</label>
-            <input type="number" id="taxiPerKm" value="1.50" step="0.10" min="0" />
-            <div class="hint">π.χ. €0.80/χλμ</div>
-          </div>
-          <div class="form-group">
-            <label>Ελάχιστη χρέωση (€)</label>
-            <input type="number" id="taxiMin" value="4.50" step="0.10" min="0" />
-          </div>
-          <div class="form-group">
-            <label>Νόμισμα</label>
-            <input type="text" id="taxiCurrency" value="€" maxlength="3" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Σημείωση τιμοκαταλόγου (προαιρετικό)</label>
-          <input type="text" id="taxiNote" placeholder="π.χ. Τιμοκατάλογος Α. Νυχτερινό +20%." />
-        </div>
-
-        <!-- Fixed routes -->
-        <div class="section-divider"></div>
-        <div class="section-title">Σταθερές τιμές διαδρομών (Fix)</div>
-        <div class="section-subtitle">Ορίζεις σταθερή τιμή για συγκεκριμένες διαδρομές. Έχουν προτεραιότητα έναντι της χρέωσης ανά χλμ.</div>
-        <div class="services-list" id="fixRoutesList">
-          <div class="service-row fix-route-row header-row">
-            <span>Αφετηρία</span><span>Προορισμός</span><span>Τιμή (€)</span><span></span>
-          </div>
-        </div>
-        <button class="btn-add" onclick="addFixRouteRow()">+ Προσθήκη σταθερής διαδρομής</button>
-
-        <!-- Zones -->
-        <div class="section-divider"></div>
-        <div class="section-title">Ζώνες Εξυπηρέτησης</div>
-        <div class="section-subtitle">Ορίστε τις περιοχές που καλύπτει η υπηρεσία σας.</div>
-        <div class="zone-mode-options">
-          <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="whitelist" checked /> ✅ Whitelist — μόνο αυτές</label>
-          <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="blacklist" /> 🚫 Blacklist — εκτός αυτών</label>
-          <label class="zone-mode-card"><input type="radio" name="setup-zone-mode" value="open" /> 🌍 Παγκόσμιο</label>
-        </div>
-        <div class="form-group" id="setup-areas-row">
-          <label>Περιοχές εξυπηρέτησης <span style="font-weight:400">(μία ανά γραμμή)</span></label>
-          <textarea class="zone-ta" id="setupZoneAreas" rows="4"
-            placeholder="Κρήτη&#10;Αεροδρόμιο Ηρακλείου&#10;Χανιά&#10;Ρέθυμνο&#10;Ηράκλειο"></textarea>
-        </div>
-        <label class="zone-toggle-row">
-          <input type="checkbox" id="setupIntraZone" />
-          Να επιτρέπονται transfers εντός της ίδιας πόλης/περιοχής
-        </label>
-
-        <!-- Vehicles -->
-        <div class="section-divider"></div>
-        <div class="section-title">Τύποι Οχημάτων</div>
-        <div class="section-subtitle">Ορίστε τα οχήματα που προσφέρετε και τυχόν επιπλέον χρέωση.</div>
-        <table class="v-setup-table" id="setupVehiclesTable">
-          <thead>
-            <tr>
-              <th style="width:8%">Icon</th>
-              <th style="width:28%">Τίτλος</th>
-              <th style="width:14%">Άτομα</th>
-              <th style="width:22%">Επιπλέον</th>
-              <th style="width:14%">Ποσό</th>
-              <th style="width:8%"></th>
-            </tr>
-          </thead>
-          <tbody id="setupVehiclesList"></tbody>
-        </table>
-        <button class="btn-add" onclick="addSetupVehicleRow()">+ Προσθήκη οχήματος</button>
-      </div>
-
-      <!-- Restaurant -->
-      <div id="cfg-restaurant" style="display:none">
-        <div class="rest-grid">
-          <div class="form-group">
-            <label>Αριθμός τραπεζιών</label>
-            <input type="number" id="restTables" value="10" min="1" />
-          </div>
-          <div class="form-group">
-            <label>Διάρκεια κράτησης (λεπτά)</label>
-            <input type="number" id="restDuration" value="90" min="15" step="15" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Κουζίνα / Είδος</label>
-          <input type="text" id="restCuisine" placeholder="π.χ. Ελληνική, Ιταλική, Fusion…" />
-        </div>
-      </div>
-
-      <div class="nav-btns">
-        <button class="btn btn-secondary" onclick="goTo(2)">← Πίσω</button>
-        <button class="btn btn-primary" onclick="goTo(4)">Επόμενο →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step 4: Admin account -->
-  <div class="step-panel" id="step4">
     <div class="card">
       <h2>Λογαριασμός διαχειριστή</h2>
       <p class="subtitle">Δημιούργησε το admin account για τη διαχείριση κρατήσεων.</p>
@@ -470,7 +350,7 @@
         <input type="password" id="adminPassConfirm" placeholder="Επανάληψη κωδικού" autocomplete="new-password" />
       </div>
       <div class="nav-btns">
-        <button class="btn btn-secondary" onclick="goTo(3)">← Πίσω</button>
+        <button class="btn btn-secondary" onclick="goTo(2)">← Πίσω</button>
         <button class="btn btn-primary" id="submitBtn" onclick="submitSetup()">Δημιουργία →</button>
       </div>
     </div>
@@ -481,7 +361,7 @@
     <div class="card">
       <div class="success-icon">🎉</div>
       <h2 style="text-align:center;margin-bottom:8px">Έτοιμο!</h2>
-      <p class="subtitle" style="text-align:center;margin-bottom:24px">Η επιχείρησή σου δημιουργήθηκε. Βάλε αυτό το snippet στο site σου.</p>
+      <p class="subtitle" style="text-align:center;margin-bottom:24px">Η εταιρεία σου δημιουργήθηκε. Βάλε αυτό το snippet στο site σου.</p>
       <div class="info-row">
         📋 Business ID: <strong id="showBizId">—</strong>
       </div>
@@ -492,7 +372,7 @@
       </div>
       <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
         <a href="/admin/login" class="btn btn-primary" style="text-decoration:none">Πήγαινε στο Admin →</a>
-        <a href="/setup" class="btn btn-secondary" style="text-decoration:none">Νέα επιχείρηση</a>
+        <a href="/setup" class="btn btn-secondary" style="text-decoration:none">Νέα εταιρεία</a>
       </div>
     </div>
   </div>
@@ -500,104 +380,62 @@
 </div>
 
 <script>
-let selectedType = null;
 let currentStep = 1;
-
-// ── Type selection ────────────────────────────────────────────────────────────
-document.querySelectorAll('.type-card').forEach(card => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    selectedType = card.dataset.type;
-    document.getElementById('next1').disabled = false;
-    // special label for "Άλλο"
-    if (card.querySelector('.type-label').textContent === 'Άλλο') selectedType = 'salon';
-  });
-});
 
 // ── Step navigation ───────────────────────────────────────────────────────────
 function goTo(n) {
-  if (n === 2 && !selectedType) return;
-  if (n === 3) {
+  if (n === 2) {
     const name = document.getElementById('bizName').value.trim();
     if (!name) { document.getElementById('bizName').focus(); return; }
-    showTypeConfig();
+    if (document.querySelectorAll('.setup-vehicle-row').length === 0) initVehicles();
+    wireZoneToggle();
   }
 
   document.getElementById('step' + currentStep)?.classList.remove('active');
   currentStep = n;
-  document.getElementById('step' + n)?.classList.add('active');
+  const el = document.getElementById('step' + n);
+  if (el) el.classList.add('active');
   updateProgress(n);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function updateProgress(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 3; i++) {
     const dot = document.getElementById('dot' + i);
     const lbl = document.getElementById('lbl' + i);
-    if (i < n)  { dot.className = 'prog-dot done';   dot.textContent = '✓'; lbl.className = 'prog-label'; }
-    else if (i === n) { dot.className = 'prog-dot active'; dot.textContent = i; lbl.className = 'prog-label active'; }
-    else         { dot.className = 'prog-dot';        dot.textContent = i; lbl.className = 'prog-label'; }
-    if (i < 4) {
+    if (i < n)       { dot.className = 'prog-dot done';   dot.textContent = '✓'; lbl.className = 'prog-label'; }
+    else if (i === n){ dot.className = 'prog-dot active'; dot.textContent = i;   lbl.className = 'prog-label active'; }
+    else             { dot.className = 'prog-dot';        dot.textContent = i;   lbl.className = 'prog-label'; }
+    if (i < 3) {
       const line = document.getElementById('line' + i);
       line.className = i < n ? 'prog-line done' : 'prog-line';
     }
   }
 }
 
-// ── Step 3: show correct config section ───────────────────────────────────────
-function showTypeConfig() {
-  const subtitles = {
-    salon:      'Πρόσθεσε τις υπηρεσίες και τιμές σου.',
-    clinic:     'Πρόσθεσε τις ειδικότητες της κλινικής.',
-    taxi:       'Ρύθμισε τον τιμοκατάλογο.',
-    restaurant: 'Ρύθμισε τις παραμέτρους κρατήσεων.',
-  };
-  document.getElementById('step3Subtitle').textContent = subtitles[selectedType] || subtitles.salon;
-
-  document.getElementById('cfg-salon').style.display     = ['salon'].includes(selectedType) ? '' : 'none';
-  document.getElementById('cfg-clinic').style.display    = selectedType === 'clinic'     ? '' : 'none';
-  document.getElementById('cfg-taxi').style.display      = selectedType === 'taxi'       ? '' : 'none';
-  document.getElementById('cfg-restaurant').style.display = selectedType === 'restaurant' ? '' : 'none';
-
-  if (selectedType === 'salon' && document.querySelectorAll('.salon-data-row').length === 0) addSalonRow();
-  if (selectedType === 'clinic' && document.querySelectorAll('.clinic-data-row').length === 0) addClinicRow();
-  if (selectedType === 'taxi') {
-    // Wire zone mode toggle
-    document.querySelectorAll('input[name="setup-zone-mode"]').forEach(r =>
-      r.addEventListener('change', toggleSetupAreasRow));
-    toggleSetupAreasRow();
-    // Default vehicles if empty
-    if (document.querySelectorAll('.setup-vehicle-row').length === 0) {
-      [
-        { icon: '🚗', label: 'Economy',     capacity: '1-4', surcharge_type: 'none',  surcharge_value: 0 },
-        { icon: '🚐', label: 'Van',          capacity: '5-8', surcharge_type: 'fixed', surcharge_value: 10 },
-        { icon: '🚘', label: 'VIP/Mercedes', capacity: '1-4', surcharge_type: 'pct',   surcharge_value: 50 },
-      ].forEach(v => addSetupVehicleRow(v));
-    }
-  }
+// ── Zone toggle ───────────────────────────────────────────────────────────────
+function wireZoneToggle() {
+  document.querySelectorAll('input[name="setup-zone-mode"]').forEach(r =>
+    r.addEventListener('change', toggleAreasRow));
+  toggleAreasRow();
 }
 
-function toggleSetupAreasRow() {
+function toggleAreasRow() {
   const mode = document.querySelector('input[name="setup-zone-mode"]:checked')?.value;
   const row  = document.getElementById('setup-areas-row');
   if (row) row.style.display = mode === 'open' ? 'none' : '';
 }
 
-// ── Salon services ────────────────────────────────────────────────────────────
-function addSalonRow() {
-  const row = document.createElement('div');
-  row.className = 'service-row salon-row salon-data-row';
-  row.innerHTML = `
-    <input type="text" placeholder="Υπηρεσία" class="svc-name" />
-    <input type="number" placeholder="25" min="0" step="1" class="svc-price" />
-    <input type="number" placeholder="45" min="5" step="5" class="svc-duration" />
-    <button class="btn-icon" onclick="this.closest('.service-row').remove()" title="Διαγραφή">×</button>
-  `;
-  document.getElementById('salonList').appendChild(row);
+// ── Default vehicles ──────────────────────────────────────────────────────────
+function initVehicles() {
+  [
+    { icon: '🚗', label: 'Economy',     capacity: '1-4', surcharge_type: 'none',  surcharge_value: 0  },
+    { icon: '🚐', label: 'Van',         capacity: '5-8', surcharge_type: 'fixed', surcharge_value: 10 },
+    { icon: '🚘', label: 'VIP/Mercedes',capacity: '1-4', surcharge_type: 'pct',   surcharge_value: 50 },
+  ].forEach(v => addSetupVehicleRow(v));
 }
 
-// ── Taxi fix routes ───────────────────────────────────────────────────────────
+// ── Fix routes ────────────────────────────────────────────────────────────────
 function addFixRouteRow() {
   const row = document.createElement('div');
   row.className = 'service-row fix-route-row fix-route-data-row';
@@ -610,18 +448,18 @@ function addFixRouteRow() {
   document.getElementById('fixRoutesList').appendChild(row);
 }
 
-// ── Setup vehicles ────────────────────────────────────────────────────────────
+// ── Vehicles ──────────────────────────────────────────────────────────────────
 function addSetupVehicleRow(v = {}) {
   const row = document.createElement('tr');
   row.className = 'setup-vehicle-row';
-  const stype = v.surcharge_type || 'none';
+  const stype    = v.surcharge_type || 'none';
   const valStyle = stype === 'none' ? 'opacity:0.3;pointer-events:none;' : '';
   row.innerHTML = `
     <td><input class="v-setup-input v-icon" placeholder="🚗" value="${v.icon || ''}" /></td>
     <td><input class="v-setup-input" placeholder="Economy" value="${v.label || ''}" /></td>
     <td><input class="v-setup-input v-cap" placeholder="1-4" value="${v.capacity || ''}" /></td>
     <td>
-      <select class="v-setup-select" onchange="onSetupSurchargeChange(this)">
+      <select class="v-setup-select" onchange="onSurchargeChange(this)">
         <option value="none"  ${stype==='none'  ?'selected':''}>Κανένα</option>
         <option value="fixed" ${stype==='fixed' ?'selected':''}>+€ σταθερό</option>
         <option value="pct"   ${stype==='pct'   ?'selected':''}>+% ποσοστό</option>
@@ -633,7 +471,7 @@ function addSetupVehicleRow(v = {}) {
   document.getElementById('setupVehiclesList').appendChild(row);
 }
 
-function onSetupSurchargeChange(sel) {
+function onSurchargeChange(sel) {
   const valInput = sel.closest('tr').querySelector('input[type="number"]');
   if (valInput) {
     const isNone = sel.value === 'none';
@@ -642,131 +480,91 @@ function onSetupSurchargeChange(sel) {
   }
 }
 
-// ── Clinic specialties ────────────────────────────────────────────────────────
-function addClinicRow() {
-  const row = document.createElement('div');
-  row.className = 'service-row clinic-row clinic-data-row';
-  row.innerHTML = `
-    <input type="text" placeholder="Ειδικότητα" class="spec-name" />
-    <input type="number" placeholder="30" min="5" step="5" class="spec-duration" />
-    <button class="btn-icon" onclick="this.closest('.service-row').remove()" title="Διαγραφή">×</button>
-  `;
-  document.getElementById('clinicList').appendChild(row);
-}
-
 // ── Password strength ─────────────────────────────────────────────────────────
 function checkStrength() {
   const p = document.getElementById('adminPass').value;
   const fill = document.getElementById('strengthFill');
   let score = 0;
-  if (p.length >= 8)  score++;
-  if (/[A-Z]/.test(p)) score++;
-  if (/[0-9]/.test(p)) score++;
+  if (p.length >= 8)        score++;
+  if (/[A-Z]/.test(p))      score++;
+  if (/[0-9]/.test(p))      score++;
   if (/[^A-Za-z0-9]/.test(p)) score++;
   const colors = ['#f85149','#f0883e','#e3b341','#3fb950'];
-  fill.style.width    = (score * 25) + '%';
+  fill.style.width      = (score * 25) + '%';
   fill.style.background = colors[score - 1] || 'transparent';
 }
 
-// ── Collect form data ─────────────────────────────────────────────────────────
+// ── Collect & submit ──────────────────────────────────────────────────────────
 function collectPayload() {
-  const name       = document.getElementById('bizName').value.trim();
-  const phone      = document.getElementById('bizPhone').value.trim();
-  const address    = document.getElementById('bizAddress').value.trim();
-  const theme_color = document.getElementById('themeColor').value;
-  const admin_username = document.getElementById('adminUser').value.trim();
-  const admin_password = document.getElementById('adminPass').value;
+  const fixedRoutes = [];
+  document.querySelectorAll('.fix-route-data-row').forEach(row => {
+    const origin      = row.querySelector('.fix-origin').value.trim();
+    const destination = row.querySelector('.fix-destination').value.trim();
+    const price       = parseFloat(row.querySelector('.fix-price').value) || 0;
+    if (origin && destination && price > 0) fixedRoutes.push({ origin, destination, price });
+  });
 
-  let services = [];
-  let config   = {};
+  const zoneMode  = document.querySelector('input[name="setup-zone-mode"]:checked')?.value || 'whitelist';
+  const zoneAreas = (document.getElementById('setupZoneAreas')?.value || '')
+    .split('\n').map(s => s.trim()).filter(Boolean);
+  const intraZone = document.getElementById('setupIntraZone')?.checked ?? false;
 
-  if (selectedType === 'salon') {
-    document.querySelectorAll('.salon-data-row').forEach(row => {
-      const n = row.querySelector('.svc-name').value.trim();
-      const p = parseFloat(row.querySelector('.svc-price').value) || 0;
-      const d = parseInt(row.querySelector('.svc-duration').value) || 45;
-      if (n) services.push({ name: n, price: p, duration: d });
+  const vehicles = [];
+  document.querySelectorAll('.setup-vehicle-row').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const sel    = row.querySelector('select');
+    const label  = inputs[1]?.value.trim() || '';
+    if (!label) return;
+    vehicles.push({
+      id:              label.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+      icon:            inputs[0]?.value.trim() || '',
+      label,
+      capacity:        inputs[2]?.value.trim() || '',
+      surcharge_type:  sel?.value || 'none',
+      surcharge_value: parseFloat(inputs[3]?.value) || 0,
+      enabled:         true,
     });
+  });
 
-  } else if (selectedType === 'clinic') {
-    document.querySelectorAll('.clinic-data-row').forEach(row => {
-      const n = row.querySelector('.spec-name').value.trim();
-      const d = parseInt(row.querySelector('.spec-duration').value) || 30;
-      if (n) services.push({ name: n, duration: d });
-    });
-
-  } else if (selectedType === 'taxi') {
-    const fixedRoutes = [];
-    document.querySelectorAll('.fix-route-data-row').forEach(row => {
-      const origin      = row.querySelector('.fix-origin').value.trim();
-      const destination = row.querySelector('.fix-destination').value.trim();
-      const price       = parseFloat(row.querySelector('.fix-price').value) || 0;
-      if (origin && destination && price > 0) fixedRoutes.push({ origin, destination, price });
-    });
-
-    const zoneMode  = document.querySelector('input[name="setup-zone-mode"]:checked')?.value || 'whitelist';
-    const zoneAreas = (document.getElementById('setupZoneAreas')?.value || '')
-      .split('\n').map(s => s.trim()).filter(Boolean);
-    const intraZone = document.getElementById('setupIntraZone')?.checked ?? false;
-
-    const vehicles = [];
-    document.querySelectorAll('.setup-vehicle-row').forEach(row => {
-      const inputs  = row.querySelectorAll('input');
-      const sel     = row.querySelector('select');
-      const label   = inputs[1]?.value.trim() || '';
-      if (!label) return;
-      vehicles.push({
-        id:              label.toLowerCase().replace(/[^a-z0-9]/g, '_'),
-        icon:            inputs[0]?.value.trim() || '',
-        label,
-        capacity:        inputs[2]?.value.trim() || '',
-        surcharge_type:  sel?.value || 'none',
-        surcharge_value: parseFloat(inputs[3]?.value) || 0,
-        enabled:         true,
-      });
-    });
-
-    config = {
+  return {
+    type:  'taxi',
+    name:  document.getElementById('bizName').value.trim(),
+    phone: document.getElementById('bizPhone').value.trim(),
+    address: document.getElementById('bizAddress').value.trim(),
+    theme_color: document.getElementById('themeColor').value,
+    services: [],
+    config: {
       pricing: {
         mode:         'combined',
-        base_fare:    parseFloat(document.getElementById('taxiBase').value)    || 3.50,
-        price_per_km: parseFloat(document.getElementById('taxiPerKm').value)   || 1.50,
-        min_fare:     parseFloat(document.getElementById('taxiMin').value)     || 4.50,
-        currency:     document.getElementById('taxiCurrency').value.trim()     || '€',
+        base_fare:    parseFloat(document.getElementById('taxiBase').value)  || 3.50,
+        price_per_km: parseFloat(document.getElementById('taxiPerKm').value) || 1.50,
+        min_fare:     parseFloat(document.getElementById('taxiMin').value)   || 4.50,
+        currency:     document.getElementById('taxiCurrency').value.trim()   || '€',
+        tariff_note:  document.getElementById('taxiNote').value.trim()       || undefined,
         fixed_routes: fixedRoutes,
       },
       zones:    { mode: zoneMode, areas: zoneAreas, intra_zone: intraZone },
       vehicles,
-    };
-
-  } else if (selectedType === 'restaurant') {
-    config = {
-      tables:               parseInt(document.getElementById('restTables').value)   || 10,
-      reservation_duration: parseInt(document.getElementById('restDuration').value) || 90,
-      cuisine:              document.getElementById('restCuisine').value.trim()     || '',
-    };
-  }
-
-  return { type: selectedType, name, phone, address, theme_color, services, config, admin_username, admin_password };
+    },
+    admin_username: document.getElementById('adminUser').value.trim(),
+    admin_password: document.getElementById('adminPass').value,
+  };
 }
 
-// ── Submit ────────────────────────────────────────────────────────────────────
 async function submitSetup() {
   const errorBox = document.getElementById('adminError');
   errorBox.style.display = 'none';
 
   const payload = collectPayload();
 
-  if (!payload.admin_username) { showError('Συμπλήρωσε όνομα χρήστη.'); return; }
-  if (payload.admin_password.length < 8) { showError('Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες.'); return; }
+  if (!payload.admin_username)               { showError('Συμπλήρωσε όνομα χρήστη.'); return; }
+  if (payload.admin_password.length < 8)     { showError('Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες.'); return; }
   if (payload.admin_password !== document.getElementById('adminPassConfirm').value) {
-    showError('Οι κωδικοί δεν ταιριάζουν.');
-    return;
+    showError('Οι κωδικοί δεν ταιριάζουν.'); return;
   }
 
   const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Αποθήκευση…';
+  btn.disabled = true; btn.textContent = 'Αποθήκευση…';
 
   try {
     const res  = await fetch('/api/setup', {
@@ -776,15 +574,16 @@ async function submitSetup() {
     });
     const data = await res.json();
 
-    if (!res.ok) { showError(data.error || 'Σφάλμα κατά τη δημιουργία.'); btn.disabled = false; btn.textContent = 'Δημιουργία →'; return; }
+    if (!res.ok) {
+      showError(data.error || 'Σφάλμα κατά τη δημιουργία.');
+      btn.disabled = false; btn.textContent = 'Δημιουργία →';
+      return;
+    }
 
-    // Show success screen
-    document.getElementById('step4').classList.remove('active');
+    document.getElementById('step3').classList.remove('active');
     document.getElementById('stepDone').classList.add('active');
     document.getElementById('showBizId').textContent = data.business_id;
     document.getElementById('embedCode').textContent = data.embed;
-
-    // Hide progress bar on done
     document.getElementById('progressBar').style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -801,8 +600,7 @@ function showError(msg) {
 }
 
 function copyEmbed() {
-  const code = document.getElementById('embedCode').textContent;
-  navigator.clipboard.writeText(code).then(() => {
+  navigator.clipboard.writeText(document.getElementById('embedCode').textContent).then(() => {
     const msg = document.getElementById('copyMsg');
     msg.style.display = 'inline';
     setTimeout(() => msg.style.display = 'none', 2500);
