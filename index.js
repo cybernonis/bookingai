@@ -282,10 +282,6 @@ CONFIRMED_BOOKING:{name}|{phone}|{email}|{pickup}|{destination}|{datetime}|{vehi
   res.status(201).json({ business_id, embed });
 });
 
-// ── Version check ─────────────────────────────────────────────────────────────
-
-app.get('/api/version', (_req, res) => res.json({ version: 'pricing-zones-v2-' + Date.now(), routes: ['ai-settings','pricing-zones'] }));
-
 // ── Public pages ──────────────────────────────────────────────────────────────
 
 app.get('/dashboard', (_req, res) =>
