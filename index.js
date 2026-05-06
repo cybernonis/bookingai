@@ -284,7 +284,7 @@ CONFIRMED_BOOKING:{name}|{phone}|{email}|{pickup}|{destination}|{datetime}|{vehi
 
 // ── Version check ─────────────────────────────────────────────────────────────
 
-app.get('/api/version', (_req, res) => res.json({ version: 'pricing-zones-v1', routes: ['ai-settings','pricing-zones'] }));
+app.get('/api/version', (_req, res) => res.json({ version: 'pricing-zones-v2-' + Date.now(), routes: ['ai-settings','pricing-zones'] }));
 
 // ── Public pages ──────────────────────────────────────────────────────────────
 
