@@ -324,6 +324,77 @@
     .ai-ch-send:disabled { opacity: 0.35; cursor: not-allowed; }
     .ai-ch-send svg { width: 14px; height: 14px; }
 
+    /* ── AI header icon buttons ── */
+    .ai-ch-hdr-btn {
+      background: none; border: none; color: rgba(255,255,255,0.75); cursor: pointer;
+      font-size: 1rem; padding: 5px 7px; border-radius: 5px; flex-shrink: 0;
+      transition: color 0.15s, background 0.15s; line-height: 1;
+    }
+    .ai-ch-hdr-btn:hover { color: #fff; background: rgba(255,255,255,0.14); }
+    .ai-ch-hdr-btn.active { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* ── AI overlay panels (Settings & Guide) ── */
+    .ai-overlay-panel {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--surface); z-index: 20; display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.22s cubic-bezier(.4,0,.2,1);
+      border-radius: 0;
+    }
+    .ai-overlay-panel.open { transform: translateX(0); }
+    .ai-overlay-hdr {
+      background: var(--accent); color: #fff; padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 10px;
+    }
+    .ai-overlay-hdr span { font-size: 0.9rem; font-weight: 600; }
+    .ai-overlay-hdr button {
+      background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer;
+      font-size: 1.1rem; padding: 4px 8px; border-radius: 5px; transition: color 0.15s, background 0.15s;
+    }
+    .ai-overlay-hdr button:hover { color: #fff; background: rgba(255,255,255,0.12); }
+    .ai-overlay-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
+
+    /* Settings rows */
+    .ai-setting-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+    .ai-setting-row:last-child { border-bottom: none; }
+    .ai-setting-row > label { font-size: 0.83rem; font-weight: 500; color: var(--text); flex-shrink: 0; }
+    .ai-setting-opts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .ai-opt {
+      padding: 4px 11px; border-radius: 6px; border: 1.5px solid var(--border);
+      background: transparent; font-size: 0.74rem; cursor: pointer; color: var(--muted);
+      transition: border-color 0.15s, background 0.15s, color 0.15s; font-family: inherit;
+    }
+    .ai-opt:hover { border-color: var(--accent); color: var(--accent); }
+    .ai-opt.active { border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 600; }
+    .ai-toggle {
+      padding: 4px 16px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: transparent; font-size: 0.76rem; font-weight: 600; cursor: pointer;
+      color: var(--muted); transition: border-color 0.15s, background 0.15s, color 0.15s; font-family: inherit;
+    }
+    .ai-toggle.on { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+
+    /* Guide categories */
+    .ai-guide-cat { margin-bottom: 18px; }
+    .ai-guide-cat-title { font-size: 0.73rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 7px; }
+    .ai-guide-item {
+      display: block; width: 100%; text-align: left;
+      padding: 7px 12px; margin-bottom: 4px; border-radius: 7px;
+      border: 1px solid var(--border); background: var(--bg);
+      font-size: 0.78rem; color: var(--text); cursor: pointer; font-family: inherit;
+      transition: background 0.13s, border-color 0.13s, color 0.13s;
+    }
+    .ai-guide-item:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* Help message */
+    .ai-ch-msg-help { align-self: flex-start; background: #f0f2f5; color: var(--text); border-radius: 14px; border-bottom-left-radius: 4px; padding: 12px 14px; max-width: 96%; font-size: 0.8rem; line-height: 1.55; }
+    .ai-help-cat { margin-bottom: 12px; }
+    .ai-help-cat-title { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .ai-help-item {
+      display: inline-block; padding: 3px 9px; margin: 2px 2px; border-radius: 5px;
+      border: 1px solid #d1d5db; background: #fff; font-size: 0.75rem;
+      color: var(--accent); cursor: pointer; transition: background 0.13s, color 0.13s;
+    }
+    .ai-help-item:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
     /* ── AI History tab ── */
     .ai-hist-filters { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
     .ai-hist-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
@@ -1019,6 +1090,85 @@
 
 <!-- ── AI Chat Panel ───────────────────────────────────────────────────── -->
 <div id="ai-chat-panel">
+  <!-- Settings overlay -->
+  <div id="ai-settings-panel" class="ai-overlay-panel">
+    <div class="ai-overlay-hdr">
+      <span>⚙️ Ρυθμίσεις AI</span>
+      <button onclick="closeAiSettings()">✕</button>
+    </div>
+    <div class="ai-overlay-body">
+      <div class="ai-setting-row">
+        <label>Τόνος</label>
+        <div class="ai-setting-opts" id="ai-tone-opts">
+          <button class="ai-opt" data-val="professional" onclick="setAiOpt('tone',this)">Επαγγελματικός</button>
+          <button class="ai-opt" data-val="friendly" onclick="setAiOpt('tone',this)">Φιλικός</button>
+          <button class="ai-opt" data-val="brief" onclick="setAiOpt('tone',this)">Σύντομος</button>
+        </div>
+      </div>
+      <div class="ai-setting-row">
+        <label>Γλώσσα</label>
+        <div class="ai-setting-opts" id="ai-lang-opts">
+          <button class="ai-opt" data-val="auto" onclick="setAiOpt('lang',this)">Αυτόματη</button>
+          <button class="ai-opt" data-val="el" onclick="setAiOpt('lang',this)">Ελληνικά</button>
+          <button class="ai-opt" data-val="en" onclick="setAiOpt('lang',this)">English</button>
+        </div>
+      </div>
+      <div class="ai-setting-row">
+        <label>Auto-προτάσεις</label>
+        <button class="ai-toggle" id="ai-toggle-suggestions" onclick="toggleAiSetting('suggestions')">ON</button>
+      </div>
+      <div class="ai-setting-row">
+        <label>Ειδοποιήσεις</label>
+        <button class="ai-toggle" id="ai-toggle-notifications" onclick="toggleAiSetting('notifications')">ON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guide overlay -->
+  <div id="ai-guide-panel" class="ai-overlay-panel">
+    <div class="ai-overlay-hdr">
+      <span>❓ Οδηγός Χρήσης</span>
+      <button onclick="closeAiGuide()">✕</button>
+    </div>
+    <div class="ai-overlay-body">
+      <div class="ai-guide-cat">
+        <div class="ai-guide-cat-title">⏰ Ώρες &amp; Ημέρες</div>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Τις Κυριακές δεν δέχομαι κρατήσεις</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Από 18:00 έως 22:00 βάλε +30%</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Τα Σαββατοκύριακα κλειστά</button>
+      </div>
+      <div class="ai-guide-cat">
+        <div class="ai-guide-cat-title">💶 Τιμολόγηση</div>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Άλλαξε τιμή/χλμ σε €1.20</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Fix τιμή Αεροδρόμιο → Χερσόνησος = €35</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Last minute κάτω από 4 ώρες +25%</button>
+      </div>
+      <div class="ai-guide-cat">
+        <div class="ai-guide-cat-title">📍 Περιοχές</div>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Δεν εξυπηρετώ εντός νομού Χανίων</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Νότια Κρήτης +20%</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Αφαίρεσε την Ιεράπετρα από τη νότια ζώνη</button>
+      </div>
+      <div class="ai-guide-cat">
+        <div class="ai-guide-cat-title">🚗 Οχήματα</div>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">VIP +€20 επιπλέον</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Van μόνο για 4+ επιβάτες</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Απενεργοποίησε Economy</button>
+      </div>
+      <div class="ai-guide-cat">
+        <div class="ai-guide-cat-title">⚡ Σύνθετοι Κανόνες</div>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Παρασκευή βράδυ 20:00-24:00 VIP +40%</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Νότια ζώνη Κυριακή +50% εκτός Economy</button>
+      </div>
+      <div class="ai-guide-cat">
+        <div class="ai-guide-cat-title">🔄 Διαχείριση</div>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Τι αλλαγές έχω κάνει;</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Αναίρεσε την τελευταία αλλαγή</button>
+        <button class="ai-guide-item" onclick="useGuideExample(this)">Δείξε μου όλους τους κανόνες</button>
+      </div>
+    </div>
+  </div>
+
   <div class="ai-ch-header">
     <div class="ai-ch-header-info">
       <h3>🤖 AI Settings Assistant</h3>
@@ -1026,6 +1176,8 @@
         <span class="ai-ch-online-dot"></span>Online — δώσε εντολή για αλλαγές
       </div>
     </div>
+    <button class="ai-ch-hdr-btn" id="ai-btn-guide" onclick="toggleAiGuide(event)" title="Οδηγός Χρήσης">❓</button>
+    <button class="ai-ch-hdr-btn" id="ai-btn-settings" onclick="toggleAiSettings(event)" title="Ρυθμίσεις AI">⚙️</button>
     <button class="ai-ch-close" onclick="toggleAiPanel()" aria-label="Κλείσιμο">✕</button>
   </div>
   <div class="ai-ch-biz-sel">
@@ -2105,6 +2257,133 @@
     aiChatBiz = document.getElementById('ai-panel-biz-sel').value || null;
   }
 
+  // ── AI Settings overlay ───────────────────────────────────────────────────
+  let _aiSettings = JSON.parse(localStorage.getItem('ai_panel_settings') || '{"tone":"professional","lang":"auto","suggestions":true,"notifications":true}');
+
+  function _applyAiSettings() {
+    ['professional','friendly','brief'].forEach(v => {
+      document.querySelector(`#ai-tone-opts [data-val="${v}"]`)?.classList.toggle('active', _aiSettings.tone === v);
+    });
+    ['auto','el','en'].forEach(v => {
+      document.querySelector(`#ai-lang-opts [data-val="${v}"]`)?.classList.toggle('active', _aiSettings.lang === v);
+    });
+    const sBtn = document.getElementById('ai-toggle-suggestions');
+    const nBtn = document.getElementById('ai-toggle-notifications');
+    if (sBtn) { sBtn.textContent = _aiSettings.suggestions ? 'ON' : 'OFF'; sBtn.classList.toggle('on', _aiSettings.suggestions); }
+    if (nBtn) { nBtn.textContent = _aiSettings.notifications ? 'ON' : 'OFF'; nBtn.classList.toggle('on', _aiSettings.notifications); }
+  }
+
+  function toggleAiSettings(e) {
+    e?.stopPropagation();
+    const panel = document.getElementById('ai-settings-panel');
+    const btn   = document.getElementById('ai-btn-settings');
+    const isOpen = panel.classList.contains('open');
+    document.getElementById('ai-guide-panel').classList.remove('open');
+    document.getElementById('ai-btn-guide').classList.remove('active');
+    if (isOpen) { panel.classList.remove('open'); btn.classList.remove('active'); }
+    else { _applyAiSettings(); panel.classList.add('open'); btn.classList.add('active'); }
+  }
+
+  function closeAiSettings() {
+    document.getElementById('ai-settings-panel').classList.remove('open');
+    document.getElementById('ai-btn-settings').classList.remove('active');
+  }
+
+  function setAiOpt(key, btn) {
+    _aiSettings[key] = btn.dataset.val;
+    localStorage.setItem('ai_panel_settings', JSON.stringify(_aiSettings));
+    _applyAiSettings();
+  }
+
+  function toggleAiSetting(key) {
+    _aiSettings[key] = !_aiSettings[key];
+    localStorage.setItem('ai_panel_settings', JSON.stringify(_aiSettings));
+    _applyAiSettings();
+  }
+
+  // ── AI Guide overlay ──────────────────────────────────────────────────────
+  function toggleAiGuide(e) {
+    e?.stopPropagation();
+    const panel = document.getElementById('ai-guide-panel');
+    const btn   = document.getElementById('ai-btn-guide');
+    const isOpen = panel.classList.contains('open');
+    document.getElementById('ai-settings-panel').classList.remove('open');
+    document.getElementById('ai-btn-settings').classList.remove('active');
+    if (isOpen) { panel.classList.remove('open'); btn.classList.remove('active'); }
+    else { panel.classList.add('open'); btn.classList.add('active'); }
+  }
+
+  function closeAiGuide() {
+    document.getElementById('ai-guide-panel').classList.remove('open');
+    document.getElementById('ai-btn-guide').classList.remove('active');
+  }
+
+  function useGuideExample(btn) {
+    closeAiGuide();
+    const text = btn.textContent.trim();
+    document.getElementById('ai-ch-input').value = text;
+    document.getElementById('ai-ch-input').focus();
+  }
+
+  // ── AI Help command ───────────────────────────────────────────────────────
+  function showAiHelp() {
+    const msgs = document.getElementById('ai-ch-msgs');
+    const wrap = document.createElement('div');
+    wrap.className = 'ai-ch-msg ai-ch-msg-help';
+
+    const cats = [
+      { icon: '⏰', title: 'Ώρες & Ημέρες', items: [
+        'Τις Κυριακές δεν δέχομαι κρατήσεις',
+        'Από 18:00 έως 22:00 βάλε +30%',
+        'Τα Σαββατοκύριακα κλειστά',
+      ]},
+      { icon: '💶', title: 'Τιμολόγηση', items: [
+        'Άλλαξε τιμή/χλμ σε €1.20',
+        'Fix τιμή Αεροδρόμιο → Χερσόνησος = €35',
+        'Last minute κάτω από 4 ώρες +25%',
+      ]},
+      { icon: '📍', title: 'Περιοχές', items: [
+        'Δεν εξυπηρετώ εντός νομού Χανίων',
+        'Νότια Κρήτης +20%',
+        'Αφαίρεσε την Ιεράπετρα από τη νότια ζώνη',
+      ]},
+      { icon: '🚗', title: 'Οχήματα', items: [
+        'VIP +€20 επιπλέον',
+        'Van μόνο για 4+ επιβάτες',
+        'Απενεργοποίησε Economy',
+      ]},
+      { icon: '⚡', title: 'Σύνθετοι Κανόνες', items: [
+        'Παρασκευή βράδυ 20:00-24:00 VIP +40%',
+        'Νότια ζώνη Κυριακή +50% εκτός Economy',
+      ]},
+      { icon: '🔄', title: 'Διαχείριση', items: [
+        'Τι αλλαγές έχω κάνει;',
+        'Αναίρεσε την τελευταία αλλαγή',
+        'Δείξε μου όλους τους κανόνες',
+      ]},
+    ];
+
+    cats.forEach(cat => {
+      const sec = document.createElement('div');
+      sec.className = 'ai-help-cat';
+      const title = document.createElement('div');
+      title.className = 'ai-help-cat-title';
+      title.textContent = `${cat.icon} ${cat.title}`;
+      sec.appendChild(title);
+      cat.items.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'ai-help-item';
+        btn.textContent = item;
+        btn.onclick = () => sendAiChatMsg(item);
+        sec.appendChild(btn);
+      });
+      wrap.appendChild(sec);
+    });
+
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
   function fillAiChip(btn) {
     const input = document.getElementById('ai-ch-input');
     input.value = btn.textContent.trim();
@@ -2154,7 +2433,7 @@
 
     // Mouse
     header.addEventListener('mousedown', e => {
-      if (e.target.closest('.ai-ch-close, select, input, button')) return;
+      if (e.target.closest('.ai-ch-close, .ai-ch-hdr-btn')) return;
       startDrag(e.clientX, e.clientY);
       e.preventDefault();
     });
@@ -2240,12 +2519,18 @@
     addAiMsg('ai', 'Ακυρώθηκε — η ζώνη δεν αποθηκεύτηκε.');
   }
 
-  async function sendAiChatMsg() {
+  async function sendAiChatMsg(overrideMsg) {
     if (!aiChatBiz) { addAiMsg('ai', '⚠️ Επίλεξε πρώτα επιχείρηση.'); return; }
     const input = document.getElementById('ai-ch-input');
-    const msg = input.value.trim();
+    const msg = (overrideMsg || input.value).trim();
     if (!msg) return;
     input.value = '';
+
+    // Help command — local response, no API call
+    if (['help','βοήθεια','?'].includes(msg.toLowerCase())) {
+      showAiHelp();
+      return;
+    }
     input.disabled = true;
     document.getElementById('ai-ch-send').disabled = true;
     addAiMsg('user', msg);
