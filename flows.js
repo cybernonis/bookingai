@@ -155,14 +155,30 @@ async function aiChatFlow(message, history, business, lang) {
     ? `\n\nSESSION LANGUAGE: The customer selected ${LANG_NAMES[lang]}. ALWAYS respond in ${LANG_NAMES[lang]}. Never switch language.`
     : `\n\nDEFAULT LANGUAGE: Respond in English. If the customer writes in a different language you may continue in that language.`;
 
+  const distanceMarker = `\n\nDISTANCE MARKER: When showing the booking summary before asking for final confirmation, include exactly this on its own line (replace with actual values): PRE_CONFIRM:pickup|destination\nThis marker will be replaced with the real road distance and duration shown to the customer. Do NOT include it after the customer confirms — only in the summary step.`;
+
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Today is ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${sessionLang}`,
+    system: `Today is ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${sessionLang}${distanceMarker}`,
     messages: msgs,
   });
 
   let text = response.content[0].text;
+
+  // Inject distance into pre-confirmation summary
+  const preConfirmMatch = text.match(/PRE_CONFIRM:([^\n]+)/);
+  if (preConfirmMatch) {
+    const [prePickup, preDest] = preConfirmMatch[1].split('|').map(s => s.trim());
+    let distLine = '';
+    if (prePickup && preDest && prePickup.toLowerCase() !== 'skip' && preDest.toLowerCase() !== 'skip') {
+      try {
+        const d = await calculateDistance(prePickup, preDest);
+        distLine = `📏 **Distance: ${d.distance_text}${d.duration_text ? ` · ⏱ ${d.duration_text}` : ''}**`;
+      } catch { /* silent — no distance shown */ }
+    }
+    text = text.replace(preConfirmMatch[0], distLine);
+  }
 
   // Detect booking confirmation marker and create real DB entry
   const confirmMatch = text.match(/CONFIRMED_BOOKING:([^\n]+)/);
