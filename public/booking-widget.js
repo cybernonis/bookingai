@@ -411,6 +411,17 @@
     return /pick.?up|where.*pick|destination|where.*go|address|location|starting point|drop.?off|pickup|from where|to where|where would|αναχώρηση|προορισμός|πού θα/i.test(last);
   }
 
+  function looksLikeAddress(text) {
+    if (text.length < 3) return false;
+    // Starts with a digit → time (14:00), date (17 May), passengers (2), price (€38)
+    if (/^\d/.test(text)) return false;
+    // Common non-address words: days, months, yes/no, time words
+    if (/^(yes|no|ok|ναι|όχι|αύριο|σήμερα|αυρ|σήμ|mon|tue|wed|thu|fri|sat|sun|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december|δευτ|τρίτ|τετά|πέμπ|παρα|σάββ|κυρι|ιανου|φεβρ|μαρτ|απρίλ|μαΐου|ιουν|ιουλ|αύγ|σεπτ|οκτ|νοε|δεκ|tonight|tomorrow|today|now|skip|ναί|nai)/i.test(text)) return false;
+    // Looks like HH:MM time
+    if (/^\d{1,2}:\d{2}$/.test(text)) return false;
+    return true;
+  }
+
   function hideAc() {
     acEl.style.display = 'none';
     acEl.innerHTML = '';
@@ -437,7 +448,7 @@
   inputEl.addEventListener('input', () => {
     clearTimeout(acTimer);
     const val = inputEl.value.trim();
-    if (val.length < 2 || !isLocationQuestion()) { hideAc(); return; }
+    if (!isLocationQuestion() || !looksLikeAddress(val)) { hideAc(); return; }
     acTimer = setTimeout(async () => {
       try {
         const res = await fetch(`${API_URL}/api/places/autocomplete?input=${encodeURIComponent(val)}`);
