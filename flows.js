@@ -119,17 +119,24 @@ function buildVehicleInstructions(vehicles) {
 
 function buildPricingZoneInstructions(pricingZones) {
   if (!Array.isArray(pricingZones) || !pricingZones.length) return '';
-  const lines = ['\n\nPRICING ZONES — apply ALWAYS based on pickup/destination:'];
+  const lines = ['\n\nPRICING ZONES — MANDATORY surcharges applied ON TOP of any price (including fixed routes):'];
   pricingZones.forEach(z => {
     let desc;
-    if (z.surcharge_type === 'pct')            desc = `+${z.surcharge_value}% on top of price`;
-    else if (z.surcharge_type === 'fixed')     desc = `+€${z.surcharge_value} fixed`;
-    else if (z.surcharge_type === 'multiplier') desc = `×${z.surcharge_value} (multiply base price)`;
-    else                                        desc = `+${z.surcharge_value}`;
+    if (z.surcharge_type === 'pct') {
+      const mult = (1 + z.surcharge_value / 100).toFixed(2);
+      desc = `+${z.surcharge_value}% → multiply price by ${mult} (example: €55 × ${mult} = €${(55 * (1 + z.surcharge_value / 100)).toFixed(2)})`;
+    } else if (z.surcharge_type === 'fixed') {
+      desc = `add €${z.surcharge_value} on top (example: €55 + €${z.surcharge_value} = €${(55 + z.surcharge_value).toFixed(2)})`;
+    } else if (z.surcharge_type === 'multiplier') {
+      desc = `multiply price by ${z.surcharge_value} (example: €55 × ${z.surcharge_value} = €${(55 * z.surcharge_value).toFixed(2)})`;
+    } else {
+      desc = `+${z.surcharge_value}`;
+    }
     const kwds = Array.isArray(z.keywords) && z.keywords.length ? z.keywords.join(', ') : z.name.toLowerCase();
-    lines.push(`• "${z.name}": if pickup or destination contains [${kwds}] → ${desc}`);
+    lines.push(`• Zone "${z.name}": keywords [${kwds}]`);
+    lines.push(`  Surcharge: ${desc}`);
   });
-  lines.push('ZONE RULE: Before giving a final price, check IF pickup or destination matches any zone. If yes, apply the zone surcharge on top and inform the customer (e.g. "Zone surcharge \'South Rethymno\' applied: +€10, final price €X").');
+  lines.push('ZONE RULE: BEFORE quoting any price, scan pickup AND destination for zone keywords. If a match is found, you MUST apply the zone surcharge — it adds to the base/fixed price. Always show the calculation: "Base €X + Zone \'[name]\' +Y% = €Z final". Never skip a matching zone.');
   return lines.join('\n');
 }
 
