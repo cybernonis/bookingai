@@ -8,7 +8,7 @@ import {
   getAllBookings, getBookingById, createBooking,
   updateBookingStatus, getStats, seedIfEmpty,
   getAdminByUsername, createAdmin, verifyPassword,
-  setupNewBusiness, updateBusinessConfig,
+  setupNewBusiness, updateBusinessConfig, updateBusinessMeta,
 } from './db.js';
 import { getBookingReply, applySettingsCommand } from './flows.js';
 
@@ -210,6 +210,32 @@ app.patch('/api/admin/business/:id/pricing-zones', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'pricing_zones array required' });
   const biz = updateBusinessConfig(bizId, { pricing_zones });
   if (!biz) return res.status(404).json({ error: 'Business not found' });
+  res.json({ business: biz });
+});
+
+app.patch('/api/admin/business/:id/app-settings', requireAdmin, (req, res) => {
+  const bizId = req.params.id;
+  if (req.session.businessId && req.session.businessId !== bizId)
+    return res.status(403).json({ error: 'Forbidden' });
+
+  const { name, theme_color, config } = req.body;
+  let biz;
+
+  if (name !== undefined || theme_color !== undefined) {
+    biz = updateBusinessMeta(bizId, { name, theme_color });
+    if (!biz) return res.status(404).json({ error: 'Business not found' });
+  }
+
+  if (config && typeof config === 'object') {
+    biz = updateBusinessConfig(bizId, config);
+    if (!biz) return res.status(404).json({ error: 'Business not found' });
+  }
+
+  if (!biz) {
+    biz = getBusinessById(bizId);
+    if (!biz) return res.status(404).json({ error: 'Business not found' });
+  }
+
   res.json({ business: biz });
 });
 

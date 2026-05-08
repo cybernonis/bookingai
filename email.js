@@ -27,7 +27,7 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
     .join('');
 
   const html = `<!DOCTYPE html>
-<html lang="el">
+<html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -44,7 +44,7 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
         <tr>
           <td style="background:#0ea5e9;padding:28px 32px;">
             <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:11px;
-                      text-transform:uppercase;letter-spacing:0.1em;">Επιβεβαίωση Κράτησης</p>
+                      text-transform:uppercase;letter-spacing:0.1em;">Booking Confirmation</p>
             <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;
                        line-height:1.3;">${esc(businessName)}</h1>
           </td>
@@ -54,15 +54,15 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
         <tr>
           <td style="padding:28px 32px 16px;">
             <p style="margin:0 0 18px;font-size:14px;color:#374151;line-height:1.6;">
-              Γεια σας <strong>${esc(name)}</strong>,<br/>
-              η κράτησή σας επιβεβαιώθηκε επιτυχώς!
+              Dear <strong>${esc(name)}</strong>,<br/>
+              your booking has been confirmed successfully!
             </p>
 
             <!-- Booking number pill -->
             <div style="display:inline-block;padding:10px 18px;background:#f0f9ff;
                         border-left:4px solid #0ea5e9;border-radius:0 8px 8px 0;margin-bottom:8px;">
               <p style="margin:0;font-size:11px;color:#6b7280;text-transform:uppercase;
-                        letter-spacing:0.06em;">Αριθμός Κράτησης</p>
+                        letter-spacing:0.06em;">Booking Number</p>
               <p style="margin:4px 0 0;font-size:22px;font-weight:800;color:#0ea5e9;
                         letter-spacing:0.05em;">${esc(bookingNum)}</p>
             </div>
@@ -83,8 +83,8 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
         <tr>
           <td style="padding:18px 32px;background:#f9fafb;border-top:1px solid #e5e8ed;">
             <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.6;">
-              Αυτό το email στάλθηκε αυτόματα από το σύστημα κρατήσεων.<br/>
-              Παρακαλώ μην απαντάτε σε αυτό το email.
+              This email was sent automatically by the booking system.<br/>
+              Please do not reply to this email.
             </p>
           </td>
         </tr>
@@ -99,7 +99,7 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
     const info = await transporter.sendMail({
       from: `"${businessName}" <${process.env.EMAIL_USER}>`,
       to,
-      subject: `✅ Επιβεβαίωση κράτησης ${bookingNum} — ${businessName}`,
+      subject: `✅ Booking Confirmation ${bookingNum} — ${businessName}`,
       html,
     });
     console.log(`Email sent to ${to} (${bookingNum}) — ${info.messageId}`);

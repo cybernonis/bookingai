@@ -178,6 +178,19 @@ export function updateBusinessConfig(businessId, patch) {
   return parseBiz(q.bizById.get(businessId));
 }
 
+export function updateBusinessMeta(businessId, { name, theme_color } = {}) {
+  const row = q.bizById.get(businessId);
+  if (!row) return null;
+  const fields = [], params = [];
+  if (name !== undefined)        { fields.push('name = ?');        params.push(name); }
+  if (theme_color !== undefined) { fields.push('theme_color = ?'); params.push(theme_color); }
+  if (fields.length) {
+    params.push(businessId);
+    db.prepare(`UPDATE businesses SET ${fields.join(', ')} WHERE business_id = ?`).run(...params);
+  }
+  return parseBiz(q.bizById.get(businessId));
+}
+
 export function getAvailableSlots(businessId, date = null) {
   return date ? q.slotsByDate.all(businessId, date) : q.slotsAll.all(businessId);
 }

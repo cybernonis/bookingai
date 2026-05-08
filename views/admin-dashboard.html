@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -237,6 +237,13 @@
     .ai-response.pending { background: var(--yellow-bg); border-color: #fcd34d; color: var(--yellow); }
     .kw-chip { display: inline-block; background: rgba(0,0,0,0.06); border-radius: 4px; padding: 1px 6px; margin: 2px 2px; font-size: 0.73rem; }
 
+    /* ── App settings ── */
+    .lang-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+    .lang-check-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 0.82rem; transition: border-color 0.15s, background 0.15s; user-select: none; }
+    .lang-check-item:has(input:checked) { border-color: var(--accent); background: #f0f1ff; font-weight: 600; }
+    .lang-check-item input { width: 14px; height: 14px; accent-color: var(--accent); }
+    .embed-block { background: #1a1d23; color: #e2e8f0; border-radius: 8px; padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 0.75rem; line-height: 1.7; white-space: pre-wrap; word-break: break-all; margin-bottom: 10px; }
+
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -254,12 +261,12 @@
       <p>Admin Panel</p>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-section">Πλοήγηση</div>
+      <div class="nav-section">Navigation</div>
       <a class="nav-item active" href="/admin/dashboard">
         <span class="nav-icon">📋</span> Dashboard
       </a>
 
-      <div class="nav-section" style="margin-top:12px;">Επιχειρήσεις</div>
+      <div class="nav-section" style="margin-top:12px;">Businesses</div>
       <div class="biz-list" id="sidebar-biz-list"></div>
 
       <div class="nav-section" style="margin-top:12px;">Demo</div>
@@ -271,39 +278,40 @@
       <div class="user-avatar">👤</div>
       <div class="user-info">
         <div class="user-name" id="sidebar-username">admin</div>
-        <div class="user-role">Διαχειριστής</div>
+        <div class="user-role">Administrator</div>
       </div>
-      <button class="btn-logout" title="Αποσύνδεση" onclick="confirmLogout()">⏻</button>
+      <button class="btn-logout" title="Log out" onclick="confirmLogout()">⏻</button>
     </div>
   </aside>
 
   <div class="main">
     <header class="topbar">
       <div class="topbar-left">
-        <h1 id="topbar-title">Όλες οι Κρατήσεις</h1>
+        <h1 id="topbar-title">All Bookings</h1>
         <p id="topbar-date"></p>
       </div>
       <div class="topbar-right">
-        <button class="btn-sm" onclick="refreshAll()">↻ Ανανέωση</button>
-        <button class="btn-sm primary" onclick="confirmLogout()">Αποσύνδεση</button>
+        <button class="btn-sm" onclick="refreshAll()">↻ Refresh</button>
+        <button class="btn-sm primary" onclick="confirmLogout()">Log out</button>
       </div>
     </header>
 
     <!-- Main tab bar -->
     <div class="tab-nav">
-      <button class="main-tab active" id="tab-btn-bookings" onclick="switchTab('bookings')">📋 Κρατήσεις</button>
-      <button class="main-tab" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Ρυθμίσεις</button>
+      <button class="main-tab active" id="tab-btn-bookings" onclick="switchTab('bookings')">📋 Bookings</button>
+      <button class="main-tab" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Settings</button>
+      <button class="main-tab" id="tab-btn-app-settings" onclick="switchTab('app-settings')">🛠️ App Settings</button>
     </div>
 
     <div class="content">
 
-      <!-- ══════════ Tab: Κρατήσεις ══════════ -->
+      <!-- ══════════ Tab: Bookings ══════════ -->
       <div id="tab-bookings">
 
         <div class="biz-banner">
           <div class="biz-banner-dot" id="biz-banner-dot"></div>
           <div>
-            <h3 id="biz-banner-name">Φόρτωση...</h3>
+            <h3 id="biz-banner-name">Loading...</h3>
             <p id="biz-banner-services"></p>
           </div>
           <div class="biz-banner-right" id="biz-banner-right"></div>
@@ -311,31 +319,31 @@
 
         <div class="stats-grid">
           <div class="stat-card all">
-            <div class="stat-top"><div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Σύνολο</div></div><div class="stat-icon-wrap">📊</div></div>
+            <div class="stat-top"><div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total</div></div><div class="stat-icon-wrap">📊</div></div>
           </div>
           <div class="stat-card confirmed">
-            <div class="stat-top"><div><div class="stat-value" id="stat-confirmed">—</div><div class="stat-label">Επιβεβαιωμένες</div></div><div class="stat-icon-wrap">✅</div></div>
+            <div class="stat-top"><div><div class="stat-value" id="stat-confirmed">—</div><div class="stat-label">Confirmed</div></div><div class="stat-icon-wrap">✅</div></div>
           </div>
           <div class="stat-card pending">
-            <div class="stat-top"><div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Αναμονή</div></div><div class="stat-icon-wrap">⏳</div></div>
+            <div class="stat-top"><div><div class="stat-value" id="stat-pending">—</div><div class="stat-label">Pending</div></div><div class="stat-icon-wrap">⏳</div></div>
           </div>
           <div class="stat-card cancelled">
-            <div class="stat-top"><div><div class="stat-value" id="stat-cancelled">—</div><div class="stat-label">Ακυρωμένες</div></div><div class="stat-icon-wrap">❌</div></div>
+            <div class="stat-top"><div><div class="stat-value" id="stat-cancelled">—</div><div class="stat-label">Cancelled</div></div><div class="stat-icon-wrap">❌</div></div>
           </div>
         </div>
 
         <div class="table-card">
           <div class="table-header">
-            <h2>Λίστα Κρατήσεων</h2>
+            <h2>Bookings List</h2>
             <div class="table-controls">
               <div class="search-wrap">
-                <input type="text" id="search" placeholder="Αναζήτηση..." oninput="renderTable()" />
+                <input type="text" id="search" placeholder="Search..." oninput="renderTable()" />
               </div>
               <div class="filter-tabs">
-                <div class="ftab active" data-filter="all">Όλες</div>
-                <div class="ftab" data-filter="pending">Αναμονή</div>
-                <div class="ftab" data-filter="confirmed">Επιβεβαιωμένες</div>
-                <div class="ftab" data-filter="cancelled">Ακυρωμένες</div>
+                <div class="ftab active" data-filter="all">All</div>
+                <div class="ftab" data-filter="pending">Pending</div>
+                <div class="ftab" data-filter="confirmed">Confirmed</div>
+                <div class="ftab" data-filter="cancelled">Cancelled</div>
               </div>
             </div>
           </div>
@@ -343,68 +351,68 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Πελάτης</th>
-                <th class="hide-sm">Επιχείρηση</th>
-                <th class="hide-sm">Υπηρεσία</th>
-                <th>Ημ/νία</th>
-                <th class="hide-sm">Καταχ.</th>
-                <th>Κατάσταση</th>
-                <th>Ενέργειες</th>
+                <th>Customer</th>
+                <th class="hide-sm">Business</th>
+                <th class="hide-sm">Service</th>
+                <th>Date</th>
+                <th class="hide-sm">Added</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="bookings-body"></tbody>
           </table>
           <div class="empty" id="empty-state" style="display:none;">
             <div class="empty-icon">📭</div>
-            Δεν βρέθηκαν κρατήσεις.
+            No bookings found.
           </div>
         </div>
 
       </div><!-- /tab-bookings -->
 
-      <!-- ══════════ Tab: Ρυθμίσεις ══════════ -->
+      <!-- ══════════ Tab: Settings ══════════ -->
       <div id="tab-settings" style="display:none;">
 
         <!-- Placeholder when no biz selected -->
         <div class="settings-placeholder" id="settings-placeholder">
           <div class="ph-icon">🏢</div>
-          <p>Επέλεξε μια επιχείρηση από την πλαϊνή μπάρα για να δεις τις ρυθμίσεις.</p>
+          <p>Select a business from the sidebar to view settings.</p>
         </div>
 
-        <!-- ── Zones ── -->
+        <!-- ── Service Zones ── -->
         <div class="s-card" id="zones-card" style="display:none;">
           <div class="s-card-header">
-            <h2>🗺️ Ζώνες Εξυπηρέτησης</h2>
-            <p>Ορίστε ποιες περιοχές εξυπηρετεί αυτή η επιχείρηση</p>
+            <h2>🗺️ Service Zones</h2>
+            <p>Define which areas this business serves</p>
           </div>
           <div class="s-card-body">
             <div class="p-section">
-              <label class="p-label">Κανόνας</label>
+              <label class="p-label">Rule</label>
               <div class="mode-options">
-                <label class="mode-option"><input type="radio" name="zone-mode" value="open" /> 🌍 Παγκόσμιο</label>
-                <label class="mode-option"><input type="radio" name="zone-mode" value="whitelist" /> ✅ Whitelist — μόνο αυτές</label>
-                <label class="mode-option"><input type="radio" name="zone-mode" value="blacklist" /> 🚫 Blacklist — εκτός αυτών</label>
+                <label class="mode-option"><input type="radio" name="zone-mode" value="open" /> 🌍 Global</label>
+                <label class="mode-option"><input type="radio" name="zone-mode" value="whitelist" /> ✅ Whitelist — only these</label>
+                <label class="mode-option"><input type="radio" name="zone-mode" value="blacklist" /> 🚫 Blacklist — except these</label>
               </div>
             </div>
             <div class="p-section" id="areas-row">
-              <label class="p-label">Περιοχές <span style="font-weight:400;text-transform:none">(μία ανά γραμμή)</span></label>
+              <label class="p-label">Areas <span style="font-weight:400;text-transform:none">(one per line)</span></label>
               <textarea id="zones-areas" class="zones-textarea" rows="5"
-                placeholder="Κρήτη&#10;Αεροδρόμιο Ηρακλείου&#10;Χανιά&#10;Ρέθυμνο"></textarea>
+                placeholder="Crete&#10;Heraklion Airport&#10;Chania&#10;Rethymno"></textarea>
             </div>
             <div class="p-section">
               <label class="p-label">Intra-zone Transfers</label>
               <label class="toggle-label">
                 <input type="checkbox" id="zones-intra" />
-                Επιτρέπονται transfers εντός της ίδιας πόλης/περιοχής
+                Allow transfers within the same city/area
               </label>
               <p style="margin-top:5px;font-size:0.71rem;color:var(--muted);line-height:1.5;">
-                <strong>Απενεργοποιημένο (προτεινόμενο):</strong> Χανιά → Χανιά ΟΧΙ · Νέα Υόρκη → Νέα Υόρκη ΟΧΙ<br>
-                <strong>Ενεργοποιημένο:</strong> Επιτρέπονται διαδρομές εντός της ίδιας πόλης
+                <strong>Disabled (recommended):</strong> Chania → Chania NO · New York → New York NO<br>
+                <strong>Enabled:</strong> Allow routes within the same city
               </p>
             </div>
             <div class="s-footer">
-              <button class="btn-sm primary" onclick="saveZones()">💾 Αποθήκευση</button>
-              <span class="s-hint" id="zones-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
+              <button class="btn-sm primary" onclick="saveZones()">💾 Save</button>
+              <span class="s-hint" id="zones-hint">Changes apply immediately in the chat assistant.</span>
             </div>
           </div>
         </div>
@@ -412,37 +420,37 @@
         <!-- ── Pricing ── -->
         <div class="s-card" id="pricing-card" style="display:none;">
           <div class="s-card-header">
-            <h2>💰 Τιμολόγηση</h2>
-            <p>Τρόπος χρέωσης, τιμοκατάλογος και σταθερές διαδρομές</p>
+            <h2>💰 Pricing</h2>
+            <p>Pricing mode, rates and fixed routes</p>
           </div>
           <div class="s-card-body">
 
             <div class="p-section">
-              <label class="p-label">Τρόπος χρέωσης</label>
+              <label class="p-label">Pricing mode</label>
               <div class="mode-options">
-                <label class="mode-option"><input type="radio" name="p-mode" value="per_km"   onchange="togglePricingMode()" /> 📏 Ανά χιλιόμετρο</label>
-                <label class="mode-option"><input type="radio" name="p-mode" value="fixed"    onchange="togglePricingMode()" /> 📌 Σταθερές τιμές</label>
-                <label class="mode-option"><input type="radio" name="p-mode" value="combined" onchange="togglePricingMode()" /> ⚡ Συνδυασμός</label>
+                <label class="mode-option"><input type="radio" name="p-mode" value="per_km"   onchange="togglePricingMode()" /> 📏 Per kilometre</label>
+                <label class="mode-option"><input type="radio" name="p-mode" value="fixed"    onchange="togglePricingMode()" /> 📌 Fixed prices</label>
+                <label class="mode-option"><input type="radio" name="p-mode" value="combined" onchange="togglePricingMode()" /> ⚡ Combined</label>
               </div>
             </div>
 
             <div class="p-section" id="p-perkm-section">
-              <label class="p-label">Τιμοκατάλογος ανά χλμ</label>
+              <label class="p-label">Rate per km</label>
               <div class="p-fields">
                 <div class="p-field">
-                  <label>Εκκίνηση</label>
+                  <label>Start fare</label>
                   <div class="p-input-wrap"><input type="number" id="p-base-fare" class="p-input p-input-sm" step="0.01" min="0" value="2.00" /><span class="p-unit" id="p-cur-lbl1">€</span></div>
                 </div>
                 <div class="p-field">
-                  <label>Τιμή / χλμ</label>
+                  <label>Price / km</label>
                   <div class="p-input-wrap"><input type="number" id="p-per-km" class="p-input p-input-sm" step="0.01" min="0" value="0.92" /><span class="p-unit" id="p-cur-lbl2">€</span></div>
                 </div>
                 <div class="p-field">
-                  <label>Ελάχιστο</label>
+                  <label>Minimum</label>
                   <div class="p-input-wrap"><input type="number" id="p-min-fare" class="p-input p-input-sm" step="0.01" min="0" value="5.00" /><span class="p-unit" id="p-cur-lbl3">€</span></div>
                 </div>
                 <div class="p-field">
-                  <label>Νόμισμα</label>
+                  <label>Currency</label>
                   <input type="text" id="p-currency" class="p-input p-input-xs" maxlength="3" value="€" oninput="updateCurrencyLabels()" />
                 </div>
               </div>
@@ -451,9 +459,9 @@
             <div class="p-divider"></div>
 
             <div class="p-section">
-              <label class="p-label">Στρογγυλοποίηση τιμής</label>
+              <label class="p-label">Price rounding</label>
               <div class="mode-options">
-                <label class="mode-option"><input type="radio" name="p-rounding" value="0" /> Καμία</label>
+                <label class="mode-option"><input type="radio" name="p-rounding" value="0" /> None</label>
                 <label class="mode-option"><input type="radio" name="p-rounding" value="1" /> ±€1</label>
                 <label class="mode-option"><input type="radio" name="p-rounding" value="2" /> ±€2</label>
                 <label class="mode-option"><input type="radio" name="p-rounding" value="5" /> ±€5</label>
@@ -463,14 +471,14 @@
             <div class="p-divider"></div>
 
             <div class="p-section">
-              <label class="p-label">Μετ' επιστροφής (Two-way)</label>
+              <label class="p-label">Return trip (Two-way)</label>
               <label class="toggle-label">
                 <input type="checkbox" id="p-twoway" onchange="toggleTwoway()" />
-                Ρώτα αν θέλει επιστροφή &amp; δίνε έκπτωση
+                Ask if they want a return trip &amp; apply discount
               </label>
               <div id="p-twoway-extra" style="display:none;margin-top:6px;">
                 <div class="p-field">
-                  <label>Έκπτωση two-way</label>
+                  <label>Two-way discount</label>
                   <div class="p-input-wrap"><input type="number" id="p-twoway-pct" class="p-input p-input-sm" min="0" max="50" value="10" /><span class="p-unit">%</span></div>
                 </div>
               </div>
@@ -480,18 +488,18 @@
 
             <div class="p-section" id="p-routes-section">
               <div class="p-routes-header">
-                <label class="p-label">Σταθερές Διαδρομές</label>
-                <button class="btn-sm" onclick="addRoute()">+ Προσθήκη</button>
+                <label class="p-label">Fixed Routes</label>
+                <button class="btn-sm" onclick="addRoute()">+ Add</button>
               </div>
               <table class="p-routes-table">
-                <thead><tr><th style="width:42%">Αναχώρηση</th><th style="width:42%">Προορισμός</th><th style="width:10%">Τιμή</th><th style="width:6%"></th></tr></thead>
+                <thead><tr><th style="width:42%">Origin</th><th style="width:42%">Destination</th><th style="width:10%">Price</th><th style="width:6%"></th></tr></thead>
                 <tbody id="p-routes-body"></tbody>
               </table>
             </div>
 
             <div class="s-footer">
-              <button class="btn-sm primary" onclick="savePricing()">💾 Αποθήκευση</button>
-              <span class="s-hint" id="pricing-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
+              <button class="btn-sm primary" onclick="savePricing()">💾 Save</button>
+              <span class="s-hint" id="pricing-hint">Changes apply immediately in the chat assistant.</span>
             </div>
           </div>
         </div>
@@ -499,29 +507,29 @@
         <!-- ── Extras & Night ── -->
         <div class="s-card" id="extras-card" style="display:none;">
           <div class="s-card-header">
-            <h2>🌙 Extras &amp; Νυχτερινή Χρέωση</h2>
-            <p>Extras επιλογές για τον πελάτη και νυχτερινό τιμολόγιο</p>
+            <h2>🌙 Extras &amp; Night Surcharge</h2>
+            <p>Extra options for the customer and night tariff</p>
           </div>
           <div class="s-card-body">
 
             <div class="p-section">
-              <label class="p-label">Νυχτερινή χρέωση</label>
+              <label class="p-label">Night surcharge</label>
               <label class="toggle-label">
                 <input type="checkbox" id="p-night" onchange="toggleNight()" />
-                Εφάρμοσε επιπλέον χρέωση νύχτας
+                Apply additional night surcharge
               </label>
               <div id="p-night-extra" style="display:none;margin-top:8px;">
                 <div class="p-fields">
                   <div class="p-field">
-                    <label>Επιπλέον %</label>
+                    <label>Surcharge %</label>
                     <div class="p-input-wrap"><input type="number" id="p-night-pct" class="p-input p-input-sm" min="0" max="100" value="20" /><span class="p-unit">%</span></div>
                   </div>
                   <div class="p-field">
-                    <label>Από</label>
+                    <label>From</label>
                     <input type="time" id="p-night-from" class="p-input p-input-time" value="22:00" />
                   </div>
                   <div class="p-field">
-                    <label>Έως</label>
+                    <label>To</label>
                     <input type="time" id="p-night-to" class="p-input p-input-time" value="06:00" />
                   </div>
                 </div>
@@ -531,27 +539,27 @@
             <div class="p-divider"></div>
 
             <div class="p-section">
-              <label class="p-label">Extras (εμφανίζονται στον πελάτη)</label>
+              <label class="p-label">Extras (shown to customer)</label>
               <div class="p-fields">
                 <div class="p-field">
-                  <label>Παιδικό κάθισμα</label>
+                  <label>Child seat</label>
                   <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex1">€</span><input type="number" id="p-extra-child" class="p-input p-input-sm" step="0.50" min="0" value="5" /></div>
                 </div>
                 <div class="p-field">
-                  <label>Αποσκευή (+/τεμ.)</label>
+                  <label>Extra luggage (+/pc)</label>
                   <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex2">€</span><input type="number" id="p-extra-luggage" class="p-input p-input-sm" step="0.50" min="0" value="3" /></div>
                 </div>
                 <div class="p-field">
-                  <label>Κατοικίδιο</label>
+                  <label>Pet</label>
                   <div class="p-input-wrap"><span class="p-unit" id="p-cur-ex3">€</span><input type="number" id="p-extra-pet" class="p-input p-input-sm" step="0.50" min="0" value="5" /></div>
                 </div>
               </div>
-              <p style="font-size:0.71rem;color:var(--muted);">Βάλε 0 για να αποκλείσεις ένα extra από τον πελάτη.</p>
+              <p style="font-size:0.71rem;color:var(--muted);">Set to 0 to exclude an extra option from the customer.</p>
             </div>
 
             <div class="s-footer">
-              <button class="btn-sm primary" onclick="savePricing()">💾 Αποθήκευση</button>
-              <span class="s-hint" id="extras-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
+              <button class="btn-sm primary" onclick="savePricing()">💾 Save</button>
+              <span class="s-hint" id="extras-hint">Changes apply immediately in the chat assistant.</span>
             </div>
           </div>
         </div>
@@ -559,13 +567,13 @@
         <!-- ── Pricing Zones ── -->
         <div class="s-card" id="pricing-zones-card" style="display:none;">
           <div class="s-card-header">
-            <h2>💶 Ζώνες Χρέωσης</h2>
-            <p>Περιοχές με επιπλέον χρέωση — εφαρμόζονται αυτόματα βάσει προορισμού</p>
+            <h2>💶 Pricing Zones &amp; Excluded Areas</h2>
+            <p>Zones with surcharge and areas not served</p>
           </div>
           <div class="s-card-body">
             <div id="pricing-zones-content"></div>
-            <p style="font-size:0.72rem;color:var(--muted);">
-              💡 Χρησιμοποίησε τον <strong>AI Assistant</strong> παρακάτω για να προσθέσεις ζώνες, π.χ. <em>"Νότια ζώνη Ηρακλείου +15%"</em>
+            <p style="font-size:0.72rem;color:var(--muted);margin-top:8px;">
+              💡 Use the <strong>AI Assistant</strong> below for changes, e.g. <em>"South Heraklion zone +15%"</em> or <em>"No service within Heraklion"</em>
             </p>
           </div>
         </div>
@@ -573,28 +581,28 @@
         <!-- ── Vehicles ── -->
         <div class="s-card" id="vehicles-card" style="display:none;">
           <div class="s-card-header">
-            <h2>🚗 Τύποι Οχημάτων</h2>
-            <p>Ορίστε τα διαθέσιμα οχήματα και την επιπλέον χρέωση καθενός</p>
+            <h2>🚗 Vehicle Types</h2>
+            <p>Define available vehicles and each one's surcharge</p>
           </div>
           <div class="s-card-body">
             <table class="v-table">
               <thead>
                 <tr>
                   <th style="width:7%">Icon</th>
-                  <th style="width:22%">Τίτλος</th>
-                  <th style="width:13%">Άτομα</th>
-                  <th style="width:20%">Επιπλέον χρέωση</th>
-                  <th style="width:12%">Ποσό</th>
-                  <th style="width:10%;text-align:center">Ενεργό</th>
+                  <th style="width:22%">Label</th>
+                  <th style="width:13%">Capacity</th>
+                  <th style="width:20%">Surcharge type</th>
+                  <th style="width:12%">Amount</th>
+                  <th style="width:10%;text-align:center">Active</th>
                   <th style="width:6%"></th>
                 </tr>
               </thead>
               <tbody id="vehicles-tbody"></tbody>
             </table>
-            <button class="btn-sm" onclick="addVehicleRow()" style="align-self:flex-start;">+ Προσθήκη οχήματος</button>
+            <button class="btn-sm" onclick="addVehicleRow()" style="align-self:flex-start;">+ Add vehicle</button>
             <div class="s-footer">
-              <button class="btn-sm primary" onclick="saveVehicles()">💾 Αποθήκευση</button>
-              <span class="s-hint" id="vehicles-hint">Αλλαγές ισχύουν αμέσως στο chat assistant.</span>
+              <button class="btn-sm primary" onclick="saveVehicles()">💾 Save</button>
+              <span class="s-hint" id="vehicles-hint">Changes apply immediately in the chat assistant.</span>
             </div>
           </div>
         </div>
@@ -602,27 +610,27 @@
         <!-- ── AI Assistant ── -->
         <div class="s-card" id="ai-card" style="display:none;">
           <div class="s-card-header">
-            <h2>🤖 AI Assistant Ρυθμίσεων</h2>
-            <p>Γράψε εντολή στα ελληνικά και το AI θα ενημερώσει τις ρυθμίσεις αυτόματα</p>
+            <h2>🤖 Settings AI Assistant</h2>
+            <p>Write a command and the AI will update settings automatically</p>
           </div>
           <div class="s-card-body">
             <div class="ai-examples">
-              <span>Παραδείγματα:</span>
-              <button class="ai-chip" onclick="fillAI(this)">Πρόσθεσε Ρέθυμνο στις περιοχές</button>
-              <button class="ai-chip" onclick="fillAI(this)">Ενεργοποίησε νυχτερινή +25%</button>
-              <button class="ai-chip" onclick="fillAI(this)">Άλλαξε τιμή Ηράκλειο→Χανιά σε €55</button>
-              <button class="ai-chip" onclick="fillAI(this)">Απενεργοποίησε το VIP όχημα</button>
-              <button class="ai-chip" onclick="fillAI(this)">Βάλε παιδικό κάθισμα στα €8</button>
-              <button class="ai-chip" onclick="fillAI(this)" title="Γεωγραφική ζώνη — αναγνωρίζει αυτόματα τα χωριά">🗺 Χωριά νότιου Ρεθύμνου +€10</button>
-              <button class="ai-chip" onclick="fillAI(this)" title="Γεωγραφική ζώνη — αναγνωρίζει αυτόματα τα χωριά">🗺 Ορεινές περιοχές βόρειας Κρήτης +20%</button>
-              <button class="ai-chip" onclick="fillAI(this)" title="Γεωγραφική ζώνη — αναγνωρίζει αυτόματα τα χωριά">🗺 Ιεράπετρα και γύρω χωριά x1.3</button>
-              <button class="ai-chip" onclick="fillAI(this)">Περιοχή Λασιθίου τιμή x1.2</button>
-              <button class="ai-chip" onclick="fillAI(this)">Εμφάνισε τις ζώνες χρέωσης</button>
+              <span>Examples:</span>
+              <button class="ai-chip" onclick="fillAI(this)">Add Rethymno to areas</button>
+              <button class="ai-chip" onclick="fillAI(this)">Enable night surcharge +25%</button>
+              <button class="ai-chip" onclick="fillAI(this)">Change Heraklion→Chania price to €55</button>
+              <button class="ai-chip" onclick="fillAI(this)">Disable the VIP vehicle</button>
+              <button class="ai-chip" onclick="fillAI(this)">Set child seat to €8</button>
+              <button class="ai-chip" onclick="fillAI(this)" title="Geographic zone — automatically identifies villages">🗺 Villages of south Rethymno +€10</button>
+              <button class="ai-chip" onclick="fillAI(this)" title="Geographic zone — automatically identifies villages">🗺 Mountain areas of northern Crete +20%</button>
+              <button class="ai-chip" onclick="fillAI(this)" title="Geographic zone — automatically identifies villages">🗺 Ierapetra and surrounding villages ×1.3</button>
+              <button class="ai-chip" onclick="fillAI(this)">Lasithi area ×1.2</button>
+              <button class="ai-chip" onclick="fillAI(this)">Show pricing zones</button>
             </div>
             <textarea id="ai-input" class="ai-textarea" rows="3"
-              placeholder="π.χ. Πρόσθεσε Αθήνα στις whitelist περιοχές και αύξησε τη βασική εκκίνηση σε €3"></textarea>
+              placeholder="e.g. Add Athens to whitelist areas and increase the base start fare to €3"></textarea>
             <div class="s-footer">
-              <button class="btn-sm primary" id="ai-btn" onclick="sendAICommand()">▶ Εκτέλεση</button>
+              <button class="btn-sm primary" id="ai-btn" onclick="sendAICommand()">▶ Run</button>
               <span class="s-hint" id="ai-hint"></span>
             </div>
             <div id="ai-response" class="ai-response" style="display:none;"></div>
@@ -631,17 +639,130 @@
 
       </div><!-- /tab-settings -->
 
+      <!-- ══════════ Tab: App Settings ══════════ -->
+      <div id="tab-app-settings" style="display:none;">
+
+        <div class="settings-placeholder" id="app-settings-placeholder">
+          <div class="ph-icon">🏢</div>
+          <p>Select a business from the sidebar to view settings.</p>
+        </div>
+
+        <!-- ── Identity ── -->
+        <div class="s-card" id="app-identity-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>🏷️ Business Identity</h2>
+            <p>Details shown in the chat widget</p>
+          </div>
+          <div class="s-card-body">
+            <div class="p-section">
+              <label class="p-label">Business name in chat</label>
+              <input type="text" id="app-chat-name" class="p-input" style="width:100%;max-width:320px;" />
+            </div>
+            <div class="p-section">
+              <label class="p-label">Welcome message</label>
+              <textarea id="app-welcome-msg" class="zones-textarea" rows="3"
+                placeholder="e.g. Welcome! How can I help you today?"></textarea>
+            </div>
+            <div class="p-section">
+              <label class="p-label">Widget colour</label>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <input type="color" id="app-theme-color"
+                  style="width:48px;height:34px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;"
+                  oninput="document.getElementById('app-theme-color-hex').value=this.value" />
+                <input type="text" id="app-theme-color-hex" class="p-input" style="width:100px;" maxlength="7"
+                  placeholder="#1a1a2e"
+                  oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('app-theme-color').value=this.value" />
+              </div>
+            </div>
+            <div class="s-footer">
+              <button class="btn-sm primary" onclick="saveAppIdentity()">💾 Save</button>
+              <span class="s-hint" id="app-identity-hint">Changes apply immediately in the widget.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Languages ── -->
+        <div class="s-card" id="app-lang-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>🌍 Languages</h2>
+            <p>Dashboard language and chat widget language(s)</p>
+          </div>
+          <div class="s-card-body">
+
+            <div class="p-section">
+              <label class="p-label">Dashboard Language</label>
+              <select id="app-dashboard-lang" class="v-select" style="max-width:200px;">
+                <option value="en">🇬🇧 English</option>
+                <option value="el">🇬🇷 Ελληνικά</option>
+              </select>
+            </div>
+
+            <div class="p-divider"></div>
+
+            <div class="p-section">
+              <label class="p-label">Chat Widget Language</label>
+              <div class="mode-options">
+                <label class="mode-option">
+                  <input type="radio" name="app-widget-lang-mode" value="auto" onchange="toggleAppWidgetLang()" />
+                  🌐 Auto-detect
+                </label>
+                <label class="mode-option">
+                  <input type="radio" name="app-widget-lang-mode" value="single" onchange="toggleAppWidgetLang()" />
+                  🔤 Fixed language
+                </label>
+                <label class="mode-option">
+                  <input type="radio" name="app-widget-lang-mode" value="multi" onchange="toggleAppWidgetLang()" />
+                  🌍 Multiple (user selects)
+                </label>
+              </div>
+              <div id="app-widget-single" style="display:none;margin-top:8px;">
+                <select id="app-widget-single-lang" class="v-select" style="max-width:200px;">
+                  <option value="en">🇬🇧 English</option>
+                  <option value="el">🇬🇷 Ελληνικά</option>
+                  <option value="de">🇩🇪 Deutsch</option>
+                  <option value="fr">🇫🇷 Français</option>
+                  <option value="it">🇮🇹 Italiano</option>
+                  <option value="es">🇪🇸 Español</option>
+                  <option value="ru">🇷🇺 Русский</option>
+                </select>
+              </div>
+              <div id="app-widget-multi" style="display:none;margin-top:10px;">
+                <div class="lang-checks" id="app-widget-multi-langs"></div>
+              </div>
+            </div>
+
+            <div class="s-footer">
+              <button class="btn-sm primary" onclick="saveAppLangs()">💾 Save</button>
+              <span class="s-hint" id="app-lang-hint">Changes apply immediately in the widget.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Embed ── -->
+        <div class="s-card" id="app-embed-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>🔗 Embed Script</h2>
+            <p>Copy this snippet to your page to embed the chat widget</p>
+          </div>
+          <div class="s-card-body">
+            <div id="app-embed-code" class="embed-block"></div>
+            <button class="btn-sm" onclick="copyEmbed()">📋 Copy</button>
+          </div>
+        </div>
+
+      </div><!-- /tab-app-settings -->
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /layout -->
 
 <div class="modal-overlay" id="logout-modal">
   <div class="modal">
-    <h3>Αποσύνδεση;</h3>
-    <p>Είσαι σίγουρος ότι θέλεις να αποσυνδεθείς;</p>
+    <h3>Log out?</h3>
+    <p>Are you sure you want to log out?</p>
     <div class="modal-actions">
-      <button class="modal-btn" onclick="closeModal()">Άκυρο</button>
-      <button class="modal-btn danger" onclick="doLogout()">Αποσύνδεση</button>
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn danger" onclick="doLogout()">Log out</button>
     </div>
   </div>
 </div>
@@ -656,17 +777,20 @@
   let activeTab     = 'bookings';
 
   document.getElementById('topbar-date').textContent =
-    new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   // ── Tab switching ─────────────────────────────────────────────────────────
 
   function switchTab(tab) {
     activeTab = tab;
-    document.getElementById('tab-bookings').style.display = tab === 'bookings' ? '' : 'none';
-    document.getElementById('tab-settings').style.display = tab === 'settings' ? '' : 'none';
-    document.getElementById('tab-btn-bookings').classList.toggle('active', tab === 'bookings');
-    document.getElementById('tab-btn-settings').classList.toggle('active', tab === 'settings');
-    if (tab === 'settings') loadSettings(activeBizId);
+    document.getElementById('tab-bookings').style.display     = tab === 'bookings'     ? '' : 'none';
+    document.getElementById('tab-settings').style.display     = tab === 'settings'     ? '' : 'none';
+    document.getElementById('tab-app-settings').style.display = tab === 'app-settings' ? '' : 'none';
+    document.getElementById('tab-btn-bookings').classList.toggle('active',     tab === 'bookings');
+    document.getElementById('tab-btn-settings').classList.toggle('active',     tab === 'settings');
+    document.getElementById('tab-btn-app-settings').classList.toggle('active', tab === 'app-settings');
+    if (tab === 'settings')     loadSettings(activeBizId);
+    if (tab === 'app-settings') loadAppSettings(activeBizId);
   }
 
   // ── Data loading ──────────────────────────────────────────────────────────
@@ -690,13 +814,14 @@
       renderBanner();
       renderTable();
     } catch {
-      showToast('Σφάλμα φόρτωσης', 'error');
+      showToast('Load error', 'error');
     }
   }
 
   function refreshAll() {
     loadAll();
-    if (activeTab === 'settings') loadSettings(activeBizId);
+    if (activeTab === 'settings')     loadSettings(activeBizId);
+    if (activeTab === 'app-settings') loadAppSettings(activeBizId);
   }
 
   function renderStats(s) {
@@ -718,7 +843,7 @@
     const allItem = `
       <div class="biz-item ${activeBizId === null ? 'active' : ''}" onclick="switchBiz(null)">
         <div class="biz-dot" style="background:#6b7280"></div>
-        <span>Όλες</span>
+        <span>All</span>
         <span class="biz-count">${allBookings.length}</span>
       </div>`;
     const items = allBusinesses.map(biz => {
@@ -737,9 +862,10 @@
     activeBizId = bizId;
     document.getElementById('topbar-title').textContent = bizId
       ? (allBusinesses.find(b => b.business_id === bizId)?.name ?? bizId)
-      : 'Όλες οι Κρατήσεις';
+      : 'All Bookings';
     loadAll();
-    if (activeTab === 'settings') loadSettings(bizId);
+    if (activeTab === 'settings')     loadSettings(bizId);
+    if (activeTab === 'app-settings') loadAppSettings(bizId);
   }
 
   // ── Banner ────────────────────────────────────────────────────────────────
@@ -754,12 +880,12 @@
       dot.style.background = biz.theme_color || '#6b7280';
       name.textContent  = biz.name;
       subs.textContent  = biz.services.slice(0, 4).map(s => s.name).join(' · ');
-      right.textContent = `${biz.services.length} υπηρεσίες`;
+      right.textContent = `${biz.services.length} services`;
     } else {
       dot.style.background = '#6b7280';
-      name.textContent  = 'Όλες οι επιχειρήσεις';
+      name.textContent  = 'All businesses';
       subs.textContent  = allBusinesses.map(b => b.name).join(' · ');
-      right.textContent = `${allBusinesses.length} επιχειρήσεις`;
+      right.textContent = `${allBusinesses.length} businesses`;
     }
   }
 
@@ -776,10 +902,17 @@
     const empty = document.getElementById('empty-state');
     if (!filtered.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
     empty.style.display = 'none';
-    const statusLabel = { confirmed: 'Επιβεβαιωμένη', pending: 'Αναμονή', cancelled: 'Ακυρωμένη' };
+    const statusLabel = { confirmed: 'Confirmed', pending: 'Pending', cancelled: 'Cancelled' };
     tbody.innerHTML = filtered.map(b => {
       const biz   = allBusinesses.find(x => x.business_id === b.business_id);
       const color = biz?.theme_color || '#6b7280';
+      let distHtml = '';
+      try {
+        const notes = JSON.parse(b.notes || '{}');
+        if (notes.distance_km) {
+          distHtml = `<div style="font-size:0.68rem;color:var(--muted);margin-top:2px;">📏 ${Number(notes.distance_km).toFixed(1)} km${notes.duration_mins ? ` · ⏱ ~${notes.duration_mins} min` : ''}</div>`;
+        }
+      } catch {}
       return `
         <tr id="row-${b.id}">
           <td style="color:var(--muted);font-size:0.7rem;">#${b.id}</td>
@@ -788,7 +921,7 @@
             <div class="customer-meta">${esc(b.email)}${b.phone ? ' · ' + esc(b.phone) : ''}</div>
           </td>
           <td class="hide-sm"><span class="biz-chip" style="background:${color}22;color:${color};">${esc(biz?.name ?? b.business_id ?? '—')}</span></td>
-          <td class="hide-sm">${b.service ? `<span class="service-chip">${esc(b.service)}</span>` : '<span style="color:var(--muted);font-style:italic;font-size:0.75rem;">—</span>'}</td>
+          <td class="hide-sm">${b.service ? `<span class="service-chip">${esc(b.service)}</span>${distHtml}` : '<span style="color:var(--muted);font-style:italic;font-size:0.75rem;">—</span>'}</td>
           <td style="white-space:nowrap;">
             <div style="font-size:0.82rem;">${formatDate(b.date)}</div>
             <div style="font-size:0.7rem;color:var(--muted);">${b.time}</div>
@@ -820,9 +953,9 @@
       renderStats(await (await fetch(`/api/bookings/stats${bizParam}`)).json());
       renderSidebarBiz();
       renderTable();
-      showToast(status === 'confirmed' ? '✅ Επιβεβαιώθηκε!' : '❌ Ακυρώθηκε.', status === 'confirmed' ? 'success' : 'info');
+      showToast(status === 'confirmed' ? '✅ Confirmed!' : '❌ Cancelled.', status === 'confirmed' ? 'success' : 'info');
     } catch {
-      showToast('Σφάλμα ενημέρωσης', 'error');
+      showToast('Update error', 'error');
     }
   }
 
@@ -887,7 +1020,7 @@
       renderRoutesTable(p.fixed_routes || []);
 
       // Pricing zones
-      renderPricingZonesCard(biz.config?.pricing_zones || []);
+      renderPricingZonesCard(biz.config?.pricing_zones || [], biz.config?.zones);
 
       // Vehicles
       renderVehiclesTable(biz.config?.vehicles || []);
@@ -916,10 +1049,10 @@
       });
       if (res.status === 401) { location.href = '/admin/login'; return; }
       if (!res.ok) throw new Error();
-      hint.textContent = '✅ Αποθηκεύτηκε!'; hint.style.color = 'var(--green)';
-      showToast('✅ Ζώνες αποθηκεύτηκαν!', 'success');
-      setTimeout(() => { hint.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; hint.style.color = ''; }, 3000);
-    } catch { showToast('Σφάλμα αποθήκευσης ζωνών', 'error'); }
+      hint.textContent = '✅ Saved!'; hint.style.color = 'var(--green)';
+      showToast('✅ Zones saved!', 'success');
+      setTimeout(() => { hint.textContent = 'Changes apply immediately in the chat assistant.'; hint.style.color = ''; }, 3000);
+    } catch { showToast('Error saving zones', 'error'); }
   }
 
   // ── Pricing ───────────────────────────────────────────────────────────────
@@ -947,13 +1080,13 @@
   function renderRoutesTable(routes) {
     const tbody = document.getElementById('p-routes-body');
     if (!routes.length) {
-      tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);font-style:italic;font-size:0.78rem;text-align:center;padding:14px;">Δεν υπάρχουν σταθερές διαδρομές</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);font-style:italic;font-size:0.78rem;text-align:center;padding:14px;">No fixed routes</td></tr>';
       return;
     }
     tbody.innerHTML = routes.map((r, i) => `
       <tr>
-        <td><input class="p-route-input" value="${esc(r.origin)}"      placeholder="Αναχώρηση..." /></td>
-        <td><input class="p-route-input" value="${esc(r.destination)}" placeholder="Προορισμός..." /></td>
+        <td><input class="p-route-input" value="${esc(r.origin)}"      placeholder="Origin..." /></td>
+        <td><input class="p-route-input" value="${esc(r.destination)}" placeholder="Destination..." /></td>
         <td><input class="p-route-input p-route-price" type="number" step="0.50" min="0" value="${r.price}" /></td>
         <td><button class="btn-del" onclick="removeRoute(${i})">🗑</button></td>
       </tr>`).join('');
@@ -1016,14 +1149,14 @@
       if (idx !== -1) allBusinesses[idx] = data.business;
       ['pricing-hint','extras-hint'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) { el.textContent = '✅ Αποθηκεύτηκε!'; el.style.color = 'var(--green)'; }
+        if (el) { el.textContent = '✅ Saved!'; el.style.color = 'var(--green)'; }
       });
-      showToast('✅ Τιμολόγιο αποθηκεύτηκε!', 'success');
+      showToast('✅ Pricing saved!', 'success');
       setTimeout(() => ['pricing-hint','extras-hint'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) { el.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; el.style.color = ''; }
+        if (el) { el.textContent = 'Changes apply immediately in the chat assistant.'; el.style.color = ''; }
       }), 3000);
-    } catch (e) { showToast('Σφάλμα αποθήκευσης: ' + e.message, 'error'); }
+    } catch (e) { showToast('Save error: ' + e.message, 'error'); }
   }
 
   // ── Vehicles ──────────────────────────────────────────────────────────────
@@ -1031,7 +1164,7 @@
   function renderVehiclesTable(vehicles) {
     const tbody = document.getElementById('vehicles-tbody');
     if (!vehicles.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);font-style:italic;font-size:0.78rem;padding:16px;">Δεν υπάρχουν οχήματα. Πάτα "+ Προσθήκη".</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--muted);font-style:italic;font-size:0.78rem;padding:16px;">No vehicles. Click "+ Add vehicle" to get started.</td></tr>`;
       return;
     }
     tbody.innerHTML = vehicles.map((v, i) => `
@@ -1041,9 +1174,9 @@
         <td><input class="v-input v-input-cap"  data-col="capacity" value="${esc(v.capacity || '')}" placeholder="1-4" /></td>
         <td>
           <select class="v-select" data-col="surcharge_type" onchange="onSurchargeTypeChange(this)">
-            <option value="none"  ${v.surcharge_type === 'none'  ? 'selected':''}>Κανένα</option>
-            <option value="fixed" ${v.surcharge_type === 'fixed' ? 'selected':''}>+€ σταθερό</option>
-            <option value="pct"   ${v.surcharge_type === 'pct'   ? 'selected':''}>+% ποσοστό</option>
+            <option value="none"  ${v.surcharge_type === 'none'  ? 'selected':''}>None</option>
+            <option value="fixed" ${v.surcharge_type === 'fixed' ? 'selected':''}>+€ fixed</option>
+            <option value="pct"   ${v.surcharge_type === 'pct'   ? 'selected':''}>+% percentage</option>
           </select>
         </td>
         <td>
@@ -1108,20 +1241,16 @@
       const data = await res.json();
       const idx = allBusinesses.findIndex(b => b.business_id === activeBizId);
       if (idx !== -1) allBusinesses[idx] = data.business;
-      hint.textContent = '✅ Αποθηκεύτηκε!'; hint.style.color = 'var(--green)';
-      showToast('✅ Οχήματα αποθηκεύτηκαν!', 'success');
-      setTimeout(() => { hint.textContent = 'Αλλαγές ισχύουν αμέσως στο chat assistant.'; hint.style.color = ''; }, 3000);
-    } catch (e) { showToast('Σφάλμα αποθήκευσης: ' + e.message, 'error'); }
+      hint.textContent = '✅ Saved!'; hint.style.color = 'var(--green)';
+      showToast('✅ Vehicles saved!', 'success');
+      setTimeout(() => { hint.textContent = 'Changes apply immediately in the chat assistant.'; hint.style.color = ''; }, 3000);
+    } catch (e) { showToast('Save error: ' + e.message, 'error'); }
   }
 
   // ── Pricing Zones ─────────────────────────────────────────────────────────
 
-  function renderPricingZonesCard(zones) {
+  function renderPricingZonesCard(pricingZones, zonesConfig) {
     const content = document.getElementById('pricing-zones-content');
-    if (!Array.isArray(zones) || !zones.length) {
-      content.innerHTML = '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;text-align:center;padding:16px 0;">Δεν υπάρχουν ζώνες χρέωσης ακόμα.</p>';
-      return;
-    }
     const surchargeLabel = z => {
       if (z.surcharge_type === 'pct')        return `+${z.surcharge_value}%`;
       if (z.surcharge_type === 'fixed')      return `+€${z.surcharge_value}`;
@@ -1132,50 +1261,109 @@
       if (!Array.isArray(kws) || !kws.length) return '—';
       const shown = kws.slice(0, 5).map(k => esc(k)).join(', ');
       return kws.length > 5
-        ? `${shown} <span style="color:var(--accent);font-size:0.7rem;cursor:default;" title="${esc(kws.join(', '))}">+${kws.length - 5} ακόμα ℹ</span>`
+        ? `${shown} <span style="color:var(--accent);font-size:0.7rem;cursor:default;" title="${esc(kws.join(', '))}">+${kws.length - 5} more ℹ</span>`
         : shown;
     };
-    content.innerHTML = `
-      <table class="p-routes-table" style="margin-bottom:10px;">
-        <thead><tr>
-          <th style="width:28%">Ζώνη</th>
-          <th style="width:12%">Χρέωση</th>
-          <th style="width:10%">Τοποθ.</th>
-          <th>Περιοχές (preview)</th>
-          <th style="width:6%"></th>
-        </tr></thead>
-        <tbody>
-          ${zones.map((z, i) => `
-            <tr>
-              <td style="font-weight:500;">${esc(z.name)}</td>
-              <td><span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700;">${surchargeLabel(z)}</span></td>
-              <td style="font-size:0.78rem;color:var(--muted);text-align:center;">${(z.keywords||[]).length}</td>
-              <td style="font-size:0.74rem;color:var(--muted);">${kwdPreview(z.keywords)}</td>
-              <td><button class="btn-del" onclick="deletePricingZone(${i})" title="Διαγραφή">🗑</button></td>
-            </tr>`).join('')}
-        </tbody>
-      </table>`;
+
+    let html = '';
+
+    // ── Section 1: Pricing zones ──────────────────────────────────────────────
+    html += `<h4 style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;">Pricing Zones</h4>`;
+    if (!Array.isArray(pricingZones) || !pricingZones.length) {
+      html += '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;padding:4px 0 12px;">No pricing zones yet.</p>';
+    } else {
+      html += `
+        <table class="p-routes-table" style="margin-bottom:16px;">
+          <thead><tr>
+            <th style="width:28%">Zone</th>
+            <th style="width:12%">Surcharge</th>
+            <th style="width:10%">Locs.</th>
+            <th>Areas (preview)</th>
+            <th style="width:6%"></th>
+          </tr></thead>
+          <tbody>
+            ${pricingZones.map((z, i) => `
+              <tr>
+                <td style="font-weight:500;">${esc(z.name)}</td>
+                <td><span style="background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700;">${surchargeLabel(z)}</span></td>
+                <td style="font-size:0.78rem;color:var(--muted);text-align:center;">${(z.keywords||[]).length}</td>
+                <td style="font-size:0.74rem;color:var(--muted);">${kwdPreview(z.keywords)}</td>
+                <td><button class="btn-del" onclick="deletePricingZone(${i})" title="Delete">✕</button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    // ── Section 2: Blacklist areas ────────────────────────────────────────────
+    html += `<h4 style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;">Excluded Areas</h4>`;
+    const blacklistAreas = (zonesConfig?.mode === 'blacklist' && Array.isArray(zonesConfig?.areas))
+      ? zonesConfig.areas.filter(Boolean)
+      : [];
+    const intraBlocked = zonesConfig?.intra_zone === false;
+
+    if (!blacklistAreas.length && !intraBlocked) {
+      html += '<p style="color:var(--muted);font-size:0.82rem;font-style:italic;padding:4px 0;">No excluded areas.</p>';
+    } else {
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;">';
+      if (intraBlocked) {
+        html += `<span style="display:inline-flex;align-items:center;gap:6px;background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;">
+          Intra-zone blocked
+        </span>`;
+      }
+      blacklistAreas.forEach((area, i) => {
+        html += `<span style="display:inline-flex;align-items:center;gap:6px;background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:20px;font-size:0.75rem;">
+          ${esc(area)}
+          <button onclick="deleteBlacklistArea(${i})" title="Remove" style="background:none;border:none;cursor:pointer;color:#b91c1c;font-size:0.8rem;line-height:1;padding:0;">✕</button>
+        </span>`;
+      });
+      html += '</div>';
+    }
+
+    content.innerHTML = html;
   }
 
   async function deletePricingZone(idx) {
     if (!activeBizId) return;
     const biz = allBusinesses.find(b => b.business_id === activeBizId);
     if (!biz) return;
-    const zones = [...(biz.config?.pricing_zones || [])];
-    zones.splice(idx, 1);
+    const pzones = [...(biz.config?.pricing_zones || [])];
+    pzones.splice(idx, 1);
     try {
       const res = await fetch(`/api/admin/business/${activeBizId}/pricing-zones`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pricing_zones: zones }),
+        body: JSON.stringify({ pricing_zones: pzones }),
       });
       if (res.status === 401) { location.href = '/admin/login'; return; }
       if (!res.ok) throw new Error();
       const data = await res.json();
       const i = allBusinesses.findIndex(b => b.business_id === activeBizId);
       if (i !== -1) allBusinesses[i] = data.business;
-      renderPricingZonesCard(data.business.config?.pricing_zones || []);
-      showToast('✅ Ζώνη διαγράφηκε!', 'success');
-    } catch { showToast('Σφάλμα διαγραφής ζώνης', 'error'); }
+      renderPricingZonesCard(data.business.config?.pricing_zones || [], data.business.config?.zones);
+      showToast('✅ Zone deleted!', 'success');
+    } catch { showToast('Error deleting zone', 'error'); }
+  }
+
+  async function deleteBlacklistArea(idx) {
+    if (!activeBizId) return;
+    const biz = allBusinesses.find(b => b.business_id === activeBizId);
+    if (!biz) return;
+    const zonesConfig = { ...(biz.config?.zones || {}) };
+    const areas = [...(zonesConfig.areas || [])];
+    areas.splice(idx, 1);
+    zonesConfig.areas = areas;
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/zones`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zones: zonesConfig }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const i = allBusinesses.findIndex(b => b.business_id === activeBizId);
+      if (i !== -1) allBusinesses[i] = data.business;
+      renderPricingZonesCard(data.business.config?.pricing_zones || [], data.business.config?.zones);
+      showToast('✅ Area removed!', 'success');
+    } catch { showToast('Error removing area', 'error'); }
   }
 
   // ── AI Assistant ──────────────────────────────────────────────────────────
@@ -1193,7 +1381,7 @@
     if (!message) return;
     const btn  = document.getElementById('ai-btn');
     const resp = document.getElementById('ai-response');
-    btn.disabled = true; btn.textContent = '⏳ Επεξεργασία…';
+    btn.disabled = true; btn.textContent = '⏳ Processing…';
     resp.style.display = 'none';
     _pendingZone = null;
     try {
@@ -1207,20 +1395,20 @@
         _pendingZone = data.pending_zone;
         showPendingZone(data.pending_zone);
       } else {
-        resp.textContent   = data.message || (res.ok ? 'Εκτελέστηκε.' : 'Σφάλμα.');
+        resp.textContent   = data.message || (res.ok ? 'Done.' : 'Error.');
         resp.className     = 'ai-response' + (res.ok ? '' : ' error');
         resp.style.display = '';
         if (res.ok) {
-          showToast('✅ Ρυθμίσεις ενημερώθηκαν!', 'success');
+          showToast('✅ Settings updated!', 'success');
           await loadSettings(activeBizId);
         }
       }
     } catch {
-      resp.textContent = 'Σφάλμα επικοινωνίας.';
+      resp.textContent = 'Communication error.';
       resp.className   = 'ai-response error';
       resp.style.display = '';
     } finally {
-      btn.disabled = false; btn.textContent = '▶ Εκτέλεση';
+      btn.disabled = false; btn.textContent = '▶ Run';
     }
   }
 
@@ -1231,18 +1419,18 @@
     const shown = zone.keywords.slice(0, 18);
     const rest  = zone.keywords.length - shown.length;
     const chips = shown.map(k => `<span class="kw-chip">${esc(k)}</span>`).join('') +
-      (rest > 0 ? ` <em style="font-size:0.72rem;color:var(--muted);">+${rest} ακόμα</em>` : '');
+      (rest > 0 ? ` <em style="font-size:0.72rem;color:var(--muted);">+${rest} more</em>` : '');
     resp.innerHTML = `
       <div style="margin-bottom:8px;font-size:0.85rem;">
         <strong>🗺 ${esc(zone.name)}</strong>
         <span style="margin-left:6px;opacity:0.75;">${label}</span>
-        <span style="margin-left:6px;font-size:0.75rem;opacity:0.6;">${zone.keywords.length} τοποθεσίες</span>
+        <span style="margin-left:6px;font-size:0.75rem;opacity:0.6;">${zone.keywords.length} locations</span>
       </div>
       <div style="margin-bottom:12px;line-height:1.9;">${chips}</div>
-      <div style="font-size:0.8rem;margin-bottom:10px;opacity:0.85;">Να αποθηκευτεί αυτή η ζώνη;</div>
+      <div style="font-size:0.8rem;margin-bottom:10px;opacity:0.85;">Save this zone?</div>
       <div style="display:flex;gap:8px;">
-        <button class="btn-sm primary" onclick="confirmZone()">✅ Ναι, αποθήκευσε</button>
-        <button class="btn-sm" onclick="cancelZone()">✗ Άκυρο</button>
+        <button class="btn-sm primary" onclick="confirmZone()">✅ Yes, save</button>
+        <button class="btn-sm" onclick="cancelZone()">✗ Cancel</button>
       </div>`;
     resp.className   = 'ai-response pending';
     resp.style.display = '';
@@ -1260,15 +1448,15 @@
       });
       const data = await res.json();
       const resp = document.getElementById('ai-response');
-      resp.textContent   = data.message || (res.ok ? 'Αποθηκεύτηκε.' : 'Σφάλμα.');
+      resp.textContent   = data.message || (res.ok ? 'Saved.' : 'Error.');
       resp.className     = 'ai-response' + (res.ok ? '' : ' error');
       _pendingZone = null;
       if (res.ok) {
-        showToast('✅ Ζώνη αποθηκεύτηκε!', 'success');
+        showToast('✅ Zone saved!', 'success');
         await loadSettings(activeBizId);
       }
     } catch {
-      document.getElementById('ai-response').textContent = 'Σφάλμα αποθήκευσης.';
+      document.getElementById('ai-response').textContent = 'Save error.';
       document.getElementById('ai-response').className   = 'ai-response error';
     }
   }
@@ -1276,20 +1464,149 @@
   function cancelZone() {
     _pendingZone = null;
     const resp = document.getElementById('ai-response');
-    resp.textContent   = 'Άκυρο — η ζώνη δεν αποθηκεύτηκε.';
+    resp.textContent   = 'Cancelled — zone was not saved.';
     resp.className     = 'ai-response';
     resp.style.color   = 'var(--muted)';
+  }
+
+  // ── App Settings ─────────────────────────────────────────────────────────
+
+  const APP_LANG_INFO = [
+    { code: 'en', flag: '🇬🇧', name: 'English' },
+    { code: 'el', flag: '🇬🇷', name: 'Ελληνικά' },
+    { code: 'de', flag: '🇩🇪', name: 'Deutsch' },
+    { code: 'fr', flag: '🇫🇷', name: 'Français' },
+    { code: 'it', flag: '🇮🇹', name: 'Italiano' },
+    { code: 'es', flag: '🇪🇸', name: 'Español' },
+    { code: 'ru', flag: '🇷🇺', name: 'Русский' },
+  ];
+
+  function buildMultiLangChecks(selected = []) {
+    document.getElementById('app-widget-multi-langs').innerHTML = APP_LANG_INFO.map(({ code, flag, name }) => `
+      <label class="lang-check-item">
+        <input type="checkbox" name="app-multi-lang" value="${code}" ${selected.includes(code) ? 'checked' : ''} />
+        ${flag} ${name}
+      </label>`).join('');
+  }
+
+  function toggleAppWidgetLang() {
+    const mode = document.querySelector('input[name="app-widget-lang-mode"]:checked')?.value;
+    document.getElementById('app-widget-single').style.display = mode === 'single' ? '' : 'none';
+    document.getElementById('app-widget-multi').style.display  = mode === 'multi'  ? '' : 'none';
+  }
+
+  async function loadAppSettings(bizId) {
+    const placeholder = document.getElementById('app-settings-placeholder');
+    const appCards = ['app-identity-card', 'app-lang-card', 'app-embed-card'];
+
+    if (!bizId) {
+      placeholder.style.display = '';
+      appCards.forEach(id => document.getElementById(id).style.display = 'none');
+      return;
+    }
+
+    placeholder.style.display = 'none';
+    appCards.forEach(id => document.getElementById(id).style.display = '');
+
+    try {
+      const res = await fetch(`/api/business/${bizId}`);
+      if (!res.ok) return;
+      const biz = await res.json();
+
+      // Identity
+      document.getElementById('app-chat-name').value        = biz.name || '';
+      document.getElementById('app-welcome-msg').value      = biz.config?.welcome_message || '';
+      document.getElementById('app-theme-color').value      = biz.theme_color || '#1a1a2e';
+      document.getElementById('app-theme-color-hex').value  = biz.theme_color || '#1a1a2e';
+
+      // Dashboard lang (default: English)
+      document.getElementById('app-dashboard-lang').value = biz.config?.dashboard_lang || 'en';
+
+      // Widget lang
+      const wl = biz.config?.widget_lang || { mode: 'auto' };
+      document.querySelectorAll('input[name="app-widget-lang-mode"]').forEach(r => {
+        r.checked = r.value === (wl.mode || 'auto');
+      });
+      if (wl.mode === 'single') {
+        document.getElementById('app-widget-single-lang').value = wl.lang || 'en';
+      }
+      buildMultiLangChecks(wl.mode === 'multi' ? (wl.langs || ['en', 'el']) : []);
+      toggleAppWidgetLang();
+
+      // Embed
+      const origin = window.location.origin;
+      document.getElementById('app-embed-code').textContent =
+        `<script src="${origin}/booking-widget.js"\n        data-api-url="${origin}"\n        data-business-id="${bizId}"><\/script>`;
+
+    } catch { /* ignore */ }
+  }
+
+  async function saveAppIdentity() {
+    if (!activeBizId) return;
+    const name          = document.getElementById('app-chat-name').value.trim();
+    const welcome_message = document.getElementById('app-welcome-msg').value.trim();
+    const theme_color   = document.getElementById('app-theme-color').value;
+    const hint = document.getElementById('app-identity-hint');
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/app-settings`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, theme_color, config: { welcome_message } }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const i = allBusinesses.findIndex(b => b.business_id === activeBizId);
+      if (i !== -1) allBusinesses[i] = data.business;
+      hint.textContent = '✅ Saved!'; hint.style.color = 'var(--green)';
+      showToast('✅ Identity saved!', 'success');
+      setTimeout(() => { hint.textContent = 'Changes apply immediately in the widget.'; hint.style.color = ''; }, 3000);
+      renderSidebarBiz();
+      renderBanner();
+    } catch (e) { showToast('Save error: ' + e.message, 'error'); }
+  }
+
+  async function saveAppLangs() {
+    if (!activeBizId) return;
+    const dashboard_lang = document.getElementById('app-dashboard-lang').value;
+    const mode = document.querySelector('input[name="app-widget-lang-mode"]:checked')?.value || 'auto';
+    const widget_lang = { mode };
+    if (mode === 'single') {
+      widget_lang.lang = document.getElementById('app-widget-single-lang').value;
+    } else if (mode === 'multi') {
+      const checked = [...document.querySelectorAll('input[name="app-multi-lang"]:checked')].map(cb => cb.value);
+      widget_lang.langs = checked.length ? checked : ['en', 'el'];
+    }
+    const hint = document.getElementById('app-lang-hint');
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/app-settings`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: { dashboard_lang, widget_lang } }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const i = allBusinesses.findIndex(b => b.business_id === activeBizId);
+      if (i !== -1) allBusinesses[i] = data.business;
+      hint.textContent = '✅ Saved!'; hint.style.color = 'var(--green)';
+      showToast('✅ Languages saved!', 'success');
+      setTimeout(() => { hint.textContent = 'Changes apply immediately in the widget.'; hint.style.color = ''; }, 3000);
+    } catch (e) { showToast('Save error: ' + e.message, 'error'); }
+  }
+
+  function copyEmbed() {
+    const text = document.getElementById('app-embed-code').textContent;
+    navigator.clipboard.writeText(text).then(() => showToast('📋 Copied!', 'success'));
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   function formatDate(d) {
     if (!d || d === '—') return '—';
-    return new Date(d + 'T00:00:00').toLocaleDateString('el-GR', { weekday: 'short', day: 'numeric', month: 'short' });
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
   }
   function formatCreatedAt(dt) {
     if (!dt) return '—';
-    return new Date(dt.replace(' ', 'T')).toLocaleString('el-GR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return new Date(dt.replace(' ', 'T')).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
   function esc(str) {
     return String(str ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
