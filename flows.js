@@ -774,7 +774,7 @@ export async function applySettingsCommand(message, business) {
   const configJson = JSON.stringify(business.config, null, 2);
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 2048,
+    max_tokens: 4096,
     system: `You are an AI assistant for managing taxi business settings.
 The admin writes a command in their preferred language. You convert it into a JSON patch to update the config.
 
@@ -798,26 +798,37 @@ CONFIG STRUCTURE:
   • keywords: list of words (lowercase) for location matching
 
 RULES:
-1. Return ONLY valid JSON: {"message":"...English...","patch":{...} or null}
-2. In patch include ONLY top-level keys that change
-3. For arrays/objects send the FULL element (not partial)
-4. Examples:
-   - "Add Rethymno to areas" → patch: { zones: { ...currentZones, areas: [...currentAreas, "Rethymno"] } }
-   - "Change Heraklion-Rethymno price to €60" → patch: { pricing: { ...currentPricing, fixed_routes: [...updatedRoutes] } }
-   - "Enable night surcharge +25%" → patch: { pricing: { ...currentPricing, night_surcharge_enabled:true, night_surcharge_pct:25 } }
-   - "Lasithi area ×1.2" → patch: { pricing_zones: [...currentZones, { id:"zone_1", name:"Lasithi Area", surcharge_type:"multiplier", surcharge_value:1.2, keywords:["lasithi","ierapetra","sitia","agios nikolaos"] }] }
-   - "Delete Lasithi zone" → filter pricing_zones array, patch: { pricing_zones: [filteredArray] }
-   - "Show pricing zones" → message with list, patch: null
-5. Write nothing outside JSON`,
+1. Return ONLY valid JSON: {"message":"...","patch":{...} or null}
+2. CRITICAL: patch MUST be non-null for ANY command that changes a setting. patch:null is ONLY for read/display commands ("show", "list", "what is", "εμφάνισε", "δείξε", "τι είναι").
+3. If you are unsure whether to return a patch, return the patch anyway.
+4. In patch include ONLY top-level keys that change.
+5. For nested objects/arrays always include ALL current fields plus your change (never send partial objects).
+6. Examples:
+   - "Add Rethymno to areas" → patch: {"zones":{"mode":"whitelist","areas":["Heraklion","Rethymno"],"intra_zone":false}}
+   - "Change Heraklion-Rethymno price to €60" → patch: {"pricing":{<ALL current pricing fields, updated fixed_routes>}}
+   - "Enable night surcharge +25%" → patch: {"pricing":{<ALL current pricing fields, night_surcharge_enabled:true, night_surcharge_pct:25>}}
+   - "Set base fare to €3" → patch: {"pricing":{<ALL current pricing fields, base_fare:3>}}
+   - "Lasithi area ×1.2" → patch: {"pricing_zones":[<existing zones>, {"id":"zone_1","name":"Lasithi Area","surcharge_type":"multiplier","surcharge_value":1.2,"keywords":["lasithi","ierapetra"]}]}
+   - "Delete Lasithi zone" → patch: {"pricing_zones":[<all zones except Lasithi>]}
+   - "Show pricing zones" → patch: null  ← read-only, no change
+7. Write nothing outside JSON`,
     messages: [{ role: 'user', content: message }],
   });
 
   const text = response.content[0].text.trim();
+  console.log(`[AI-CMD] message="${message}" raw_response=${text.slice(0, 300)}`);
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return { message: 'Could not understand the command. Please try again.', patch: null };
+  if (!jsonMatch) {
+    console.warn(`[AI-CMD] no JSON found in response`);
+    return { message: 'Could not understand the command. Please try again.', patch: null };
+  }
   try {
-    return JSON.parse(jsonMatch[0]);
-  } catch {
+    const parsed = JSON.parse(jsonMatch[0]);
+    console.log(`[AI-CMD] patch=${parsed.patch ? 'YES (keys: ' + Object.keys(parsed.patch).join(',') + ')' : 'null'}`);
+    return parsed;
+  } catch (e) {
+    console.warn(`[AI-CMD] JSON parse error: ${e.message}`);
     return { message: 'Parse error. Please try again.', patch: null };
   }
 }

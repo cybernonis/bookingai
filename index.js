@@ -358,20 +358,33 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
   try {
     const snapshotBefore = { ...biz.config };
     const result = await applySettingsCommand(message, biz);
+    let saved = false;
     if (result.patch && !result.pending_zone) {
-      const category = detectAiCategory(result.patch);
+      // Deep-merge nested objects so a partial patch never wipes sibling fields
+      const DEEP_MERGE_KEYS = ['pricing', 'zones', 'widget_lang', 'region'];
+      for (const key of DEEP_MERGE_KEYS) {
+        if (result.patch[key] && typeof result.patch[key] === 'object' && !Array.isArray(result.patch[key])) {
+          result.patch[key] = { ...(biz.config[key] || {}), ...result.patch[key] };
+        }
+      }
+      // Protect fixed routes from collateral changes
       if (Array.isArray(result.patch.pricing?.fixed_routes)) {
         const currentRoutes = biz.config?.pricing?.fixed_routes || [];
         result.patch.pricing.fixed_routes = safeMergeFixedRoutes(currentRoutes, result.patch.pricing.fixed_routes, message);
       }
+      const category = detectAiCategory(result.patch);
+      console.log(`[AI-SAVE] bizId=${bizId} category=${category} patch_keys=${Object.keys(result.patch).join(',')}`);
       updateBusinessConfig(bizId, result.patch);
+      saved = true;
       const snapshotAfter = { ...getBusinessById(bizId).config };
       const histId = createAiHistoryEntry({ business_id: bizId, command: message, summary: result.message, category, snapshot_before: snapshotBefore });
       finalizeAiHistoryEntry(histId, snapshotAfter);
       setAiMeta(bizId, category, message);
+    } else if (!result.pending_zone) {
+      console.log(`[AI-NOSAVE] bizId=${bizId} patch=null msg="${result.message?.slice(0, 80)}"`);
     }
     const updated = getBusinessById(bizId);
-    res.json({ message: result.message, pending_zone: result.pending_zone || null, business: updated });
+    res.json({ message: result.message, saved, pending_zone: result.pending_zone || null, business: updated });
   } catch (err) {
     console.error('AI settings error:', err);
     res.status(500).json({ error: 'Σφάλμα επεξεργασίας.' });
