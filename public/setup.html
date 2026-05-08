@@ -200,7 +200,7 @@
   <div class="logo">Booking<span>AI</span></div>
   <div class="logo-sub">🚕 Δημιουργία εταιρείας ταξί & μεταφορών</div>
 
-  <!-- Progress bar (3 steps) -->
+  <!-- Progress bar (4 steps) -->
   <div class="progress" id="progressBar">
     <div class="prog-step">
       <div class="prog-dot active" id="dot1">1</div>
@@ -214,7 +214,12 @@
     <div class="prog-line" id="line2"></div>
     <div class="prog-step">
       <div class="prog-dot" id="dot3">3</div>
-      <div class="prog-label" id="lbl3">Λογαριασμός</div>
+      <div class="prog-label" id="lbl3">Ειδοποιήσεις</div>
+    </div>
+    <div class="prog-line" id="line3"></div>
+    <div class="prog-step">
+      <div class="prog-dot" id="dot4">4</div>
+      <div class="prog-label" id="lbl4">Λογαριασμός</div>
     </div>
   </div>
 
@@ -230,7 +235,7 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Τηλέφωνο <span style="font-size:0.75rem;color:var(--muted);">— SMS notifications νέων κρατήσεων</span></label>
+          <label>Τηλέφωνο επιχείρησης</label>
           <input type="tel" id="bizPhone" placeholder="6912 345678" />
         </div>
         <div class="form-group">
@@ -240,7 +245,7 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Email επιχείρησης * <span style="font-size:0.75rem;color:var(--muted);">— email notifications νέων κρατήσεων</span></label>
+          <label>Email επιχείρησης *</label>
           <input type="email" id="bizEmail" placeholder="info@company.com" />
         </div>
         <div class="form-group">
@@ -449,8 +454,70 @@
     </div>
   </div>
 
-  <!-- Step 3: Admin account -->
+  <!-- Step 3: Notifications -->
   <div class="step-panel" id="step3">
+    <div class="card">
+      <h2>Ειδοποιήσεις κρατήσεων</h2>
+      <p class="subtitle">Ρύθμισε πώς θα ενημερώνεσαι για κάθε νέα κράτηση.</p>
+
+      <!-- Email notifications -->
+      <div class="section-title" style="margin-bottom:8px;">📧 Email ειδοποιήσεων</div>
+      <div class="section-subtitle">Λαμβάνεις email για κάθε νέα κράτηση. Χρησιμοποιεί <strong>SendGrid</strong> (δωρεάν 100 emails/ημέρα).</div>
+      <div class="form-group">
+        <label>Email admin *</label>
+        <input type="email" id="notifEmail" placeholder="info@company.com" />
+        <div class="hint">Pre-filled από το Step 1 — μπορείς να χρησιμοποιήσεις διαφορετικό.</div>
+      </div>
+      <div style="background:rgba(47,129,247,0.07);border:1px solid rgba(47,129,247,0.2);border-radius:8px;padding:14px 16px;margin-bottom:24px;font-size:0.82rem;line-height:1.7;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">Οδηγίες SendGrid (απαιτείται για αποστολή email)</div>
+        <ol style="padding-left:18px;color:var(--muted);margin:0;">
+          <li>Εγγραφή στο <strong style="color:var(--text);">sendgrid.com</strong> (δωρεάν)</li>
+          <li>Settings → <strong style="color:var(--text);">Sender Authentication → Single Sender Verification</strong> → προσθήκη email</li>
+          <li>Settings → <strong style="color:var(--text);">API Keys → Create API Key</strong> (Full Access)</li>
+          <li>Στο Railway: <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">SENDGRID_API_KEY=SG.xxx</code> και <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">SENDGRID_FROM=your@email.com</code></li>
+        </ol>
+        <div style="margin-top:8px;color:#e3b341;font-size:0.78rem;">⚠️ Χωρίς SendGrid τα emails δεν θα αποστέλλονται. Το SMS και η κράτηση λειτουργούν κανονικά.</div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- SMS notifications -->
+      <div class="section-title" style="margin-bottom:8px;">📱 SMS ειδοποιήσεων</div>
+      <div class="section-subtitle">Λαμβάνεις SMS για κάθε νέα κράτηση. Χρησιμοποιεί <strong>Vonage</strong> (~€0.06 ανά SMS).</div>
+      <div class="form-group">
+        <label>Τηλέφωνο admin (με κωδικό χώρας)</label>
+        <input type="tel" id="notifPhone" placeholder="π.χ. 6983068667 ή +306983068667" />
+        <div class="hint">Pre-filled από το Step 1 — μπορείς να χρησιμοποιήσεις διαφορετικό.</div>
+      </div>
+      <div style="background:rgba(47,129,247,0.07);border:1px solid rgba(47,129,247,0.2);border-radius:8px;padding:14px 16px;margin-bottom:24px;font-size:0.82rem;line-height:1.7;">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">Οδηγίες Vonage (απαιτείται για αποστολή SMS)</div>
+        <ol style="padding-left:18px;color:var(--muted);margin:0;">
+          <li>Εγγραφή στο <strong style="color:var(--text);">vonage.com</strong> (δωρεάν, €2 credit)</li>
+          <li>Από το dashboard: <strong style="color:var(--text);">API Key</strong> (8 χαρακτήρες) + <strong style="color:var(--text);">API Secret</strong></li>
+          <li>Στο Railway: <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">VONAGE_API_KEY=xxx</code>, <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">VONAGE_API_SECRET=xxx</code>, <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">VONAGE_FROM=BooklyAi</code></li>
+        </ol>
+        <div style="margin-top:8px;color:#e3b341;font-size:0.78rem;">⚠️ Χωρίς Vonage τα SMS δεν θα αποστέλλονται. Η κράτηση λειτουργεί κανονικά.</div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- Customer confirmations (automatic) -->
+      <div class="section-title" style="margin-bottom:8px;">✅ Επιβεβαίωση πελάτη (αυτόματο)</div>
+      <div style="background:rgba(63,185,80,0.07);border:1px solid rgba(63,185,80,0.2);border-radius:8px;padding:14px 16px;font-size:0.82rem;line-height:1.8;color:var(--muted);">
+        Μετά από κάθε κράτηση αποστέλλονται αυτόματα:<br/>
+        <span style="color:var(--text);">📧 Email επιβεβαίωσης</span> στον πελάτη (SendGrid) — εμφανίζει αριθμό κράτησης, διαδρομή, τιμή<br/>
+        <span style="color:var(--text);">📱 SMS επιβεβαίωσης</span> στον πελάτη (Vonage) — σύντομη επιβεβαίωση με αριθμό κράτησης
+      </div>
+
+      <div class="nav-btns" style="margin-top:28px;">
+        <button class="btn btn-secondary" onclick="goTo(2)">← Πίσω</button>
+        <button class="btn btn-primary" onclick="goTo(4)">Επόμενο →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Admin account -->
+  <div class="step-panel" id="step4">
     <div class="card">
       <h2>Λογαριασμός διαχειριστή</h2>
       <p class="subtitle">Δημιούργησε το admin account για τη διαχείριση κρατήσεων.</p>
@@ -469,7 +536,7 @@
         <input type="password" id="adminPassConfirm" placeholder="Επανάληψη κωδικού" autocomplete="new-password" />
       </div>
       <div class="nav-btns">
-        <button class="btn btn-secondary" onclick="goTo(2)">← Πίσω</button>
+        <button class="btn btn-secondary" onclick="goTo(3)">← Πίσω</button>
         <button class="btn btn-primary" id="submitBtn" onclick="submitSetup()">Δημιουργία →</button>
       </div>
     </div>
@@ -511,6 +578,12 @@ function goTo(n) {
     if (document.querySelectorAll('.setup-vehicle-row').length === 0) initVehicles();
     wireZoneToggle();
   }
+  if (n === 3) {
+    const notifEmail = document.getElementById('notifEmail');
+    const notifPhone = document.getElementById('notifPhone');
+    if (!notifEmail.value) notifEmail.value = document.getElementById('bizEmail').value.trim();
+    if (!notifPhone.value) notifPhone.value = document.getElementById('bizPhone').value.trim();
+  }
 
   document.getElementById('step' + currentStep)?.classList.remove('active');
   currentStep = n;
@@ -521,13 +594,13 @@ function goTo(n) {
 }
 
 function updateProgress(n) {
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 4; i++) {
     const dot = document.getElementById('dot' + i);
     const lbl = document.getElementById('lbl' + i);
     if (i < n)       { dot.className = 'prog-dot done';   dot.textContent = '✓'; lbl.className = 'prog-label'; }
     else if (i === n){ dot.className = 'prog-dot active'; dot.textContent = i;   lbl.className = 'prog-label active'; }
     else             { dot.className = 'prog-dot';        dot.textContent = i;   lbl.className = 'prog-label'; }
-    if (i < 3) {
+    if (i < 4) {
       const line = document.getElementById('line' + i);
       line.className = i < n ? 'prog-line done' : 'prog-line';
     }
@@ -696,7 +769,8 @@ function collectPayload() {
     theme_color: document.getElementById('themeColor').value,
     services: [],
     config: {
-      email:          document.getElementById('bizEmail').value.trim(),
+      email:          document.getElementById('notifEmail').value.trim() || document.getElementById('bizEmail').value.trim(),
+      phone:          document.getElementById('notifPhone').value.trim() || document.getElementById('bizPhone').value.trim() || undefined,
       office_address: document.getElementById('bizOfficeAddress').value.trim() || null,
       region:         collectRegion(),
       dashboard_lang: document.getElementById('dashLang').value,
@@ -747,7 +821,7 @@ async function submitSetup() {
       return;
     }
 
-    document.getElementById('step3').classList.remove('active');
+    document.getElementById('step4').classList.remove('active');
     document.getElementById('stepDone').classList.add('active');
     document.getElementById('showBizId').textContent = data.business_id;
     document.getElementById('embedCode').textContent = data.embed;

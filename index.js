@@ -346,7 +346,7 @@ CONFIRMED_BOOKING:{name}|{phone}|{email}|{pickup}|{destination}|{datetime}|{vehi
       services: [],
       hours: {},
       theme_color: theme_color || '#1a1a2e',
-      config: { ...config, phone: phone || null, address: address || null },
+      config: { phone: phone || null, address: address || null, ...config },
     });
 
     createAdmin(business_id, admin_username, admin_password);
