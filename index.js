@@ -381,7 +381,16 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
       finalizeAiHistoryEntry(histId, snapshotAfter);
       setAiMeta(bizId, category, message);
     } else if (!result.pending_zone) {
-      console.log(`[AI-NOSAVE] bizId=${bizId} patch=null msg="${result.message?.slice(0, 80)}"`);
+      const rawMsg = result.message || '';
+      const isReadOnly = /^(ℹ️|📋|show|list|here|current|the |these |pricing zones|zones:|vehicles:|routes:)/i.test(rawMsg.trim());
+      const isCannotMsg = rawMsg.startsWith('CANNOT:');
+      console.log(`[AI-NOSAVE] bizId=${bizId} patch=null read=${isReadOnly} msg="${rawMsg.slice(0, 80)}"`);
+      // Rewrite message so the admin knows it was not applied
+      if (!isReadOnly && !isCannotMsg) {
+        result.message = `❌ Δεν εφαρμόστηκε — ${rawMsg}`;
+      } else if (isCannotMsg) {
+        result.message = `❌ ${rawMsg.replace(/^CANNOT:\s*/i, '')}`;
+      }
     }
     const updated = getBusinessById(bizId);
     res.json({ message: result.message, saved, pending_zone: result.pending_zone || null, business: updated });

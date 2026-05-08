@@ -803,15 +803,18 @@ RULES:
 3. If you are unsure whether to return a patch, return the patch anyway.
 4. In patch include ONLY top-level keys that change.
 5. For nested objects/arrays always include ALL current fields plus your change (never send partial objects).
-6. Examples:
+6. If a command is outside the supported config fields (e.g. "delete all bookings", "send email", "generate report"), set patch:null and your message MUST start with "CANNOT:" followed by what you cannot do and why. Example: "CANNOT: Delete bookings — booking management is not part of the config."
+7. NEVER write a success message when patch is null for a modification command. If you cannot apply it, say so with "CANNOT:".
+8. Examples:
    - "Add Rethymno to areas" → patch: {"zones":{"mode":"whitelist","areas":["Heraklion","Rethymno"],"intra_zone":false}}
    - "Change Heraklion-Rethymno price to €60" → patch: {"pricing":{<ALL current pricing fields, updated fixed_routes>}}
    - "Enable night surcharge +25%" → patch: {"pricing":{<ALL current pricing fields, night_surcharge_enabled:true, night_surcharge_pct:25>}}
    - "Set base fare to €3" → patch: {"pricing":{<ALL current pricing fields, base_fare:3>}}
    - "Lasithi area ×1.2" → patch: {"pricing_zones":[<existing zones>, {"id":"zone_1","name":"Lasithi Area","surcharge_type":"multiplier","surcharge_value":1.2,"keywords":["lasithi","ierapetra"]}]}
    - "Delete Lasithi zone" → patch: {"pricing_zones":[<all zones except Lasithi>]}
-   - "Show pricing zones" → patch: null  ← read-only, no change
-7. Write nothing outside JSON`,
+   - "Show pricing zones" → patch: null, message: list of zones  ← read-only
+   - "Delete all bookings" → patch: null, message: "CANNOT: ..."  ← unsupported
+9. Write nothing outside JSON`,
     messages: [{ role: 'user', content: message }],
   });
 
