@@ -27,7 +27,17 @@ export async function getBookingReply(message, history, business, options = {}) 
 
 // ── Pricing instructions builder ─────────────────────────────────────────────
 
-function buildPricingInstructions(pricing) {
+function applyZoneSurcharge(basePrice, activeZones) {
+  let price = basePrice;
+  for (const z of (activeZones || [])) {
+    if (z.surcharge_type === 'pct')        price *= (1 + z.surcharge_value / 100);
+    else if (z.surcharge_type === 'fixed') price += z.surcharge_value;
+    else if (z.surcharge_type === 'multiplier') price *= z.surcharge_value;
+  }
+  return price;
+}
+
+function buildPricingInstructions(pricing, activeZones = []) {
   if (!pricing) return '';
   const {
     mode = 'combined',
@@ -39,13 +49,26 @@ function buildPricingInstructions(pricing) {
   } = pricing;
   const cur = currency;
   const lines = ['\n\nPRICING:'];
+  const hasZones = activeZones.length > 0;
 
   if (mode === 'per_km' || mode === 'combined') {
-    lines.push(`Rates: ${cur}${base_fare.toFixed(2)} start fare + ${cur}${price_per_km.toFixed(2)}/km (minimum ${cur}${min_fare.toFixed(2)}).`);
+    if (hasZones) {
+      const adjBase = applyZoneSurcharge(base_fare, activeZones);
+      const adjKm   = applyZoneSurcharge(price_per_km, activeZones);
+      const adjMin  = applyZoneSurcharge(min_fare, activeZones);
+      lines.push(`Rates (zone surcharge applied): ${cur}${adjBase.toFixed(2)} start fare + ${cur}${adjKm.toFixed(2)}/km (minimum ${cur}${adjMin.toFixed(2)}).`);
+    } else {
+      lines.push(`Rates: ${cur}${base_fare.toFixed(2)} start fare + ${cur}${price_per_km.toFixed(2)}/km (minimum ${cur}${min_fare.toFixed(2)}).`);
+    }
   }
   if ((mode === 'fixed' || mode === 'combined') && fixed_routes.length > 0) {
     lines.push('Fixed prices:');
-    fixed_routes.forEach(r => lines.push(`• ${r.origin} → ${r.destination}: ${cur}${Number(r.price).toFixed(2)}`));
+    fixed_routes.forEach(r => {
+      const base = Number(r.price);
+      const final = hasZones ? applyZoneSurcharge(base, activeZones) : base;
+      const note  = hasZones ? ` (base ${cur}${base.toFixed(2)} + zone)` : '';
+      lines.push(`• ${r.origin} → ${r.destination}: ${cur}${final.toFixed(2)}${note}`);
+    });
   }
   if (mode === 'combined') {
     lines.push('For known routes use the fixed price. For others calculate based on km.');
@@ -173,14 +196,14 @@ async function aiChatFlow(message, history, business, lang) {
   msgs.push({ role: 'user', content: message === '__init__' ? 'Hello.' : message });
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const pricingRules      = buildPricingInstructions(business.config.pricing);
+  // Server-side zone detection — must run before buildPricingInstructions
+  const activeZones    = detectActiveZones(history, message, business.config.pricing_zones);
+  const activeZoneNote = buildActiveZoneNote(activeZones);
+
+  const pricingRules      = buildPricingInstructions(business.config.pricing, activeZones);
   const vehicleRules      = buildVehicleInstructions(business.config.vehicles);
   const zoneRules         = buildZoneInstructions(business.config.zones);
   const pricingZoneRules  = buildPricingZoneInstructions(business.config.pricing_zones);
-
-  // Server-side zone detection — inject confirmed active zones so Claude doesn't have to guess
-  const activeZones    = detectActiveZones(history, message, business.config.pricing_zones);
-  const activeZoneNote = buildActiveZoneNote(activeZones);
 
   // Session language: customer selected a specific language in the widget
   const sessionLang = lang && LANG_NAMES[lang]
