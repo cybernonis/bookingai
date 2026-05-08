@@ -54,6 +54,18 @@ db.exec(`
     password_hash TEXT   NOT NULL,
     created_at   TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
   );
+
+  CREATE TABLE IF NOT EXISTS ai_history (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_id     TEXT    NOT NULL,
+    command         TEXT    NOT NULL,
+    summary         TEXT,
+    category        TEXT    NOT NULL DEFAULT 'general',
+    snapshot_before TEXT,
+    snapshot_after  TEXT,
+    status          TEXT    NOT NULL DEFAULT 'applied',
+    created_at      TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+  );
 `);
 
 // ── Migrations ────────────────────────────────────────────────────────────────
@@ -153,6 +165,16 @@ const q = {
       SUM(status='pending')   AS pending,
       SUM(status='cancelled') AS cancelled
     FROM bookings WHERE business_id = ?`),
+
+  // ai_history
+  aiHistInsert: db.prepare(`
+    INSERT INTO ai_history (business_id, command, summary, category, snapshot_before, snapshot_after)
+    VALUES (@business_id, @command, @summary, @category, @snapshot_before, @snapshot_after)
+  `),
+  aiHistPatchAfter:  db.prepare('UPDATE ai_history SET snapshot_after = ? WHERE id = ?'),
+  aiHistPatchStatus: db.prepare('UPDATE ai_history SET status = ? WHERE id = ?'),
+  aiHistByBiz:  db.prepare('SELECT id, business_id, command, summary, category, status, created_at FROM ai_history WHERE business_id = ? ORDER BY created_at DESC LIMIT 200'),
+  aiHistById:   db.prepare('SELECT * FROM ai_history WHERE id = ?'),
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -175,6 +197,13 @@ export function updateBusinessConfig(businessId, patch) {
   if (!row) return null;
   const merged = { ...JSON.parse(row.config || '{}'), ...patch };
   q.bizPatchConfig.run(JSON.stringify(merged), businessId);
+  return parseBiz(q.bizById.get(businessId));
+}
+
+export function replaceBusinessConfig(businessId, config) {
+  const row = q.bizById.get(businessId);
+  if (!row) return null;
+  q.bizPatchConfig.run(JSON.stringify(config || {}), businessId);
   return parseBiz(q.bizById.get(businessId));
 }
 
@@ -219,6 +248,40 @@ export function updateBookingStatus(id, status) {
 
 export function getStats(businessId = null) {
   return businessId ? q.statsByBiz.get(businessId) : q.statsAll.get();
+}
+
+// ── AI History ────────────────────────────────────────────────────────────────
+
+export function createAiHistoryEntry({ business_id, command, summary, category, snapshot_before }) {
+  const r = q.aiHistInsert.run({
+    business_id, command, summary: summary || '',
+    category: category || 'general',
+    snapshot_before: JSON.stringify(snapshot_before || null),
+    snapshot_after: null,
+  });
+  return r.lastInsertRowid;
+}
+
+export function finalizeAiHistoryEntry(id, snapshot_after) {
+  q.aiHistPatchAfter.run(JSON.stringify(snapshot_after || null), id);
+}
+
+export function getAiHistory(bizId) {
+  return q.aiHistByBiz.all(bizId);
+}
+
+export function getAiHistoryEntry(id) {
+  const row = q.aiHistById.get(id);
+  if (!row) return null;
+  return {
+    ...row,
+    snapshot_before: row.snapshot_before ? JSON.parse(row.snapshot_before) : null,
+    snapshot_after:  row.snapshot_after  ? JSON.parse(row.snapshot_after)  : null,
+  };
+}
+
+export function setAiHistoryStatus(id, status) {
+  q.aiHistPatchStatus.run(status, id);
 }
 
 // ── Seed ─────────────────────────────────────────────────────────────────────

@@ -8,7 +8,8 @@ import {
   getAllBookings, getBookingById, createBooking,
   updateBookingStatus, getStats, seedIfEmpty,
   getAdminByUsername, createAdmin, verifyPassword,
-  setupNewBusiness, updateBusinessConfig, updateBusinessMeta,
+  setupNewBusiness, updateBusinessConfig, replaceBusinessConfig, updateBusinessMeta,
+  createAiHistoryEntry, finalizeAiHistoryEntry, getAiHistory, getAiHistoryEntry, setAiHistoryStatus,
 } from './db.js';
 import { getBookingReply, applySettingsCommand } from './flows.js';
 import { sendEmailDirect } from './email.js';
@@ -199,7 +200,8 @@ app.patch('/api/admin/business/:id/pricing', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'pricing object required' });
   const biz = updateBusinessConfig(bizId, { pricing });
   if (!biz) return res.status(404).json({ error: 'Business not found' });
-  res.json({ business: biz });
+  clearAiMeta(bizId, 'pricing');
+  res.json({ business: getBusinessById(bizId) });
 });
 
 app.patch('/api/admin/business/:id/zones', requireAdmin, (req, res) => {
@@ -211,7 +213,8 @@ app.patch('/api/admin/business/:id/zones', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'zones object required' });
   const biz = updateBusinessConfig(bizId, { zones });
   if (!biz) return res.status(404).json({ error: 'Business not found' });
-  res.json({ business: biz });
+  clearAiMeta(bizId, 'zones');
+  res.json({ business: getBusinessById(bizId) });
 });
 
 app.patch('/api/admin/business/:id/vehicles', requireAdmin, (req, res) => {
@@ -223,7 +226,8 @@ app.patch('/api/admin/business/:id/vehicles', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'vehicles array required' });
   const biz = updateBusinessConfig(bizId, { vehicles });
   if (!biz) return res.status(404).json({ error: 'Business not found' });
-  res.json({ business: biz });
+  clearAiMeta(bizId, 'vehicles');
+  res.json({ business: getBusinessById(bizId) });
 });
 
 app.patch('/api/admin/business/:id/pricing-zones', requireAdmin, (req, res) => {
@@ -235,7 +239,8 @@ app.patch('/api/admin/business/:id/pricing-zones', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'pricing_zones array required' });
   const biz = updateBusinessConfig(bizId, { pricing_zones });
   if (!biz) return res.status(404).json({ error: 'Business not found' });
-  res.json({ business: biz });
+  clearAiMeta(bizId, 'pricing_zones');
+  res.json({ business: getBusinessById(bizId) });
 });
 
 app.patch('/api/admin/business/:id/app-settings', requireAdmin, (req, res) => {
@@ -264,6 +269,32 @@ app.patch('/api/admin/business/:id/app-settings', requireAdmin, (req, res) => {
   res.json({ business: biz });
 });
 
+function detectAiCategory(patch) {
+  if (!patch) return 'general';
+  const keys = Object.keys(patch);
+  if (keys.includes('pricing_zones')) return 'pricing_zones';
+  if (keys.includes('pricing'))       return 'pricing';
+  if (keys.includes('zones'))         return 'zones';
+  if (keys.includes('vehicles'))      return 'vehicles';
+  return 'general';
+}
+
+function setAiMeta(bizId, category, cmd) {
+  const biz = getBusinessById(bizId);
+  if (!biz) return;
+  const meta = { ...(biz.config._ai_meta || {}) };
+  meta[category] = { cmd, at: new Date().toISOString() };
+  updateBusinessConfig(bizId, { _ai_meta: meta });
+}
+
+function clearAiMeta(bizId, category) {
+  const biz = getBusinessById(bizId);
+  if (!biz || !biz.config._ai_meta?.[category]) return;
+  const meta = { ...biz.config._ai_meta };
+  delete meta[category];
+  updateBusinessConfig(bizId, { _ai_meta: meta });
+}
+
 app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) => {
   const bizId = req.params.id;
   if (req.session.businessId && req.session.businessId !== bizId)
@@ -275,26 +306,64 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
   if (confirm_zone && typeof confirm_zone === 'object') {
     const biz = getBusinessById(bizId);
     if (!biz) return res.status(404).json({ error: 'Business not found' });
+    const snapshotBefore = { ...biz.config };
     const existingZones = Array.isArray(biz.config?.pricing_zones) ? biz.config.pricing_zones : [];
     updateBusinessConfig(bizId, { pricing_zones: [...existingZones, confirm_zone] });
-    const s = confirm_zone.surcharge_type;
-    const v = confirm_zone.surcharge_value;
+    const s = confirm_zone.surcharge_type, v = confirm_zone.surcharge_value;
     const label = s === 'pct' ? `+${v}%` : s === 'fixed' ? `+€${v}` : `×${v}`;
-    return res.json({ message: `✅ Ζώνη "${confirm_zone.name}" (${label}) αποθηκεύτηκε — ${confirm_zone.keywords?.length || 0} τοποθεσίες`, business: getBusinessById(bizId) });
+    const summary = `Ζώνη "${confirm_zone.name}" (${label}) — ${confirm_zone.keywords?.length || 0} τοποθεσίες`;
+    const cmd = `Confirm zone: ${confirm_zone.name}`;
+    const histId = createAiHistoryEntry({ business_id: bizId, command: cmd, summary, category: 'pricing_zones', snapshot_before: snapshotBefore });
+    finalizeAiHistoryEntry(histId, getBusinessById(bizId).config);
+    setAiMeta(bizId, 'pricing_zones', cmd);
+    return res.json({ message: `✅ ${summary}`, business: getBusinessById(bizId) });
   }
 
   if (!message) return res.status(400).json({ error: 'message required' });
   const biz = getBusinessById(bizId);
   if (!biz) return res.status(404).json({ error: 'Business not found' });
   try {
+    const snapshotBefore = { ...biz.config };
     const result = await applySettingsCommand(message, biz);
-    if (result.patch) updateBusinessConfig(bizId, result.patch);
+    if (result.patch && !result.pending_zone) {
+      const category = detectAiCategory(result.patch);
+      updateBusinessConfig(bizId, result.patch);
+      const snapshotAfter = { ...getBusinessById(bizId).config };
+      const histId = createAiHistoryEntry({ business_id: bizId, command: message, summary: result.message, category, snapshot_before: snapshotBefore });
+      finalizeAiHistoryEntry(histId, snapshotAfter);
+      setAiMeta(bizId, category, message);
+    }
     const updated = getBusinessById(bizId);
     res.json({ message: result.message, pending_zone: result.pending_zone || null, business: updated });
   } catch (err) {
     console.error('AI settings error:', err);
     res.status(500).json({ error: 'Σφάλμα επεξεργασίας.' });
   }
+});
+
+app.get('/api/admin/business/:id/ai-history', requireAdmin, (req, res) => {
+  const bizId = req.params.id;
+  if (req.session.businessId && req.session.businessId !== bizId)
+    return res.status(403).json({ error: 'Forbidden' });
+  res.json({ history: getAiHistory(bizId) });
+});
+
+app.post('/api/admin/business/:id/ai-revert/:historyId', requireAdmin, (req, res) => {
+  const bizId = req.params.id;
+  if (req.session.businessId && req.session.businessId !== bizId)
+    return res.status(403).json({ error: 'Forbidden' });
+  const entry = getAiHistoryEntry(parseInt(req.params.historyId));
+  if (!entry || entry.business_id !== bizId)
+    return res.status(404).json({ error: 'Δεν βρέθηκε η καταχώριση' });
+  if (!entry.snapshot_before)
+    return res.status(400).json({ error: 'Δεν υπάρχει snapshot για αναίρεση' });
+  if (entry.status === 'reverted')
+    return res.status(400).json({ error: 'Έχει ήδη αναιρεθεί' });
+  if (!getBusinessById(bizId))
+    return res.status(404).json({ error: 'Business not found' });
+  replaceBusinessConfig(bizId, entry.snapshot_before);
+  setAiHistoryStatus(entry.id, 'reverted');
+  res.json({ message: '↩️ Αναίρεση επιτυχής', business: getBusinessById(bizId) });
 });
 
 // ── Setup wizard ──────────────────────────────────────────────────────────────

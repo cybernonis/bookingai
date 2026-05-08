@@ -237,6 +237,99 @@
     .ai-response.pending { background: var(--yellow-bg); border-color: #fcd34d; color: var(--yellow); }
     .kw-chip { display: inline-block; background: rgba(0,0,0,0.06); border-radius: 4px; padding: 1px 6px; margin: 2px 2px; font-size: 0.73rem; }
 
+    /* ── AI Chat Panel ── */
+    #ai-admin-bubble {
+      position: fixed; top: 10px; right: 74px; z-index: 10001;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #16a34a; color: #fff; border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.22); font-size: 1rem;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    #ai-admin-bubble:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.28); }
+    #ai-admin-bubble .ai-dot {
+      position: absolute; bottom: 1px; right: 1px;
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #86efac; border: 2px solid #16a34a;
+    }
+    #ai-chat-panel {
+      position: fixed; right: 0; top: 0; bottom: 0; z-index: 10000;
+      width: 380px; background: #fff;
+      box-shadow: -4px 0 28px rgba(0,0,0,0.13);
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    }
+    #ai-chat-panel.open { transform: translateX(0); }
+    .ai-ch-header {
+      background: var(--accent); color: #fff;
+      padding: 14px 18px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .ai-ch-header h3 { flex: 1; font-size: 0.9rem; font-weight: 600; margin: 0; }
+    .ai-ch-close {
+      background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer;
+      font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; transition: color 0.15s;
+    }
+    .ai-ch-close:hover { color: #fff; }
+    .ai-ch-biz-sel { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 0.78rem; flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+    .ai-ch-biz-sel select { border: 1px solid var(--border); border-radius: 5px; padding: 4px 8px; font-size: 0.78rem; font-family: inherit; outline: none; }
+    .ai-ch-msgs {
+      flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 9px;
+    }
+    .ai-ch-msgs::-webkit-scrollbar { width: 4px; }
+    .ai-ch-msgs::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+    .ai-ch-msg {
+      max-width: 88%; padding: 9px 13px; border-radius: 13px;
+      font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; font-family: inherit;
+    }
+    .ai-ch-msg-user  { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+    .ai-ch-msg-ai    { align-self: flex-start; background: #f0f2f5; color: var(--text); border-bottom-left-radius: 4px; }
+    .ai-ch-msg-sys   { align-self: center; background: var(--yellow-bg); color: var(--yellow); border-radius: 8px; font-size: 0.74rem; padding: 5px 11px; text-align: center; max-width: 100%; }
+    .ai-ch-typing    { align-self: flex-start; background: #f0f2f5; border-radius: 13px; border-bottom-left-radius: 4px; display: flex; gap: 5px; align-items: center; padding: 10px 14px; }
+    .ai-ch-dot { width: 6px; height: 6px; border-radius: 50%; background: #aaa; animation: bw-bounce 1.2s infinite; }
+    .ai-ch-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ai-ch-dot:nth-child(3) { animation-delay: 0.4s; }
+    .ai-ch-zone { background: var(--yellow-bg); border: 1px solid #fcd34d; border-radius: 10px; padding: 11px 13px; font-size: 0.79rem; align-self: flex-start; max-width: 100%; }
+    .ai-ch-zone-btns { display: flex; gap: 7px; margin-top: 9px; }
+    .ai-ch-input-row { padding: 11px 13px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+    .ai-ch-input {
+      flex: 1; padding: 7px 12px; border: 1.5px solid var(--border);
+      border-radius: 20px; font-size: 0.82rem; outline: none; font-family: inherit; transition: border-color 0.2s;
+    }
+    .ai-ch-input:focus { border-color: var(--accent); }
+    .ai-ch-send {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent); color: #fff; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.2s;
+    }
+    .ai-ch-send:hover { opacity: 0.85; }
+    .ai-ch-send:disabled { opacity: 0.35; cursor: not-allowed; }
+    .ai-ch-send svg { width: 13px; height: 13px; }
+
+    /* ── AI History tab ── */
+    .ai-hist-filters { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
+    .ai-hist-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .ai-hist-table th { text-align: left; font-size: 0.64rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 8px 14px; border-bottom: 1px solid var(--border); background: #fafbfc; white-space: nowrap; }
+    .ai-hist-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .ai-hist-table tr:last-child td { border-bottom: none; }
+    .ai-hist-cmd { font-weight: 500; font-size: 0.82rem; }
+    .ai-hist-sum { font-size: 0.73rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+    .badge-reverted { background: #f3f4f6; color: #6b7280; }
+    .badge-reverted::before { background: #9ca3af; }
+    .btn-revert { padding: 4px 10px; border-radius: 5px; font-size: 0.7rem; font-weight: 500; cursor: pointer; border: 1.5px solid var(--border); background: transparent; color: var(--muted); white-space: nowrap; transition: border-color 0.15s, color 0.15s; }
+    .btn-revert:hover { border-color: var(--yellow); color: var(--yellow); }
+    .btn-revert:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .ai-hist-empty { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 0.85rem; }
+
+    /* ── AI Indicator ── */
+    .ai-indicator {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.69rem; color: #7c3aed; background: #f5f3ff;
+      border: 1px solid #ddd6fe; border-radius: 5px;
+      padding: 3px 8px; margin-top: 6px; cursor: pointer; user-select: none;
+      transition: background 0.15s;
+    }
+    .ai-indicator:hover { background: #ede9fe; }
+
     /* ── App settings ── */
     .lang-checks { display: flex; flex-wrap: wrap; gap: 6px; }
     .lang-check-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 0.82rem; transition: border-color 0.15s, background 0.15s; user-select: none; }
@@ -301,6 +394,7 @@
       <button class="main-tab active" id="tab-btn-bookings" onclick="switchTab('bookings')">📋 Bookings</button>
       <button class="main-tab" id="tab-btn-settings" onclick="switchTab('settings')">⚙️ Settings</button>
       <button class="main-tab" id="tab-btn-app-settings" onclick="switchTab('app-settings')">🛠️ App Settings</button>
+      <button class="main-tab" id="tab-btn-ai-history" onclick="switchTab('ai-history')">📜 Ιστορικό AI</button>
     </div>
 
     <div class="content">
@@ -607,35 +701,7 @@
           </div>
         </div>
 
-        <!-- ── AI Assistant ── -->
-        <div class="s-card" id="ai-card" style="display:none;">
-          <div class="s-card-header">
-            <h2>🤖 Settings AI Assistant</h2>
-            <p>Write a command and the AI will update settings automatically</p>
-          </div>
-          <div class="s-card-body">
-            <div class="ai-examples">
-              <span>Examples:</span>
-              <button class="ai-chip" onclick="fillAI(this)">Add Rethymno to areas</button>
-              <button class="ai-chip" onclick="fillAI(this)">Enable night surcharge +25%</button>
-              <button class="ai-chip" onclick="fillAI(this)">Change Heraklion→Chania price to €55</button>
-              <button class="ai-chip" onclick="fillAI(this)">Disable the VIP vehicle</button>
-              <button class="ai-chip" onclick="fillAI(this)">Set child seat to €8</button>
-              <button class="ai-chip" onclick="fillAI(this)" title="Geographic zone — automatically identifies villages">🗺 Villages of south Rethymno +€10</button>
-              <button class="ai-chip" onclick="fillAI(this)" title="Geographic zone — automatically identifies villages">🗺 Mountain areas of northern Crete +20%</button>
-              <button class="ai-chip" onclick="fillAI(this)" title="Geographic zone — automatically identifies villages">🗺 Ierapetra and surrounding villages ×1.3</button>
-              <button class="ai-chip" onclick="fillAI(this)">Lasithi area ×1.2</button>
-              <button class="ai-chip" onclick="fillAI(this)">Show pricing zones</button>
-            </div>
-            <textarea id="ai-input" class="ai-textarea" rows="3"
-              placeholder="e.g. Add Athens to whitelist areas and increase the base start fare to €3"></textarea>
-            <div class="s-footer">
-              <button class="btn-sm primary" id="ai-btn" onclick="sendAICommand()">▶ Run</button>
-              <span class="s-hint" id="ai-hint"></span>
-            </div>
-            <div id="ai-response" class="ai-response" style="display:none;"></div>
-          </div>
-        </div>
+        <!-- AI Assistant moved to floating panel — accessible via 🤖 button top-right -->
 
       </div><!-- /tab-settings -->
 
@@ -882,9 +948,77 @@
 
       </div><!-- /tab-app-settings -->
 
+      <!-- ══════════ Tab: AI History ══════════ -->
+      <div id="tab-ai-history" style="display:none;">
+
+        <div class="settings-placeholder" id="ai-history-placeholder">
+          <div class="ph-icon">🤖</div>
+          <p>Επιλέξτε επιχείρηση από το sidebar για να δείτε το ιστορικό AI.</p>
+        </div>
+
+        <div id="ai-history-content" style="display:none;">
+          <div class="table-card">
+            <div class="table-header">
+              <h2>Ιστορικό AI Assistant</h2>
+              <div class="ai-hist-filters" id="ai-hist-filters">
+                <div class="ftab active" data-hfilter="all" onclick="setHistFilter(this)">Όλα</div>
+                <div class="ftab" data-hfilter="zones" onclick="setHistFilter(this)">Ζώνες</div>
+                <div class="ftab" data-hfilter="pricing" onclick="setHistFilter(this)">Τιμολόγηση</div>
+                <div class="ftab" data-hfilter="pricing_zones" onclick="setHistFilter(this)">Τιμ. Ζώνες</div>
+                <div class="ftab" data-hfilter="vehicles" onclick="setHistFilter(this)">Οχήματα</div>
+                <div class="ftab" data-hfilter="general" onclick="setHistFilter(this)">Γενικά</div>
+              </div>
+            </div>
+            <div id="ai-hist-table-wrap">
+              <table class="ai-hist-table">
+                <thead>
+                  <tr>
+                    <th>Ημερομηνία</th>
+                    <th>Εντολή</th>
+                    <th>Κατηγορία</th>
+                    <th>Κατάσταση</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="ai-hist-tbody"></tbody>
+              </table>
+              <div class="ai-hist-empty" id="ai-hist-empty" style="display:none;">Δεν υπάρχουν εγγραφές.</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /tab-ai-history -->
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /layout -->
+
+<!-- ── AI Admin Bubble ─────────────────────────────────────────────────── -->
+<button id="ai-admin-bubble" title="AI Assistant" onclick="toggleAiPanel()">
+  🤖<span class="ai-dot"></span>
+</button>
+
+<!-- ── AI Chat Panel ───────────────────────────────────────────────────── -->
+<div id="ai-chat-panel">
+  <div class="ai-ch-header">
+    <h3>🤖 AI Settings Assistant</h3>
+    <button class="ai-ch-close" onclick="toggleAiPanel()">✕</button>
+  </div>
+  <div class="ai-ch-biz-sel">
+    <span style="color:var(--muted);">Business:</span>
+    <select id="ai-panel-biz-sel" onchange="onAiPanelBizChange()"></select>
+  </div>
+  <div class="ai-ch-msgs" id="ai-ch-msgs"></div>
+  <div class="ai-ch-input-row">
+    <input class="ai-ch-input" id="ai-ch-input" type="text"
+      placeholder="π.χ. Πρόσθεσε Ρέθυμνο στις περιοχές..."
+      autocomplete="off"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiChatMsg();}" />
+    <button class="ai-ch-send" id="ai-ch-send" onclick="sendAiChatMsg()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
 
 <div class="modal-overlay" id="logout-modal">
   <div class="modal">
@@ -916,11 +1050,13 @@
     document.getElementById('tab-bookings').style.display     = tab === 'bookings'     ? '' : 'none';
     document.getElementById('tab-settings').style.display     = tab === 'settings'     ? '' : 'none';
     document.getElementById('tab-app-settings').style.display = tab === 'app-settings' ? '' : 'none';
-    document.getElementById('tab-btn-bookings').classList.toggle('active',     tab === 'bookings');
-    document.getElementById('tab-btn-settings').classList.toggle('active',     tab === 'settings');
-    document.getElementById('tab-btn-app-settings').classList.toggle('active', tab === 'app-settings');
+    document.getElementById('tab-ai-history').style.display   = tab === 'ai-history'   ? '' : 'none';
+    ['bookings','settings','app-settings','ai-history'].forEach(t => {
+      document.getElementById(`tab-btn-${t}`)?.classList.toggle('active', t === tab);
+    });
     if (tab === 'settings')     loadSettings(activeBizId);
     if (tab === 'app-settings') loadAppSettings(activeBizId);
+    if (tab === 'ai-history')   loadAiHistory(activeBizId);
   }
 
   // ── Data loading ──────────────────────────────────────────────────────────
@@ -952,6 +1088,7 @@
     loadAll();
     if (activeTab === 'settings')     loadSettings(activeBizId);
     if (activeTab === 'app-settings') loadAppSettings(activeBizId);
+    if (activeTab === 'ai-history')   loadAiHistory(activeBizId);
   }
 
   function renderStats(s) {
@@ -996,6 +1133,10 @@
     loadAll();
     if (activeTab === 'settings')     loadSettings(bizId);
     if (activeTab === 'app-settings') loadAppSettings(bizId);
+    if (activeTab === 'ai-history')   loadAiHistory(bizId);
+    // keep AI panel in sync
+    const sel = document.getElementById('ai-panel-biz-sel');
+    if (sel && bizId) sel.value = bizId;
   }
 
   // ── Banner ────────────────────────────────────────────────────────────────
@@ -1093,7 +1234,7 @@
 
   async function loadSettings(bizId) {
     const placeholder = document.getElementById('settings-placeholder');
-    const settingCards = ['zones-card','pricing-card','extras-card','pricing-zones-card','vehicles-card','ai-card'];
+    const settingCards = ['zones-card','pricing-card','extras-card','pricing-zones-card','vehicles-card'];
 
     if (!bizId) {
       placeholder.style.display = '';
@@ -1114,7 +1255,6 @@
       document.getElementById('extras-card').style.display        = isTaxi ? '' : 'none';
       document.getElementById('pricing-zones-card').style.display = isTaxi ? '' : 'none';
       document.getElementById('vehicles-card').style.display      = isTaxi ? '' : 'none';
-      document.getElementById('ai-card').style.display            = isTaxi ? '' : 'none';
 
       // Zones
       const z = biz.config?.zones || { mode: 'open', areas: [], intra_zone: false };
@@ -1155,6 +1295,8 @@
       // Vehicles
       renderVehiclesTable(biz.config?.vehicles || []);
 
+      // AI indicators
+      if (bizId) renderAiIndicators(bizId);
     } catch { /* ignore */ }
   }
 
@@ -1878,6 +2020,272 @@
   function closeModal()    { document.getElementById('logout-modal').classList.remove('open'); }
   async function doLogout() { await fetch('/admin/logout', { method: 'POST' }); location.href = '/admin/login'; }
   document.getElementById('logout-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+  // ── AI Chat Panel ─────────────────────────────────────────────────────────
+
+  let aiPanelOpen = false;
+  let aiChatBiz   = null;
+  let _aiPendingZone = null;
+
+  function toggleAiPanel() {
+    aiPanelOpen = !aiPanelOpen;
+    document.getElementById('ai-chat-panel').classList.toggle('open', aiPanelOpen);
+    if (aiPanelOpen) {
+      populateAiBizSel();
+      if (!document.getElementById('ai-ch-msgs').children.length) {
+        addAiMsg('ai', '👋 Γεια! Δώσε μου εντολή για να αλλάξω ρυθμίσεις — π.χ. "Πρόσθεσε Ρέθυμνο στις περιοχές" ή "Άλλαξε τιμή Αεροδρόμιο→Χανιά σε €90".');
+      }
+      setTimeout(() => document.getElementById('ai-ch-input').focus(), 200);
+    }
+  }
+
+  function populateAiBizSel() {
+    const sel = document.getElementById('ai-panel-biz-sel');
+    sel.innerHTML = allBusinesses.map(b =>
+      `<option value="${esc(b.business_id)}">${esc(b.name)}</option>`
+    ).join('');
+    if (activeBizId) sel.value = activeBizId;
+    aiChatBiz = sel.value || null;
+  }
+
+  function onAiPanelBizChange() {
+    aiChatBiz = document.getElementById('ai-panel-biz-sel').value || null;
+  }
+
+  function addAiMsg(role, text) {
+    const msgs = document.getElementById('ai-ch-msgs');
+    const el = document.createElement('div');
+    el.className = `ai-ch-msg ai-ch-msg-${role}`;
+    el.textContent = text;
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+    return el;
+  }
+
+  function addAiTyping() {
+    const msgs = document.getElementById('ai-ch-msgs');
+    const el = document.createElement('div');
+    el.className = 'ai-ch-typing';
+    el.innerHTML = '<div class="ai-ch-dot"></div><div class="ai-ch-dot"></div><div class="ai-ch-dot"></div>';
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+    return el;
+  }
+
+  function showAiZoneConfirm(zone) {
+    const msgs = document.getElementById('ai-ch-msgs');
+    const el = document.createElement('div');
+    el.className = 'ai-ch-zone';
+    const s = zone.surcharge_type, v = zone.surcharge_value;
+    const label = s === 'pct' ? `+${v}%` : s === 'fixed' ? `+€${v}` : `×${v}`;
+    const shown = zone.keywords.slice(0, 12).join(', ');
+    const rest  = zone.keywords.length - 12;
+    el.innerHTML = `
+      <strong>🗺 ${esc(zone.name)}</strong> <span style="opacity:.75;">${label}</span>
+      <span style="font-size:0.73rem;opacity:.6;margin-left:4px;">${zone.keywords.length} τοποθεσίες</span>
+      <div style="font-size:0.73rem;color:var(--muted);margin-top:5px;line-height:1.6;">${esc(shown)}${rest > 0 ? ` +${rest} ακόμα` : ''}</div>
+      <div style="font-size:0.79rem;margin:8px 0 3px;">Αποθήκευση αυτής της ζώνης;</div>
+      <div class="ai-ch-zone-btns">
+        <button class="btn-sm primary" onclick="confirmAiZone(this)">✅ Ναι</button>
+        <button class="btn-sm" onclick="cancelAiZone(this)">✗ Όχι</button>
+      </div>`;
+    msgs.appendChild(el);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  async function confirmAiZone(btn) {
+    if (!_aiPendingZone || !aiChatBiz) return;
+    btn.disabled = true; btn.textContent = '⏳';
+    btn.closest('.ai-ch-zone-btns').querySelectorAll('button').forEach(b => b.disabled = true);
+    try {
+      const res = await fetch(`/api/admin/business/${aiChatBiz}/ai-settings`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm_zone: _aiPendingZone }),
+      });
+      const data = await res.json();
+      _aiPendingZone = null;
+      btn.closest('.ai-ch-zone').remove();
+      addAiMsg('ai', data.message || '✅ Ζώνη αποθηκεύτηκε.');
+      if (activeTab === 'settings') loadSettings(aiChatBiz);
+      if (activeTab === 'ai-history') loadAiHistory(aiChatBiz);
+    } catch { addAiMsg('ai', 'Σφάλμα αποθήκευσης.'); }
+  }
+
+  function cancelAiZone(btn) {
+    _aiPendingZone = null;
+    btn.closest('.ai-ch-zone').remove();
+    addAiMsg('ai', 'Ακυρώθηκε — η ζώνη δεν αποθηκεύτηκε.');
+  }
+
+  async function sendAiChatMsg() {
+    if (!aiChatBiz) { addAiMsg('ai', '⚠️ Επίλεξε πρώτα επιχείρηση.'); return; }
+    const input = document.getElementById('ai-ch-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    input.disabled = true;
+    document.getElementById('ai-ch-send').disabled = true;
+    addAiMsg('user', msg);
+    const typing = addAiTyping();
+    try {
+      const res = await fetch(`/api/admin/business/${aiChatBiz}/ai-settings`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      const data = await res.json();
+      typing.remove();
+      if (data.pending_zone) {
+        _aiPendingZone = data.pending_zone;
+        showAiZoneConfirm(data.pending_zone);
+      } else {
+        addAiMsg('ai', data.message || data.error || 'Σφάλμα.');
+        if (res.ok) {
+          if (activeTab === 'settings') loadSettings(aiChatBiz);
+          if (activeTab === 'ai-history') loadAiHistory(aiChatBiz);
+          renderAiIndicators(aiChatBiz);
+        }
+      }
+    } catch {
+      typing.remove();
+      addAiMsg('ai', 'Δεν ήταν δυνατή η επικοινωνία.');
+    } finally {
+      input.disabled = false;
+      document.getElementById('ai-ch-send').disabled = false;
+      input.focus();
+    }
+  }
+
+  // ── AI History Tab ────────────────────────────────────────────────────────
+
+  let allAiHistory = [];
+  let activeHistFilter = 'all';
+
+  const AI_CAT_LABELS = {
+    zones: 'Ζώνες', pricing: 'Τιμολόγηση', pricing_zones: 'Τιμ. Ζώνες',
+    vehicles: 'Οχήματα', general: 'Γενικά',
+  };
+
+  async function loadAiHistory(bizId) {
+    const placeholder = document.getElementById('ai-history-placeholder');
+    const content     = document.getElementById('ai-history-content');
+    if (!bizId) {
+      placeholder.style.display = ''; content.style.display = 'none'; return;
+    }
+    placeholder.style.display = 'none'; content.style.display = '';
+    try {
+      const res = await fetch(`/api/admin/business/${bizId}/ai-history`);
+      if (!res.ok) return;
+      const data = await res.json();
+      allAiHistory = data.history || [];
+      renderAiHistoryTable();
+    } catch { /* ignore */ }
+  }
+
+  function setHistFilter(el) {
+    document.querySelectorAll('#ai-hist-filters .ftab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    activeHistFilter = el.dataset.hfilter;
+    renderAiHistoryTable();
+  }
+
+  function renderAiHistoryTable() {
+    const tbody = document.getElementById('ai-hist-tbody');
+    const empty = document.getElementById('ai-hist-empty');
+    const rows  = activeHistFilter === 'all'
+      ? allAiHistory
+      : allAiHistory.filter(h => h.category === activeHistFilter);
+
+    if (!rows.length) {
+      tbody.innerHTML = ''; empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = rows.map(h => {
+      const dt = new Date(h.created_at.replace(' ', 'T'));
+      const dateStr = dt.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = dt.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+      const catLabel = AI_CAT_LABELS[h.category] || h.category;
+      const statusBadge = h.status === 'reverted'
+        ? '<span class="badge badge-reverted">↩ Αναιρέθηκε</span>'
+        : '<span class="badge badge-confirmed">✓ Εφαρμόστηκε</span>';
+      const revertBtn = h.status === 'applied'
+        ? `<button class="btn-revert" onclick="revertAiChange(${h.id}, this)">↩ Revert</button>`
+        : `<button class="btn-revert" disabled>↩ Revert</button>`;
+      return `
+        <tr>
+          <td style="white-space:nowrap;font-size:0.75rem;color:var(--muted);">${dateStr}<br>${timeStr}</td>
+          <td>
+            <div class="ai-hist-cmd">${esc(h.command)}</div>
+            ${h.summary ? `<div class="ai-hist-sum">${esc(h.summary)}</div>` : ''}
+          </td>
+          <td><span class="service-chip" style="white-space:nowrap;">${catLabel}</span></td>
+          <td>${statusBadge}</td>
+          <td>${revertBtn}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  async function revertAiChange(histId, btn) {
+    if (!activeBizId) return;
+    if (!confirm('Αναίρεση αυτής της αλλαγής AI; Οι ρυθμίσεις θα επιστρέψουν στην κατάσταση πριν την εντολή.')) return;
+    btn.disabled = true; btn.textContent = '⏳';
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/ai-revert/${histId}`, { method: 'POST' });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      const data = await res.json();
+      if (res.ok) {
+        showToast('✅ ' + data.message, 'success');
+        await loadAiHistory(activeBizId);
+        if (activeTab === 'settings') loadSettings(activeBizId);
+        renderAiIndicators(activeBizId);
+      } else {
+        showToast(data.error || 'Σφάλμα αναίρεσης', 'error');
+        btn.disabled = false; btn.textContent = '↩ Revert';
+      }
+    } catch {
+      showToast('Σφάλμα', 'error');
+      btn.disabled = false; btn.textContent = '↩ Revert';
+    }
+  }
+
+  // ── AI Indicators ─────────────────────────────────────────────────────────
+
+  const AI_INDICATOR_TARGETS = {
+    zones:         'zones-hint',
+    pricing:       'pricing-hint',
+    pricing_zones: 'extras-hint',
+    vehicles:      'vehicles-hint',
+  };
+
+  async function renderAiIndicators(bizId) {
+    if (!bizId) return;
+    // Remove existing indicators
+    document.querySelectorAll('.ai-indicator').forEach(el => el.remove());
+    try {
+      const res = await fetch(`/api/business/${bizId}`);
+      if (!res.ok) return;
+      const biz = await res.json();
+      const meta = biz.config?._ai_meta;
+      if (!meta) return;
+      Object.entries(meta).forEach(([category, info]) => {
+        const hintId = AI_INDICATOR_TARGETS[category];
+        if (!hintId) return;
+        const hint = document.getElementById(hintId);
+        if (!hint) return;
+        const dt = new Date(info.at);
+        const dtStr = dt.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' +
+                      dt.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+        const indicator = document.createElement('span');
+        indicator.className = 'ai-indicator';
+        indicator.title = `Εντολή: "${info.cmd}"`;
+        indicator.textContent = `🤖 AI Assistant — ${dtStr}`;
+        indicator.onclick = () => showToast(`📝 "${info.cmd}"`, 'info');
+        hint.parentNode.insertBefore(indicator, hint);
+      });
+    } catch { /* ignore */ }
+  }
+
 
   loadAll();
 </script>
