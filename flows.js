@@ -611,7 +611,8 @@ const GEO_DIRECTION_RE = /νότι|βόρει|ανατολι|δυτι|χωριά
 const SURCHARGE_RE     = /\+\s*[€$]?\s*\d|\d+\s*%|x\s*\d+[.,]?\d*|×\s*\d+|επιπλέον.*\d|\d.*επιπλέον/i;
 
 function isGeographicZoneCommand(msg) {
-  return GEO_DIRECTION_RE.test(msg) && SURCHARGE_RE.test(msg);
+  const lower = msg.toLowerCase();
+  return GEO_DIRECTION_RE.test(lower) && SURCHARGE_RE.test(lower);
 }
 
 // Two-call path: Claude identifies which specific places match the
