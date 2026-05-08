@@ -90,6 +90,39 @@
       30% { transform: translateY(-5px); }
     }
 
+    @keyframes bw-anim-bounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      30% { transform: translateY(-8px) scale(1.04); }
+      60% { transform: translateY(-2px) scale(1); }
+    }
+    @keyframes bw-anim-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+      50% { transform: scale(1.1); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+    }
+    @keyframes bw-anim-shake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-10deg); }
+      40% { transform: rotate(10deg); }
+      60% { transform: rotate(-8deg); }
+      80% { transform: rotate(8deg); }
+    }
+    #bw-bubble.bw-anim-bounce { animation: bw-anim-bounce 2s ease-in-out 1s infinite; }
+    #bw-bubble.bw-anim-pulse  { animation: bw-anim-pulse  2s ease-in-out 1s infinite; }
+    #bw-bubble.bw-anim-shake  { animation: bw-anim-shake  0.6s ease-in-out 1.5s 3; }
+
+    #bw-cta {
+      position: fixed; z-index: 99997;
+      background: #fff; border: 1.5px solid #e0e0e0;
+      border-radius: 12px; padding: 9px 14px;
+      font-size: 0.82rem; line-height: 1.4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+      white-space: nowrap; pointer-events: none;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    #bw-cta.bw-cta-visible { opacity: 1; transform: translateY(0); }
+
     #bw-input-area {
       display: flex; gap: 8px; padding: 12px 14px;
       border-top: 1px solid #ebebeb; flex-shrink: 0;
@@ -204,6 +237,7 @@
   let greeted = false;
   let widgetLangConfig = null;
   let selectedLang     = null;
+  let widgetConfig     = {};
 
   const messagesEl     = panel.querySelector('#bw-messages');
   const quickRepliesEl = panel.querySelector('#bw-quick-replies');
@@ -225,8 +259,115 @@
       panel.querySelector('#bw-business-name').textContent = biz.name;
       if (biz.theme_color) applyTheme(biz.theme_color);
       if (biz.config?.widget_lang) widgetLangConfig = biz.config.widget_lang;
+      if (biz.config?.widget) {
+        widgetConfig = biz.config.widget;
+        applyWidgetConfig(widgetConfig);
+      }
     } catch {
       // keep defaults
+    }
+  }
+
+  function applyWidgetConfig(w) {
+    if (!w) return;
+
+    // ── Page visibility ──────────────────────────────────────────────────────
+    if (w.page_visibility && w.page_visibility !== 'all' && w.page_urls?.length) {
+      const url = window.location.href;
+      const matches = w.page_urls.some(p => url.includes(p));
+      if ((w.page_visibility === 'include' && !matches) ||
+          (w.page_visibility === 'exclude' &&  matches)) {
+        bubble.style.display = 'none';
+        panel.style.display  = 'none';
+        return;
+      }
+    }
+
+    // ── Bubble icon ──────────────────────────────────────────────────────────
+    if (w.icon) {
+      bubble.innerHTML = `<span style="font-size:22px;line-height:1;">${w.icon}</span>`;
+    }
+
+    // ── Powered by ───────────────────────────────────────────────────────────
+    const poweredEl = panel.querySelector('#bw-powered');
+    if (poweredEl) poweredEl.style.display = w.powered_by === false ? 'none' : '';
+
+    // ── Position ─────────────────────────────────────────────────────────────
+    const ex = (w.edge_x ?? 24) + 'px';
+    const ey = (w.edge_y ?? 24) + 'px';
+    const panelBottom = ((w.edge_y ?? 24) + 68) + 'px';
+    if (w.position === 'bottom-left') {
+      bubble.style.right = 'auto'; bubble.style.left = ex;
+      panel.style.right  = 'auto'; panel.style.left  = ex;
+      panel.style.transformOrigin = 'bottom left';
+    } else {
+      bubble.style.left  = 'auto'; bubble.style.right = ex;
+      panel.style.left   = 'auto'; panel.style.right  = ex;
+      panel.style.transformOrigin = 'bottom right';
+    }
+    bubble.style.bottom = ey;
+    panel.style.bottom  = panelBottom;
+
+    // ── Animation ────────────────────────────────────────────────────────────
+    bubble.classList.remove('bw-anim-bounce', 'bw-anim-pulse', 'bw-anim-shake');
+    if (w.animation && w.animation !== 'none') {
+      bubble.classList.add(`bw-anim-${w.animation}`);
+    }
+
+    // ── CTA tooltip ──────────────────────────────────────────────────────────
+    if (w.cta_enabled && w.cta_text) {
+      const cta = document.createElement('div');
+      cta.id = 'bw-cta';
+      cta.textContent = w.cta_text;
+      // Position near bubble
+      const ex2 = (w.edge_x ?? 24) + 56 + 10; // bubble width + gap
+      const ey2 = (w.edge_y ?? 24) + 8;
+      if (w.position === 'bottom-left') {
+        cta.style.left   = (w.edge_x ?? 24) + 66 + 'px';
+        cta.style.right  = 'auto';
+      } else {
+        cta.style.right  = ex2 + 'px';
+        cta.style.left   = 'auto';
+      }
+      cta.style.bottom = ey2 + 'px';
+      document.body.appendChild(cta);
+      setTimeout(() => cta.classList.add('bw-cta-visible'), 800);
+      const removeCta = () => { cta.classList.remove('bw-cta-visible'); setTimeout(() => cta.remove(), 300); };
+      setTimeout(removeCta, 8000);
+      bubble.addEventListener('click', removeCta, { once: true });
+    }
+
+    // ── Inline mode ──────────────────────────────────────────────────────────
+    if (w.mode === 'inline' && w.inline_target) {
+      const target = document.querySelector(w.inline_target);
+      if (target) {
+        bubble.style.display = 'none';
+        panel.style.cssText  = 'position:static;transform:none;opacity:1;pointer-events:all;width:100%;height:100%;max-height:none;border-radius:0;box-shadow:none;display:flex;';
+        panel.classList.add('bw-open');
+        target.appendChild(panel);
+        isOpen = true;
+        greet();
+        return; // skip auto-open (already open)
+      }
+    }
+
+    // ── Auto-open ────────────────────────────────────────────────────────────
+    if (w.auto_open) {
+      const delay  = (w.auto_open_delay ?? 3) * 1000;
+      const device = w.auto_open_device || 'both';
+      const mobile = window.innerWidth <= 768;
+      const ok = device === 'both' || (device === 'mobile' && mobile) || (device === 'desktop' && !mobile);
+      if (ok) {
+        setTimeout(() => {
+          if (!isOpen) {
+            isOpen = true;
+            panel.classList.add('bw-open');
+            bubble.setAttribute('aria-expanded', 'true');
+            greet();
+            setTimeout(() => inputEl.focus(), 250);
+          }
+        }, delay);
+      }
     }
   }
 

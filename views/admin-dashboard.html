@@ -738,6 +738,136 @@
           </div>
         </div>
 
+        <!-- ── Widget ── -->
+        <div class="s-card" id="app-widget-card" style="display:none;">
+          <div class="s-card-header">
+            <h2>🪄 Widget Behaviour</h2>
+            <p>Bubble appearance, position, animation, auto-open and page visibility</p>
+          </div>
+          <div class="s-card-body">
+
+            <div class="p-section">
+              <label class="p-label">Bubble Icon</label>
+              <input type="text" id="w-icon" class="p-input" style="width:130px;" placeholder="💬 or leave blank" maxlength="10" />
+              <p style="font-size:0.7rem;color:var(--muted);margin-top:4px;">Any emoji, or leave blank for default chat icon</p>
+            </div>
+
+            <div class="p-section">
+              <label class="p-label">Powered by BooklyAI</label>
+              <label class="toggle-label">
+                <input type="checkbox" id="w-powered-by" checked />
+                Show "Powered by BooklyAI" footer in chat
+              </label>
+            </div>
+
+            <div class="p-divider"></div>
+
+            <div class="p-section">
+              <label class="p-label">Position</label>
+              <div class="mode-options">
+                <label class="mode-option"><input type="radio" name="w-position" value="bottom-right" checked /> ↘ Bottom-right</label>
+                <label class="mode-option"><input type="radio" name="w-position" value="bottom-left" /> ↙ Bottom-left</label>
+              </div>
+            </div>
+
+            <div class="p-section">
+              <label class="p-label">Edge Distance</label>
+              <div class="p-fields">
+                <div class="p-field">
+                  <label>Horizontal</label>
+                  <div class="p-input-wrap"><input type="number" id="w-edge-x" class="p-input p-input-sm" min="0" max="200" value="24" /><span class="p-unit">px</span></div>
+                </div>
+                <div class="p-field">
+                  <label>Vertical</label>
+                  <div class="p-input-wrap"><input type="number" id="w-edge-y" class="p-input p-input-sm" min="0" max="200" value="24" /><span class="p-unit">px</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-section">
+              <label class="p-label">Bubble Animation</label>
+              <div class="mode-options">
+                <label class="mode-option"><input type="radio" name="w-animation" value="none" checked /> ✕ None</label>
+                <label class="mode-option"><input type="radio" name="w-animation" value="bounce" /> ↕ Bounce</label>
+                <label class="mode-option"><input type="radio" name="w-animation" value="pulse" /> ◎ Pulse</label>
+                <label class="mode-option"><input type="radio" name="w-animation" value="shake" /> ↔ Shake</label>
+              </div>
+            </div>
+
+            <div class="p-divider"></div>
+
+            <div class="p-section">
+              <label class="p-label">CTA Message</label>
+              <label class="toggle-label" style="margin-bottom:8px;">
+                <input type="checkbox" id="w-cta-enabled" onchange="toggleWidgetCta()" />
+                Show a call-to-action tooltip near the bubble
+              </label>
+              <div id="w-cta-extra" style="display:none;">
+                <input type="text" id="w-cta-text" class="p-input" style="width:100%;max-width:320px;" placeholder="Book your ride!" />
+              </div>
+            </div>
+
+            <div class="p-divider"></div>
+
+            <div class="p-section">
+              <label class="p-label">Auto-open</label>
+              <label class="toggle-label" style="margin-bottom:8px;">
+                <input type="checkbox" id="w-auto-open" onchange="toggleAutoOpen()" />
+                Automatically open the chat after a delay
+              </label>
+              <div id="w-auto-open-extra" style="display:none;">
+                <div class="p-fields" style="margin-bottom:10px;">
+                  <div class="p-field">
+                    <label>Delay</label>
+                    <div class="p-input-wrap"><input type="number" id="w-auto-delay" class="p-input p-input-sm" min="0" max="120" value="3" /><span class="p-unit">sec</span></div>
+                  </div>
+                </div>
+                <div class="mode-options">
+                  <label class="mode-option"><input type="radio" name="w-auto-device" value="both" checked /> 📱+💻 Both</label>
+                  <label class="mode-option"><input type="radio" name="w-auto-device" value="desktop" /> 💻 Desktop only</label>
+                  <label class="mode-option"><input type="radio" name="w-auto-device" value="mobile" /> 📱 Mobile only</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-divider"></div>
+
+            <div class="p-section">
+              <label class="p-label">Display Mode</label>
+              <div class="mode-options">
+                <label class="mode-option"><input type="radio" name="w-mode" value="bubble" checked onchange="toggleWidgetMode()" /> 💬 Floating bubble</label>
+                <label class="mode-option"><input type="radio" name="w-mode" value="inline" onchange="toggleWidgetMode()" /> 🪟 Inline (embed in div)</label>
+              </div>
+              <div id="w-inline-extra" style="display:none;margin-top:8px;">
+                <label style="font-size:0.7rem;color:var(--muted);margin-bottom:3px;display:block;">Target element ID or selector</label>
+                <input type="text" id="w-inline-target" class="p-input" style="width:240px;" placeholder="#bookly-widget"
+                  oninput="updateEmbedCode()" />
+              </div>
+            </div>
+
+            <div class="p-divider"></div>
+
+            <div class="p-section">
+              <label class="p-label">Page Visibility</label>
+              <div class="mode-options">
+                <label class="mode-option"><input type="radio" name="w-pages" value="all" checked onchange="togglePageVis()" /> 🌐 All pages</label>
+                <label class="mode-option"><input type="radio" name="w-pages" value="include" onchange="togglePageVis()" /> ✅ Only these pages</label>
+                <label class="mode-option"><input type="radio" name="w-pages" value="exclude" onchange="togglePageVis()" /> 🚫 Exclude these pages</label>
+              </div>
+              <div id="w-pages-extra" style="display:none;margin-top:8px;">
+                <label style="font-size:0.7rem;color:var(--muted);margin-bottom:3px;display:block;">URLs (one per line, partial match)</label>
+                <textarea id="w-page-urls" class="zones-textarea" rows="4"
+                  placeholder="/contact&#10;/about&#10;/special-page"></textarea>
+              </div>
+            </div>
+
+            <div class="s-footer">
+              <button class="btn-sm primary" onclick="saveWidgetSettings()">💾 Save</button>
+              <span class="s-hint" id="widget-hint">Changes apply when the page with the widget is refreshed.</span>
+            </div>
+          </div>
+        </div>
+
         <!-- ── Embed ── -->
         <div class="s-card" id="app-embed-card" style="display:none;">
           <div class="s-card-header">
@@ -1497,7 +1627,7 @@
 
   async function loadAppSettings(bizId) {
     const placeholder = document.getElementById('app-settings-placeholder');
-    const appCards = ['app-identity-card', 'app-lang-card', 'app-embed-card'];
+    const appCards = ['app-identity-card', 'app-lang-card', 'app-widget-card', 'app-embed-card'];
 
     if (!bizId) {
       placeholder.style.display = '';
@@ -1533,10 +1663,11 @@
       buildMultiLangChecks(wl.mode === 'multi' ? (wl.langs || ['en', 'el']) : []);
       toggleAppWidgetLang();
 
-      // Embed
-      const origin = window.location.origin;
-      document.getElementById('app-embed-code').textContent =
-        `<script src="${origin}/booking-widget.js"\n        data-api-url="${origin}"\n        data-business-id="${bizId}"><\/script>`;
+      // Widget behaviour
+      loadWidgetSettingsForm(biz.config?.widget);
+
+      // Embed (after widget mode is loaded)
+      updateEmbedCode(bizId);
 
     } catch { /* ignore */ }
   }
@@ -1596,6 +1727,120 @@
   function copyEmbed() {
     const text = document.getElementById('app-embed-code').textContent;
     navigator.clipboard.writeText(text).then(() => showToast('📋 Copied!', 'success'));
+  }
+
+  // ── Widget Settings ───────────────────────────────────────────────────────
+
+  function toggleWidgetCta() {
+    document.getElementById('w-cta-extra').style.display =
+      document.getElementById('w-cta-enabled').checked ? '' : 'none';
+  }
+  function toggleAutoOpen() {
+    document.getElementById('w-auto-open-extra').style.display =
+      document.getElementById('w-auto-open').checked ? '' : 'none';
+  }
+  function toggleWidgetMode() {
+    const mode = document.querySelector('input[name="w-mode"]:checked')?.value || 'bubble';
+    document.getElementById('w-inline-extra').style.display = mode === 'inline' ? '' : 'none';
+    updateEmbedCode();
+  }
+  function togglePageVis() {
+    const mode = document.querySelector('input[name="w-pages"]:checked')?.value;
+    document.getElementById('w-pages-extra').style.display = mode !== 'all' ? '' : 'none';
+  }
+
+  function updateEmbedCode(bizId) {
+    const id = bizId || activeBizId;
+    if (!id) return;
+    const origin = window.location.origin;
+    const mode = document.querySelector('input[name="w-mode"]:checked')?.value || 'bubble';
+    const target = document.getElementById('w-inline-target')?.value.trim() || '#bookly-widget';
+    let code = '';
+    if (mode === 'inline') {
+      const divId = target.replace(/^#/, '');
+      code = `<div id="${divId}" style="width:360px;height:540px;"></div>\n`;
+    }
+    code += `<script src="${origin}/booking-widget.js"\n        data-api-url="${origin}"\n        data-business-id="${id}"><\/script>`;
+    document.getElementById('app-embed-code').textContent = code;
+  }
+
+  function loadWidgetSettingsForm(w) {
+    w = w || {};
+    document.getElementById('w-icon').value = w.icon || '';
+    document.getElementById('w-powered-by').checked = w.powered_by !== false;
+
+    document.querySelectorAll('input[name="w-position"]').forEach(r => {
+      r.checked = r.value === (w.position || 'bottom-right');
+    });
+    document.getElementById('w-edge-x').value = w.edge_x ?? 24;
+    document.getElementById('w-edge-y').value = w.edge_y ?? 24;
+
+    document.querySelectorAll('input[name="w-animation"]').forEach(r => {
+      r.checked = r.value === (w.animation || 'none');
+    });
+
+    document.getElementById('w-cta-enabled').checked = !!w.cta_enabled;
+    document.getElementById('w-cta-text').value = w.cta_text || 'Book your ride!';
+    toggleWidgetCta();
+
+    document.getElementById('w-auto-open').checked = !!w.auto_open;
+    document.getElementById('w-auto-delay').value = w.auto_open_delay ?? 3;
+    document.querySelectorAll('input[name="w-auto-device"]').forEach(r => {
+      r.checked = r.value === (w.auto_open_device || 'both');
+    });
+    toggleAutoOpen();
+
+    document.querySelectorAll('input[name="w-mode"]').forEach(r => {
+      r.checked = r.value === (w.mode || 'bubble');
+    });
+    document.getElementById('w-inline-target').value = w.inline_target || '';
+    toggleWidgetMode();
+
+    document.querySelectorAll('input[name="w-pages"]').forEach(r => {
+      r.checked = r.value === (w.page_visibility || 'all');
+    });
+    document.getElementById('w-page-urls').value = (w.page_urls || []).join('\n');
+    togglePageVis();
+  }
+
+  function collectWidgetSettings() {
+    return {
+      icon:              document.getElementById('w-icon').value.trim(),
+      powered_by:        document.getElementById('w-powered-by').checked,
+      position:          document.querySelector('input[name="w-position"]:checked')?.value  || 'bottom-right',
+      edge_x:            parseInt(document.getElementById('w-edge-x').value)  || 24,
+      edge_y:            parseInt(document.getElementById('w-edge-y').value)  || 24,
+      animation:         document.querySelector('input[name="w-animation"]:checked')?.value || 'none',
+      cta_enabled:       document.getElementById('w-cta-enabled').checked,
+      cta_text:          document.getElementById('w-cta-text').value.trim() || 'Book your ride!',
+      auto_open:         document.getElementById('w-auto-open').checked,
+      auto_open_delay:   parseInt(document.getElementById('w-auto-delay').value) || 3,
+      auto_open_device:  document.querySelector('input[name="w-auto-device"]:checked')?.value || 'both',
+      mode:              document.querySelector('input[name="w-mode"]:checked')?.value || 'bubble',
+      inline_target:     document.getElementById('w-inline-target').value.trim(),
+      page_visibility:   document.querySelector('input[name="w-pages"]:checked')?.value || 'all',
+      page_urls:         document.getElementById('w-page-urls').value.split('\n').map(s => s.trim()).filter(Boolean),
+    };
+  }
+
+  async function saveWidgetSettings() {
+    if (!activeBizId) return;
+    const widget = collectWidgetSettings();
+    const hint = document.getElementById('widget-hint');
+    try {
+      const res = await fetch(`/api/admin/business/${activeBizId}/app-settings`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: { widget } }),
+      });
+      if (res.status === 401) { location.href = '/admin/login'; return; }
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const i = allBusinesses.findIndex(b => b.business_id === activeBizId);
+      if (i !== -1) allBusinesses[i] = data.business;
+      hint.textContent = '✅ Saved!'; hint.style.color = 'var(--green)';
+      showToast('✅ Widget settings saved!', 'success');
+      setTimeout(() => { hint.textContent = 'Changes apply when the page with the widget is refreshed.'; hint.style.color = ''; }, 3000);
+    } catch (e) { showToast('Save error: ' + e.message, 'error'); }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
