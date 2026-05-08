@@ -147,10 +147,16 @@ app.get('/api/places/autocomplete', async (req, res) => {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey || !input?.trim()) return res.json({ suggestions: [] });
   try {
-    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${apiKey}&types=establishment%7Cgeocode`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    const r = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': apiKey },
+      body: JSON.stringify({ input }),
+      signal: AbortSignal.timeout(4000),
+    });
     const data = await r.json();
-    const suggestions = (data.predictions || []).slice(0, 5).map(p => ({ text: p.description }));
+    const suggestions = (data.suggestions || []).slice(0, 5).map(s => ({
+      text: s.placePrediction?.text?.text || s.queryPrediction?.text?.text || '',
+    })).filter(s => s.text);
     res.json({ suggestions });
   } catch {
     res.json({ suggestions: [] });
