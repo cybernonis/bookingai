@@ -1,25 +1,21 @@
-import nodemailer from 'nodemailer';
-
-function getTransporter() {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user, pass },
+async function sendgridSend({ to, subject, html }) {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (!apiKey) { console.warn('Email: SENDGRID_API_KEY not set, skipping.'); return null; }
+  const from = process.env.SENDGRID_FROM || process.env.EMAIL_USER;
+  const r = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: from, name: 'BooklyAI' },
+      subject,
+      content: [{ type: 'text/html', value: html }],
+    }),
+    signal: AbortSignal.timeout(10000),
   });
-}
-
-async function gmailSend({ to, subject, html }) {
-  const transporter = getTransporter();
-  if (!transporter) { console.warn('Email: EMAIL_USER/EMAIL_PASS not set, skipping.'); return; }
-  const info = await transporter.sendMail({
-    from: `"BooklyAI" <${process.env.EMAIL_USER}>`,
-    to, subject, html,
-  });
-  return info.messageId;
+  if (r.status === 202) return 'ok';
+  const data = await r.json().catch(() => ({}));
+  throw new Error(data?.errors?.[0]?.message || `status ${r.status}`);
 }
 
 function buildTable(rows) {
@@ -86,8 +82,8 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
     footer: `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e5e8ed;border-radius:8px;overflow:hidden;">${buildTable(rows)}</table>`,
   });
   try {
-    const id = await gmailSend({ to, subject: `✅ Booking Confirmation ${bookingNum} — ${businessName}`, html });
-    console.log(`Email sent to ${to} (${bookingNum}) — ${id}`);
+    await sendgridSend({ to, subject: `✅ Booking Confirmation ${bookingNum} — ${businessName}`, html });
+    console.log(`Email sent to ${to} (${bookingNum})`);
   } catch (err) {
     console.error('Email send error:', err?.message || err);
   }
@@ -105,8 +101,8 @@ export async function sendAdminNotification({ to, businessName, bookingNum, name
     footer: `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e5e8ed;border-radius:8px;overflow:hidden;">${buildTable(rows)}</table>`,
   });
   try {
-    const id = await gmailSend({ to, subject: `🆕 New Booking ${bookingNum} — ${name}`, html });
-    console.log(`Admin email sent to ${to} (${bookingNum}) — ${id}`);
+    await sendgridSend({ to, subject: `🆕 New Booking ${bookingNum} — ${name}`, html });
+    console.log(`Admin email sent to ${to} (${bookingNum})`);
   } catch (err) {
     console.error('Admin email error:', err?.message || err);
   }
