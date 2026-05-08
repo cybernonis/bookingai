@@ -7,6 +7,7 @@
 import { createBooking, getAvailableSlots, getSlotById, markSlotUnavailable } from './db.js';
 import { calculateDistance } from './distance.js';
 import { sendBookingConfirmation } from './email.js';
+import { sendSmsConfirmation } from './sms.js';
 import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic();
@@ -236,6 +237,15 @@ async function aiChatFlow(message, history, business, lang) {
           { icon: '💰', label: 'Price',        value: price },
         ],
       }).catch(e => console.error('Email err:', e?.message));
+    }
+
+    if (phone) {
+      sendSmsConfirmation({
+        to: phone,
+        businessName: business.name,
+        bookingNum,
+        pickup, destination, datetime, vehicle, price,
+      }).catch(e => console.error('SMS err:', e?.message));
     }
 
     const distLine = distInfo
