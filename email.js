@@ -1,15 +1,20 @@
-async function resendSend({ from, to, subject, html }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) { console.warn('Email: RESEND_API_KEY not set, skipping.'); return null; }
-  const r = await fetch('https://api.resend.com/emails', {
+async function sendgridSend({ from, to, subject, html }) {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (!apiKey) { console.warn('Email: SENDGRID_API_KEY not set, skipping.'); return null; }
+  const r = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, subject, html }),
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: process.env.SENDGRID_FROM || 'stekanonis@gmail.com', name: 'BooklyAI' },
+      subject,
+      content: [{ type: 'text/html', value: html }],
+    }),
     signal: AbortSignal.timeout(10000),
   });
-  const data = await r.json();
-  if (!r.ok) throw new Error(data?.message || r.status);
-  return data.id;
+  if (r.status === 202) return 'ok';
+  const data = await r.json().catch(() => ({}));
+  throw new Error(data?.errors?.[0]?.message || `status ${r.status}`);
 }
 
 function buildTable(rows) {
@@ -64,8 +69,6 @@ function layout({ headerColor, headerLabel, headerTitle, pill, pillColor, body, 
 </html>`;
 }
 
-const FROM = 'BooklyAI <onboarding@resend.dev>';
-
 export async function sendBookingConfirmation({ to, businessName, bookingNum, name, rows }) {
   if (!to || !to.includes('@')) return;
   const html = layout({
@@ -78,8 +81,8 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
     footer: `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e5e8ed;border-radius:8px;overflow:hidden;">${buildTable(rows)}</table>`,
   });
   try {
-    const id = await resendSend({ from: FROM, to, subject: `✅ Booking Confirmation ${bookingNum} — ${businessName}`, html });
-    console.log(`Email sent to ${to} (${bookingNum}) — id: ${id}`);
+    await sendgridSend({ to, subject: `✅ Booking Confirmation ${bookingNum} — ${businessName}`, html });
+    console.log(`Email sent to ${to} (${bookingNum})`);
   } catch (err) {
     console.error('Email send error:', err?.message || err);
   }
@@ -97,8 +100,8 @@ export async function sendAdminNotification({ to, businessName, bookingNum, name
     footer: `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e5e8ed;border-radius:8px;overflow:hidden;">${buildTable(rows)}</table>`,
   });
   try {
-    const id = await resendSend({ from: FROM, to, subject: `🆕 New Booking ${bookingNum} — ${name}`, html });
-    console.log(`Admin email sent to ${to} (${bookingNum}) — id: ${id}`);
+    await sendgridSend({ to, subject: `🆕 New Booking ${bookingNum} — ${name}`, html });
+    console.log(`Admin email sent to ${to} (${bookingNum})`);
   } catch (err) {
     console.error('Admin email error:', err?.message || err);
   }
