@@ -341,11 +341,15 @@ CONFIRMED_BOOKING:{name}|{phone}|{email}|{pickup}|{destination}|{datetime}|{vehi
     if (existing) {
       const cur = JSON.parse(existing.config || '{}');
       const seed = JSON.parse(b.config);
-      // Preserve admin-set fields; update code-owned fields (system_prompt, etc.)
+      // Start from seed (picks up updated system_prompt etc.), then restore all admin-set fields
       const merged = { ...seed };
-      if (cur.zones    !== undefined) merged.zones    = cur.zones;
-      if (cur.pricing  !== undefined) merged.pricing  = cur.pricing;
-      if (cur.vehicles !== undefined) merged.vehicles = cur.vehicles;
+      const ADMIN_FIELDS = [
+        'zones', 'pricing', 'vehicles', 'pricing_zones', 'widget', '_ai_meta',
+        'email', 'phone', 'office_address', 'region', 'dashboard_lang', 'widget_lang', 'address',
+      ];
+      for (const f of ADMIN_FIELDS) {
+        if (cur[f] !== undefined) merged[f] = cur[f];
+      }
       q.bizUpsert.run({ ...b, config: JSON.stringify(merged) });
     } else {
       q.bizUpsert.run(b);
