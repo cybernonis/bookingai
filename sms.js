@@ -9,10 +9,11 @@ function normalizePhone(phone) {
 }
 
 export async function sendSmsConfirmation({ to, businessName, bookingNum, pickup, destination, datetime, vehicle, price }) {
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) { console.warn('SMS: BREVO_API_KEY not set, skipping.'); return; }
+  const apiKey    = process.env.VONAGE_API_KEY;
+  const apiSecret = process.env.VONAGE_API_SECRET;
+  if (!apiKey || !apiSecret) { console.warn('SMS: VONAGE_* env vars not set, skipping.'); return; }
 
-  const sender = (process.env.BREVO_SENDER || businessName || 'Booking').slice(0, 11);
+  const from      = process.env.VONAGE_FROM || 'BooklyAi';
   const recipient = normalizePhone(to);
   if (!recipient) return;
 
@@ -26,15 +27,16 @@ export async function sendSmsConfirmation({ to, businessName, bookingNum, pickup
   ].filter(Boolean);
 
   try {
-    const r = await fetch('https://api.brevo.com/v3/transactionalSMS/sms', {
+    const r = await fetch('https://rest.nexmo.com/sms/json', {
       method: 'POST',
-      headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sender, recipient, content: lines.join('\n') }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret, from, to: recipient, text: lines.join('\n') }),
       signal: AbortSignal.timeout(8000),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data?.message || r.status);
-    console.log(`SMS sent to ${recipient} (${bookingNum}) — messageId: ${data.messageId}`);
+    const msg = data.messages?.[0];
+    if (msg?.status !== '0') throw new Error(msg?.['error-text'] || `status ${msg?.status}`);
+    console.log(`SMS sent to ${recipient} (${bookingNum}) — messageId: ${msg['message-id']}`);
   } catch (err) {
     console.error('SMS send error:', err?.message || err);
   }
