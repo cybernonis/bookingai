@@ -269,6 +269,39 @@ app.patch('/api/admin/business/:id/app-settings', requireAdmin, (req, res) => {
   res.json({ business: biz });
 });
 
+function safeMergeFixedRoutes(currentRoutes, patchRoutes, command) {
+  if (!Array.isArray(patchRoutes)) return currentRoutes;
+  const cmdLower = command.toLowerCase();
+  const norm = s => s.toLowerCase().replace(/[.,\-–→]/g, ' ').replace(/\s+/g, ' ').trim();
+  const isMentioned = route => {
+    const words = [...norm(route.origin).split(' '), ...norm(route.destination).split(' ')];
+    return words.some(w => w.length >= 4 && cmdLower.includes(w));
+  };
+  const currentMap = new Map();
+  for (const r of currentRoutes) currentMap.set(norm(r.origin) + '|' + norm(r.destination), r);
+
+  const result = [];
+  const seenKeys = new Set();
+  for (const pr of patchRoutes) {
+    const key = norm(pr.origin) + '|' + norm(pr.destination);
+    seenKeys.add(key);
+    const existing = currentMap.get(key);
+    if (!existing) {
+      result.push(pr); // new route
+    } else if (Math.abs(Number(existing.price) - Number(pr.price)) > 0.001) {
+      // price changed — only accept if this route is mentioned in the command
+      result.push(isMentioned(pr) ? pr : existing);
+    } else {
+      result.push(pr);
+    }
+  }
+  // restore routes Claude omitted unless they appear to be intentional deletes
+  for (const [key, r] of currentMap) {
+    if (!seenKeys.has(key) && !isMentioned(r)) result.push(r);
+  }
+  return result;
+}
+
 function detectAiCategory(patch) {
   if (!patch) return 'general';
   const keys = Object.keys(patch);
@@ -327,6 +360,10 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
     const result = await applySettingsCommand(message, biz);
     if (result.patch && !result.pending_zone) {
       const category = detectAiCategory(result.patch);
+      if (Array.isArray(result.patch.pricing?.fixed_routes)) {
+        const currentRoutes = biz.config?.pricing?.fixed_routes || [];
+        result.patch.pricing.fixed_routes = safeMergeFixedRoutes(currentRoutes, result.patch.pricing.fixed_routes, message);
+      }
       updateBusinessConfig(bizId, result.patch);
       const snapshotAfter = { ...getBusinessById(bizId).config };
       const histId = createAiHistoryEntry({ business_id: bizId, command: message, summary: result.message, category, snapshot_before: snapshotBefore });
