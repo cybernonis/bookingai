@@ -175,6 +175,34 @@ function detectActiveZones(history, message, pricingZones) {
   );
 }
 
+// Server-side fixed-route detection: find the best matching route in the conversation.
+// Returns the route object or null. Avoids Claude misidentifying similar-sounding destinations.
+function detectFixedRoute(history, message, pricing) {
+  const routes = pricing?.fixed_routes;
+  if (!Array.isArray(routes) || !routes.length) return null;
+  const allText = [...(history || []).map(m => m.content || ''), message].join(' ').toLowerCase();
+
+  let best = null;
+  let bestScore = 0;
+
+  for (const route of routes) {
+    const originWords = route.origin.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+    const destWords   = route.destination.toLowerCase().split(/\s+/).filter(w => w.length >= 3);
+    if (!originWords.length || !destWords.length) continue;
+
+    const originHits = originWords.filter(w => allText.includes(w)).length;
+    const destHits   = destWords.filter(w => allText.includes(w)).length;
+
+    // Both origin AND destination must match fully
+    if (originHits === originWords.length && destHits === destWords.length) {
+      // Prefer the route whose destination has more matching words (more specific match)
+      const score = originHits + destHits;
+      if (score > bestScore) { best = route; bestScore = score; }
+    }
+  }
+  return best;
+}
+
 function buildActiveZoneNote(activeZones) {
   if (!activeZones.length) return '';
   const parts = activeZones.map(z => {
@@ -206,6 +234,14 @@ async function aiChatFlow(message, history, business, lang) {
   const pricingZoneRules = activeZones.length ? '' : buildPricingZoneInstructions(business.config.pricing_zones);
   const activeZoneNote   = '';
 
+  // Server-side fixed-route price lock: detect which route is being booked and pin the price.
+  // Prevents Claude Haiku from confusing similar destination names (e.g. hotel vs nearby city).
+  const matchedRoute = detectFixedRoute(history, message, business.config.pricing);
+  const cur = business.config.pricing?.currency || '€';
+  const routePriceLock = matchedRoute
+    ? `\n\n🔒 ROUTE PRICE (server-confirmed): "${matchedRoute.origin} → ${matchedRoute.destination}" = ${cur}${Number(matchedRoute.price).toFixed(2)}. Use EXACTLY this price — do NOT substitute another route or recalculate.`
+    : '';
+
   // Session language: customer selected a specific language in the widget
   const sessionLang = lang && LANG_NAMES[lang]
     ? `\n\nSESSION LANGUAGE: The customer selected ${LANG_NAMES[lang]}. ALWAYS respond in ${LANG_NAMES[lang]}. Never switch language.`
@@ -216,7 +252,7 @@ async function aiChatFlow(message, history, business, lang) {
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Today is ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${activeZoneNote}${sessionLang}${distanceMarker}`,
+    system: `Today is ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${activeZoneNote}${routePriceLock}${sessionLang}${distanceMarker}`,
     messages: msgs,
   });
 
