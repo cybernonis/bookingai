@@ -71,6 +71,7 @@ function layout({ headerColor, headerLabel, headerTitle, pill, pillColor, body, 
 }
 
 export async function sendBookingConfirmation({ to, businessName, bookingNum, name, rows }) {
+  console.log(`Email: sendBookingConfirmation called → to=${to} bookingNum=${bookingNum}`);
   if (!to || !to.includes('@')) return;
   const html = layout({
     headerColor: '#0ea5e9',
