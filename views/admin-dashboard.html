@@ -58,7 +58,11 @@
     .btn-logout:hover { color: #fff; background: rgba(255,255,255,0.1); }
 
     /* ── Main ── */
-    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .main {
+      flex: 1; display: flex; flex-direction: column; min-width: 0;
+      transition: margin-right 0.28s cubic-bezier(.4,0,.2,1);
+    }
+    .main.ai-panel-open { margin-right: 380px; }
     .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 26px; height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; }
     .topbar-left h1 { font-size: 0.92rem; font-weight: 600; }
     .topbar-left p { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
@@ -260,6 +264,11 @@
       transform: translateX(100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1);
     }
     #ai-chat-panel.open { transform: translateX(0); }
+
+    @media (max-width: 768px) {
+      #ai-chat-panel { width: 100%; }
+      .main.ai-panel-open { margin-right: 0; }
+    }
     .ai-ch-header {
       background: var(--accent); color: #fff;
       padding: 14px 18px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
@@ -2030,6 +2039,7 @@
   function toggleAiPanel() {
     aiPanelOpen = !aiPanelOpen;
     document.getElementById('ai-chat-panel').classList.toggle('open', aiPanelOpen);
+    document.querySelector('.main').classList.toggle('ai-panel-open', aiPanelOpen);
     if (aiPanelOpen) {
       populateAiBizSel();
       if (!document.getElementById('ai-ch-msgs').children.length) {
