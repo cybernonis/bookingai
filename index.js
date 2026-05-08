@@ -11,6 +11,8 @@ import {
   setupNewBusiness, updateBusinessConfig, updateBusinessMeta,
 } from './db.js';
 import { getBookingReply, applySettingsCommand } from './flows.js';
+import { sendEmailDirect } from './email.js';
+import { sendSmsDirect }   from './sms.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app  = express();
@@ -299,6 +301,39 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
 
 app.get('/setup', (_req, res) =>
   res.sendFile(join(__dirname, 'public', 'setup.html')));
+
+app.post('/api/setup/test-email', async (req, res) => {
+  const { to, provider, creds } = req.body;
+  if (!to?.includes('@')) return res.status(400).json({ error: 'Invalid email address' });
+  if (!provider || provider === 'none') return res.status(400).json({ error: 'No provider selected' });
+  try {
+    await sendEmailDirect({
+      to,
+      subject: 'BooklyAI — Test Email',
+      html: '<p style="font-family:sans-serif;font-size:15px">Test email from BooklyAI setup wizard. If you see this, your email provider is configured correctly!</p>',
+      providerConfig: { provider, creds },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message || String(err) });
+  }
+});
+
+app.post('/api/setup/test-sms', async (req, res) => {
+  const { to, provider, creds } = req.body;
+  if (!to) return res.status(400).json({ error: 'Phone number required' });
+  if (!provider || provider === 'none') return res.status(400).json({ error: 'No provider selected' });
+  try {
+    await sendSmsDirect({
+      to,
+      text: 'BooklyAI test SMS - setup OK!',
+      providerConfig: { provider, creds },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message || String(err) });
+  }
+});
 
 app.post('/api/setup', (req, res) => {
   const { name, phone, address, theme_color, config, admin_username, admin_password } = req.body;

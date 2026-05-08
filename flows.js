@@ -219,12 +219,20 @@ async function aiChatFlow(message, history, business, lang) {
     const year = new Date().getFullYear();
     const bookingNum = `#TXI-${year}-${String(booking.id).padStart(3, '0')}`;
 
+    const emailPC = business.config?.email_provider
+      ? { provider: business.config.email_provider, creds: business.config.email_creds }
+      : null;
+    const smsPC = business.config?.sms_provider
+      ? { provider: business.config.sms_provider, creds: business.config.sms_creds }
+      : null;
+
     if (cleanEmail) {
       sendBookingConfirmation({
         to: cleanEmail,
         businessName: business.name,
         bookingNum,
         name: name || 'Customer',
+        providerConfig: emailPC,
         rows: [
           { icon: '🚩', label: 'Pickup',       value: pickup },
           { icon: '🏁', label: 'Destination',  value: destination },
@@ -245,6 +253,7 @@ async function aiChatFlow(message, history, business, lang) {
         businessName: business.name,
         bookingNum,
         pickup, destination, datetime, vehicle, price,
+        providerConfig: smsPC,
       }).catch(e => console.error('SMS err:', e?.message));
     }
 
@@ -258,6 +267,7 @@ async function aiChatFlow(message, history, business, lang) {
         bookingNum,
         name: name || 'Customer',
         phone, email: cleanEmail,
+        providerConfig: emailPC,
         rows: [
           { icon: '👤', label: 'Customer',     value: name },
           { icon: '📱', label: 'Phone',        value: phone },
@@ -282,6 +292,7 @@ async function aiChatFlow(message, history, business, lang) {
         bookingNum,
         name: name || 'Customer',
         phone, pickup, destination, datetime, vehicle, price,
+        providerConfig: smsPC,
       }).catch(e => console.error('Admin SMS err:', e?.message));
     }
 

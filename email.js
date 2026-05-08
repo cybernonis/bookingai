@@ -1,10 +1,29 @@
-async function sendgridSend({ to, subject, html }) {
-  const apiKey = process.env.SENDGRID_API_KEY;
-  if (!apiKey) { console.warn('Email: SENDGRID_API_KEY not set, skipping.'); return null; }
-  const from = process.env.SENDGRID_FROM || process.env.EMAIL_USER;
+import nodemailer from 'nodemailer';
+
+// ── Internal senders ──────────────────────────────────────────────────────────
+
+async function gmailSend({ to, subject, html, user, pass }) {
+  const t = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
+  await t.sendMail({ from: `BooklyAI <${user}>`, to, subject, html });
+  return 'ok';
+}
+
+async function resendSend({ to, subject, html, apiKey, from }) {
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, subject, html }),
+    signal: AbortSignal.timeout(10000),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data?.message || `Resend status ${r.status}`);
+  return 'ok';
+}
+
+async function sendgridSend({ to, subject, html, apiKey, from }) {
   const r = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       personalizations: [{ to: [{ email: to }] }],
       from: { email: from, name: 'BooklyAI' },
@@ -15,8 +34,34 @@ async function sendgridSend({ to, subject, html }) {
   });
   if (r.status === 202) return 'ok';
   const data = await r.json().catch(() => ({}));
-  throw new Error(data?.errors?.[0]?.message || `status ${r.status}`);
+  throw new Error(data?.errors?.[0]?.message || `SendGrid status ${r.status}`);
 }
+
+async function smtpSend({ to, subject, html, host, port, user, pass }) {
+  const t = nodemailer.createTransport({
+    host, port: parseInt(port) || 587, secure: parseInt(port) === 465,
+    auth: { user, pass },
+  });
+  await t.sendMail({ from: `BooklyAI <${user}>`, to, subject, html });
+  return 'ok';
+}
+
+// ── Dispatch: providerConfig or env-var fallback ───────────────────────────────
+
+export async function sendEmailDirect({ to, subject, html, providerConfig }) {
+  if (!to || !to.includes('@')) return null;
+  const p = providerConfig;
+  if (p?.provider === 'gmail')    return gmailSend({ to, subject, html, user: p.creds?.user,    pass: p.creds?.pass });
+  if (p?.provider === 'resend')   return resendSend({ to, subject, html, apiKey: p.creds?.api_key, from: p.creds?.from });
+  if (p?.provider === 'sendgrid') return sendgridSend({ to, subject, html, apiKey: p.creds?.api_key, from: p.creds?.from });
+  if (p?.provider === 'smtp')     return smtpSend({ to, subject, html, host: p.creds?.host, port: p.creds?.port, user: p.creds?.user, pass: p.creds?.pass });
+  if (process.env.SENDGRID_API_KEY)
+    return sendgridSend({ to, subject, html, apiKey: process.env.SENDGRID_API_KEY, from: process.env.SENDGRID_FROM || process.env.EMAIL_USER });
+  console.warn('Email: no provider configured, skipping.');
+  return null;
+}
+
+// ── Templates ─────────────────────────────────────────────────────────────────
 
 function buildTable(rows) {
   return rows
@@ -70,7 +115,7 @@ function layout({ headerColor, headerLabel, headerTitle, pill, pillColor, body, 
 </html>`;
 }
 
-export async function sendBookingConfirmation({ to, businessName, bookingNum, name, rows }) {
+export async function sendBookingConfirmation({ to, businessName, bookingNum, name, rows, providerConfig }) {
   if (!to || !to.includes('@')) return;
   const html = layout({
     headerColor: '#0ea5e9',
@@ -82,14 +127,14 @@ export async function sendBookingConfirmation({ to, businessName, bookingNum, na
     footer: `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e5e8ed;border-radius:8px;overflow:hidden;">${buildTable(rows)}</table>`,
   });
   try {
-    await sendgridSend({ to, subject: `✅ Booking Confirmation ${bookingNum} — ${businessName}`, html });
+    await sendEmailDirect({ to, subject: `Booking Confirmation ${bookingNum} - ${businessName}`, html, providerConfig });
     console.log(`Email sent to ${to} (${bookingNum})`);
   } catch (err) {
     console.error('Email send error:', err?.message || err);
   }
 }
 
-export async function sendAdminNotification({ to, businessName, bookingNum, name, rows }) {
+export async function sendAdminNotification({ to, businessName, bookingNum, name, rows, providerConfig }) {
   if (!to || !to.includes('@')) return;
   const html = layout({
     headerColor: '#16a34a',
@@ -101,7 +146,7 @@ export async function sendAdminNotification({ to, businessName, bookingNum, name
     footer: `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #e5e8ed;border-radius:8px;overflow:hidden;">${buildTable(rows)}</table>`,
   });
   try {
-    await sendgridSend({ to, subject: `🆕 New Booking ${bookingNum} — ${name}`, html });
+    await sendEmailDirect({ to, subject: `New Booking ${bookingNum} - ${name}`, html, providerConfig });
     console.log(`Admin email sent to ${to} (${bookingNum})`);
   } catch (err) {
     console.error('Admin email error:', err?.message || err);

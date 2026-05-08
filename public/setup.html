@@ -186,6 +186,16 @@
     .lang-check-item:has(input:checked) { border-color: var(--accent); background: var(--accent-dim); }
     .lang-check-item input { accent-color: var(--accent); cursor: pointer; }
 
+    /* ── Provider instruction boxes ── */
+    .prov-instr-box {
+      background: rgba(47,129,247,0.07); border: 1px solid rgba(47,129,247,0.2);
+      border-radius: 8px; padding: 13px 15px; font-size: 0.82rem; line-height: 1.7;
+    }
+    .prov-instr-title { font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+    .prov-instr-list { padding-left: 18px; color: var(--muted); margin: 0; }
+    .prov-instr-list li strong { color: var(--text); }
+    .prov-warn { margin-top: 8px; color: #e3b341; font-size: 0.78rem; }
+
     @media (max-width: 520px) {
       .card { padding: 20px; }
       .form-row { grid-template-columns: 1fr; }
@@ -458,55 +468,238 @@
   <div class="step-panel" id="step3">
     <div class="card">
       <h2>Ειδοποιήσεις κρατήσεων</h2>
-      <p class="subtitle">Ρύθμισε πώς θα ενημερώνεσαι για κάθε νέα κράτηση.</p>
+      <p class="subtitle">Ρύθμισε email και SMS — τόσο για εσένα (admin) όσο και για τους πελάτες.</p>
 
-      <!-- Email notifications -->
-      <div class="section-title" style="margin-bottom:8px;">📧 Email ειδοποιήσεων</div>
-      <div class="section-subtitle">Λαμβάνεις email για κάθε νέα κράτηση. Χρησιμοποιεί <strong>SendGrid</strong> (δωρεάν 100 emails/ημέρα).</div>
+      <!-- ══ EMAIL ══════════════════════════════════════════════════════════ -->
+      <div class="section-title">📧 Email</div>
+      <div class="section-subtitle" style="margin-bottom:14px;">Επέλεξε πάροχο αποστολής email. Αν δεν θες email, επέλεξε "Χωρίς email".</div>
+
       <div class="form-group">
-        <label>Email admin *</label>
+        <label>Email λήψης ειδοποιήσεων (admin)</label>
         <input type="email" id="notifEmail" placeholder="info@company.com" />
-        <div class="hint">Pre-filled από το Step 1 — μπορείς να χρησιμοποιήσεις διαφορετικό.</div>
+        <div class="hint">Pre-filled από το Βήμα 1. Εδώ θα στέλνονται οι ειδοποιήσεις νέας κράτησης.</div>
       </div>
-      <div style="background:rgba(47,129,247,0.07);border:1px solid rgba(47,129,247,0.2);border-radius:8px;padding:14px 16px;margin-bottom:24px;font-size:0.82rem;line-height:1.7;">
-        <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">Οδηγίες SendGrid (απαιτείται για αποστολή email)</div>
-        <ol style="padding-left:18px;color:var(--muted);margin:0;">
-          <li>Εγγραφή στο <strong style="color:var(--text);">sendgrid.com</strong> (δωρεάν)</li>
-          <li>Settings → <strong style="color:var(--text);">Sender Authentication → Single Sender Verification</strong> → προσθήκη email</li>
-          <li>Settings → <strong style="color:var(--text);">API Keys → Create API Key</strong> (Full Access)</li>
-          <li>Στο Railway: <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">SENDGRID_API_KEY=SG.xxx</code> και <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">SENDGRID_FROM=your@email.com</code></li>
-        </ol>
-        <div style="margin-top:8px;color:#e3b341;font-size:0.78rem;">⚠️ Χωρίς SendGrid τα emails δεν θα αποστέλλονται. Το SMS και η κράτηση λειτουργούν κανονικά.</div>
+
+      <!-- Email provider radio cards -->
+      <label style="display:block;font-size:0.82rem;font-weight:600;color:var(--muted);margin-bottom:8px;">Πάροχος αποστολής email</label>
+      <div class="zone-mode-options" style="flex-wrap:wrap;gap:8px;" id="emailProviderCards">
+        <label class="zone-mode-card" style="min-width:130px;flex:1;">
+          <input type="radio" name="email-provider" value="gmail" />
+          <div><div style="font-weight:600;">Gmail</div><div style="font-size:0.72rem;color:var(--muted);">δωρεάν</div></div>
+        </label>
+        <label class="zone-mode-card" style="min-width:130px;flex:1;">
+          <input type="radio" name="email-provider" value="resend" />
+          <div><div style="font-weight:600;">Resend</div><div style="font-size:0.72rem;color:var(--muted);">3000/μήνα δωρεάν</div></div>
+        </label>
+        <label class="zone-mode-card" style="min-width:130px;flex:1;">
+          <input type="radio" name="email-provider" value="sendgrid" />
+          <div><div style="font-weight:600;">SendGrid</div><div style="font-size:0.72rem;color:var(--muted);">100/μήνα δωρεάν</div></div>
+        </label>
+        <label class="zone-mode-card" style="min-width:130px;flex:1;">
+          <input type="radio" name="email-provider" value="smtp" />
+          <div><div style="font-weight:600;">SMTP</div><div style="font-size:0.72rem;color:var(--muted);">δικός server</div></div>
+        </label>
+        <label class="zone-mode-card" style="min-width:130px;flex:1;">
+          <input type="radio" name="email-provider" value="none" checked />
+          <div><div style="font-weight:600;">Χωρίς email</div><div style="font-size:0.72rem;color:var(--muted);">παράλειψη</div></div>
+        </label>
       </div>
+
+      <!-- Gmail panel -->
+      <div class="email-prov-panel" id="ep-gmail" style="display:none;margin-top:14px;">
+        <div class="prov-instr-box">
+          <div class="prov-instr-title">Οδηγίες Gmail App Password</div>
+          <ol class="prov-instr-list">
+            <li>Πήγαινε στο <strong>myaccount.google.com</strong> → Ασφάλεια</li>
+            <li>Ενεργοποίησε <strong>2-Step Verification</strong> (αν δεν είναι ήδη)</li>
+            <li>Πήγαινε <strong>myaccount.google.com/apppasswords</strong> → Mail → Επέλεξε συσκευή</li>
+            <li>Αντέγραψε τον <strong>16-ψήφιο κωδικό</strong> που εμφανίζεται</li>
+          </ol>
+        </div>
+        <div class="form-row" style="margin-top:12px;">
+          <div class="form-group">
+            <label>Gmail address</label>
+            <input type="email" id="gmailUser" placeholder="your@gmail.com" />
+          </div>
+          <div class="form-group">
+            <label>App Password (16 ψηφία)</label>
+            <input type="password" id="gmailPass" placeholder="xxxx xxxx xxxx xxxx" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Resend panel -->
+      <div class="email-prov-panel" id="ep-resend" style="display:none;margin-top:14px;">
+        <div class="prov-instr-box">
+          <div class="prov-instr-title">Οδηγίες Resend</div>
+          <ol class="prov-instr-list">
+            <li>Εγγραφή στο <strong>resend.com</strong> (δωρεάν)</li>
+            <li>Από το dashboard: <strong>API Keys → Create Key</strong></li>
+            <li>Αντέγραψε το API key</li>
+            <li>Για email αποστολέα: χρησιμοποίησε <strong>onboarding@resend.dev</strong> (δοκιμαστικό) ή δικό σου domain</li>
+          </ol>
+          <div class="prov-warn">⚠️ Στο δωρεάν πλάνο χωρίς domain: μόνο αποστολή στο δικό σου email. Για πελάτες χρειάζεσαι δικό domain.</div>
+        </div>
+        <div class="form-row" style="margin-top:12px;">
+          <div class="form-group">
+            <label>Resend API Key</label>
+            <input type="password" id="resendKey" placeholder="re_xxxxxxxxxxxx" />
+          </div>
+          <div class="form-group">
+            <label>Email αποστολέα (From)</label>
+            <input type="email" id="resendFrom" placeholder="onboarding@resend.dev" />
+          </div>
+        </div>
+      </div>
+
+      <!-- SendGrid panel -->
+      <div class="email-prov-panel" id="ep-sendgrid" style="display:none;margin-top:14px;">
+        <div class="prov-instr-box">
+          <div class="prov-instr-title">Οδηγίες SendGrid</div>
+          <ol class="prov-instr-list">
+            <li>Εγγραφή στο <strong>sendgrid.com</strong> (δωρεάν)</li>
+            <li>Settings → <strong>Sender Authentication → Single Sender Verification</strong> → επιβεβαίωσε email</li>
+            <li>Settings → <strong>API Keys → Create API Key → Mail Send → Full Access</strong></li>
+            <li>Αντέγραψε το API key (ξεκινά με <strong>SG.</strong>)</li>
+          </ol>
+        </div>
+        <div class="form-row" style="margin-top:12px;">
+          <div class="form-group">
+            <label>SendGrid API Key</label>
+            <input type="password" id="sgKey" placeholder="SG.xxxxxxxxxxxx" />
+          </div>
+          <div class="form-group">
+            <label>Email αποστολέα (επιβεβαιωμένο)</label>
+            <input type="email" id="sgFrom" placeholder="your@gmail.com" />
+          </div>
+        </div>
+      </div>
+
+      <!-- SMTP panel -->
+      <div class="email-prov-panel" id="ep-smtp" style="display:none;margin-top:14px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>SMTP Host</label>
+            <input type="text" id="smtpHost" placeholder="smtp.example.com" />
+          </div>
+          <div class="form-group">
+            <label>Port</label>
+            <input type="number" id="smtpPort" placeholder="587" value="587" style="max-width:120px;" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Username / Email</label>
+            <input type="text" id="smtpUser" placeholder="user@example.com" />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="smtpPass" placeholder="••••••••" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Email button -->
+      <div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
+        <button class="btn btn-secondary" onclick="testEmail()" id="testEmailBtn" style="padding:9px 18px;font-size:0.85rem;">📧 Τεστ Email</button>
+        <span id="testEmailMsg" style="font-size:0.83rem;display:none;"></span>
+      </div>
+      <div class="hint" style="margin-top:4px;">Στέλνει δοκιμαστικό στο email του Βήματος 1.</div>
 
       <div class="section-divider"></div>
 
-      <!-- SMS notifications -->
-      <div class="section-title" style="margin-bottom:8px;">📱 SMS ειδοποιήσεων</div>
-      <div class="section-subtitle">Λαμβάνεις SMS για κάθε νέα κράτηση. Χρησιμοποιεί <strong>Vonage</strong> (~€0.06 ανά SMS).</div>
+      <!-- ══ SMS ════════════════════════════════════════════════════════════ -->
+      <div class="section-title">📱 SMS</div>
+      <div class="section-subtitle" style="margin-bottom:14px;">Επέλεξε πάροχο αποστολής SMS. Αν δεν θες SMS, επέλεξε "Χωρίς SMS".</div>
+
       <div class="form-group">
-        <label>Τηλέφωνο admin (με κωδικό χώρας)</label>
-        <input type="tel" id="notifPhone" placeholder="π.χ. 6983068667 ή +306983068667" />
-        <div class="hint">Pre-filled από το Step 1 — μπορείς να χρησιμοποιήσεις διαφορετικό.</div>
+        <label>Τηλέφωνο λήψης ειδοποιήσεων (admin)</label>
+        <input type="tel" id="notifPhone" placeholder="6983068667 ή +306983068667" />
+        <div class="hint">Pre-filled από το Βήμα 1. Εδώ θα στέλνονται τα SMS νέας κράτησης.</div>
       </div>
-      <div style="background:rgba(47,129,247,0.07);border:1px solid rgba(47,129,247,0.2);border-radius:8px;padding:14px 16px;margin-bottom:24px;font-size:0.82rem;line-height:1.7;">
-        <div style="font-weight:700;color:var(--accent);margin-bottom:6px;">Οδηγίες Vonage (απαιτείται για αποστολή SMS)</div>
-        <ol style="padding-left:18px;color:var(--muted);margin:0;">
-          <li>Εγγραφή στο <strong style="color:var(--text);">vonage.com</strong> (δωρεάν, €2 credit)</li>
-          <li>Από το dashboard: <strong style="color:var(--text);">API Key</strong> (8 χαρακτήρες) + <strong style="color:var(--text);">API Secret</strong></li>
-          <li>Στο Railway: <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">VONAGE_API_KEY=xxx</code>, <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">VONAGE_API_SECRET=xxx</code>, <code style="background:var(--bg);padding:1px 5px;border-radius:3px;">VONAGE_FROM=BooklyAi</code></li>
-        </ol>
-        <div style="margin-top:8px;color:#e3b341;font-size:0.78rem;">⚠️ Χωρίς Vonage τα SMS δεν θα αποστέλλονται. Η κράτηση λειτουργεί κανονικά.</div>
+
+      <!-- SMS provider radio cards -->
+      <label style="display:block;font-size:0.82rem;font-weight:600;color:var(--muted);margin-bottom:8px;">Πάροχος αποστολής SMS</label>
+      <div class="zone-mode-options" style="flex-wrap:wrap;gap:8px;" id="smsProviderCards">
+        <label class="zone-mode-card" style="min-width:140px;flex:1;">
+          <input type="radio" name="sms-provider" value="brevo" />
+          <div><div style="font-weight:600;">Brevo</div><div style="font-size:0.72rem;color:var(--muted);">300/μήνα δωρεάν</div></div>
+        </label>
+        <label class="zone-mode-card" style="min-width:140px;flex:1;">
+          <input type="radio" name="sms-provider" value="twilio" />
+          <div><div style="font-weight:600;">Twilio</div><div style="font-size:0.72rem;color:var(--muted);">~€0.05/SMS</div></div>
+        </label>
+        <label class="zone-mode-card" style="min-width:140px;flex:1;">
+          <input type="radio" name="sms-provider" value="none" checked />
+          <div><div style="font-weight:600;">Χωρίς SMS</div><div style="font-size:0.72rem;color:var(--muted);">παράλειψη</div></div>
+        </label>
       </div>
+
+      <!-- Brevo panel -->
+      <div class="sms-prov-panel" id="sp-brevo" style="display:none;margin-top:14px;">
+        <div class="prov-instr-box">
+          <div class="prov-instr-title">Οδηγίες Brevo SMS</div>
+          <ol class="prov-instr-list">
+            <li>Εγγραφή στο <strong>brevo.com</strong> (δωρεάν — 300 SMS/μήνα)</li>
+            <li>Από το menu: <strong>Transactional → API Keys → Create a new API key</strong></li>
+            <li>Αντέγραψε το API key</li>
+          </ol>
+          <div class="prov-warn">⚠️ Αν χρησιμοποιείς Railway, το Brevo μπορεί να απαιτεί whitelist IP. Αν λάβεις σφάλμα αδείας, δοκίμασε Twilio.</div>
+        </div>
+        <div class="form-row" style="margin-top:12px;">
+          <div class="form-group">
+            <label>Brevo API Key</label>
+            <input type="password" id="brevoKey" placeholder="xkeysib-xxxxxxxxxxxx" />
+          </div>
+          <div class="form-group">
+            <label>Όνομα αποστολέα (max 11 χαρ.)</label>
+            <input type="text" id="brevoSender" placeholder="BooklyAi" maxlength="11" value="BooklyAi" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Twilio panel -->
+      <div class="sms-prov-panel" id="sp-twilio" style="display:none;margin-top:14px;">
+        <div class="prov-instr-box">
+          <div class="prov-instr-title">Οδηγίες Twilio</div>
+          <ol class="prov-instr-list">
+            <li>Εγγραφή στο <strong>twilio.com</strong></li>
+            <li>Dashboard → <strong>Account SID</strong> + <strong>Auth Token</strong> (αρχική σελίδα)</li>
+            <li>Phone Numbers → <strong>Buy a number</strong> (ή χρήση δωρεάν trial αριθμού)</li>
+            <li>Αντέγραψε τον αριθμό σε μορφή <strong>+1xxxxxxxxxx</strong></li>
+          </ol>
+        </div>
+        <div class="form-row" style="margin-top:12px;">
+          <div class="form-group">
+            <label>Account SID</label>
+            <input type="text" id="twilioSid" placeholder="ACxxxxxxxxxxxxxxxx" />
+          </div>
+          <div class="form-group">
+            <label>Auth Token</label>
+            <input type="password" id="twilioToken" placeholder="xxxxxxxxxxxxxxxx" />
+          </div>
+        </div>
+        <div class="form-group" style="max-width:240px;">
+          <label>Phone Number (From)</label>
+          <input type="text" id="twilioFrom" placeholder="+1xxxxxxxxxx" />
+        </div>
+      </div>
+
+      <!-- Test SMS button -->
+      <div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
+        <button class="btn btn-secondary" onclick="testSms()" id="testSmsBtn" style="padding:9px 18px;font-size:0.85rem;">📱 Τεστ SMS</button>
+        <span id="testSmsMsg" style="font-size:0.83rem;display:none;"></span>
+      </div>
+      <div class="hint" style="margin-top:4px;">Στέλνει δοκιμαστικό στο τηλέφωνο του Βήματος 1.</div>
 
       <div class="section-divider"></div>
 
-      <!-- Customer confirmations (automatic) -->
+      <!-- Customer confirmations info -->
       <div class="section-title" style="margin-bottom:8px;">✅ Επιβεβαίωση πελάτη (αυτόματο)</div>
       <div style="background:rgba(63,185,80,0.07);border:1px solid rgba(63,185,80,0.2);border-radius:8px;padding:14px 16px;font-size:0.82rem;line-height:1.8;color:var(--muted);">
-        Μετά από κάθε κράτηση αποστέλλονται αυτόματα:<br/>
-        <span style="color:var(--text);">📧 Email επιβεβαίωσης</span> στον πελάτη (SendGrid) — εμφανίζει αριθμό κράτησης, διαδρομή, τιμή<br/>
-        <span style="color:var(--text);">📱 SMS επιβεβαίωσης</span> στον πελάτη (Vonage) — σύντομη επιβεβαίωση με αριθμό κράτησης
+        Μετά από κάθε κράτηση ο πελάτης λαμβάνει αυτόματα:<br/>
+        <span style="color:var(--text);">📧 Email επιβεβαίωσης</span> — αριθμός κράτησης, διαδρομή, τιμή (χρησιμοποιεί τον πάροχο που επέλεξες)<br/>
+        <span style="color:var(--text);">📱 SMS επιβεβαίωσης</span> — σύντομη επιβεβαίωση με αριθμό κράτησης
       </div>
 
       <div class="nav-btns" style="margin-top:28px;">
@@ -729,8 +922,82 @@ function collectWidgetLang() {
   return { mode };
 }
 
+// ── Provider field helpers ─────────────────────────────────────────────────────
+function v(id) { return document.getElementById(id)?.value.trim() || ''; }
+
+function collectEmailCreds() {
+  const p = document.querySelector('input[name="email-provider"]:checked')?.value;
+  if (p === 'gmail')    return { user: v('gmailUser'), pass: v('gmailPass') };
+  if (p === 'resend')   return { api_key: v('resendKey'), from: v('resendFrom') };
+  if (p === 'sendgrid') return { api_key: v('sgKey'),     from: v('sgFrom') };
+  if (p === 'smtp')     return { host: v('smtpHost'), port: v('smtpPort'), user: v('smtpUser'), pass: v('smtpPass') };
+  return {};
+}
+function collectSmsCreds() {
+  const p = document.querySelector('input[name="sms-provider"]:checked')?.value;
+  if (p === 'brevo')  return { api_key: v('brevoKey'), sender: v('brevoSender') };
+  if (p === 'twilio') return { sid: v('twilioSid'), token: v('twilioToken'), from: v('twilioFrom') };
+  return {};
+}
+
+// ── Provider panel toggle ─────────────────────────────────────────────────────
+function wireProviderToggles() {
+  document.querySelectorAll('input[name="email-provider"]').forEach(r => r.addEventListener('change', () => {
+    document.querySelectorAll('.email-prov-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('ep-' + r.value);
+    if (panel) panel.style.display = '';
+  }));
+  document.querySelectorAll('input[name="sms-provider"]').forEach(r => r.addEventListener('change', () => {
+    document.querySelectorAll('.sms-prov-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('sp-' + r.value);
+    if (panel) panel.style.display = '';
+  }));
+}
+
+// ── Test buttons ──────────────────────────────────────────────────────────────
+async function testEmail() {
+  const provider = document.querySelector('input[name="email-provider"]:checked')?.value;
+  if (!provider || provider === 'none') { showTestMsg('testEmailMsg', 'Επέλεξε πάροχο πρώτα.', false); return; }
+  const to = v('bizEmail') || v('notifEmail');
+  if (!to) { showTestMsg('testEmailMsg', 'Συμπλήρωσε email στο Βήμα 1.', false); return; }
+  await runTest('testEmailBtn', 'testEmailMsg', '/api/setup/test-email',
+    { to, provider, creds: collectEmailCreds() });
+}
+async function testSms() {
+  const provider = document.querySelector('input[name="sms-provider"]:checked')?.value;
+  if (!provider || provider === 'none') { showTestMsg('testSmsMsg', 'Επέλεξε πάροχο πρώτα.', false); return; }
+  const to = v('bizPhone') || v('notifPhone');
+  if (!to) { showTestMsg('testSmsMsg', 'Συμπλήρωσε τηλέφωνο στο Βήμα 1.', false); return; }
+  await runTest('testSmsBtn', 'testSmsMsg', '/api/setup/test-sms',
+    { to, provider, creds: collectSmsCreds() });
+}
+async function runTest(btnId, msgId, url, body) {
+  const btn = document.getElementById(btnId);
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Αποστολή…';
+  try {
+    const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    showTestMsg(msgId, res.ok ? '✓ Εστάλη!' : ('Σφάλμα: ' + (data.error || 'Άγνωστο')), res.ok);
+  } catch (e) {
+    showTestMsg(msgId, 'Σφάλμα σύνδεσης.', false);
+  } finally {
+    btn.textContent = orig; btn.disabled = false;
+  }
+}
+function showTestMsg(id, msg, ok) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.color = ok ? 'var(--success)' : 'var(--danger)';
+  el.style.display = 'inline';
+  setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
 // ── Collect & submit ──────────────────────────────────────────────────────────
 function collectPayload() {
+  const emailProvider = document.querySelector('input[name="email-provider"]:checked')?.value || 'none';
+  const smsProvider   = document.querySelector('input[name="sms-provider"]:checked')?.value   || 'none';
+
   const fixedRoutes = [];
   document.querySelectorAll('.fix-route-data-row').forEach(row => {
     const origin      = row.querySelector('.fix-origin').value.trim();
@@ -771,6 +1038,10 @@ function collectPayload() {
     config: {
       email:          document.getElementById('notifEmail').value.trim() || document.getElementById('bizEmail').value.trim(),
       phone:          document.getElementById('notifPhone').value.trim() || document.getElementById('bizPhone').value.trim() || undefined,
+      email_provider: emailProvider !== 'none' ? emailProvider : null,
+      email_creds:    emailProvider !== 'none' ? collectEmailCreds() : null,
+      sms_provider:   smsProvider   !== 'none' ? smsProvider   : null,
+      sms_creds:      smsProvider   !== 'none' ? collectSmsCreds()   : null,
       office_address: document.getElementById('bizOfficeAddress').value.trim() || null,
       region:         collectRegion(),
       dashboard_lang: document.getElementById('dashLang').value,
@@ -851,6 +1122,7 @@ function copyEmbed() {
 // Init Step 1 conditional toggles on page load
 wireCountryToggle();
 wireWidgetLangToggle();
+wireProviderToggles();
 </script>
 </body>
 </html>
