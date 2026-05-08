@@ -144,6 +144,26 @@ function buildPricingZoneInstructions(pricingZones) {
 
 const LANG_NAMES = { el: 'Greek', en: 'English', fr: 'French', de: 'German', it: 'Italian', es: 'Spanish', ru: 'Russian' };
 
+// Server-side zone detection: scan entire conversation for zone keywords
+function detectActiveZones(history, message, pricingZones) {
+  if (!Array.isArray(pricingZones) || !pricingZones.length) return [];
+  const allText = [...(history || []).map(m => m.content || ''), message].join(' ').toLowerCase();
+  return pricingZones.filter(z =>
+    Array.isArray(z.keywords) && z.keywords.some(kw => allText.includes(kw.toLowerCase()))
+  );
+}
+
+function buildActiveZoneNote(activeZones) {
+  if (!activeZones.length) return '';
+  const parts = activeZones.map(z => {
+    const label = z.surcharge_type === 'pct'        ? `+${z.surcharge_value}% (×${(1 + z.surcharge_value / 100).toFixed(2)})` :
+                  z.surcharge_type === 'fixed'      ? `+€${z.surcharge_value}` :
+                  z.surcharge_type === 'multiplier' ? `×${z.surcharge_value}` : `+${z.surcharge_value}`;
+    return `"${z.name}" ${label}`;
+  });
+  return `\n\n⚠️ ACTIVE ZONE SURCHARGE (server-detected, MANDATORY): ${parts.join(', ')}. You MUST add this to the final price and show the breakdown (e.g. "Base €55 × 2.00 = €110.00 (Zone \'${activeZones[0].name}\' +${activeZones[0].surcharge_value}%)").`;
+}
+
 async function aiChatFlow(message, history, business, lang) {
   const msgs = history.map(m => ({
     role: m.role,
@@ -158,6 +178,10 @@ async function aiChatFlow(message, history, business, lang) {
   const zoneRules         = buildZoneInstructions(business.config.zones);
   const pricingZoneRules  = buildPricingZoneInstructions(business.config.pricing_zones);
 
+  // Server-side zone detection — inject confirmed active zones so Claude doesn't have to guess
+  const activeZones    = detectActiveZones(history, message, business.config.pricing_zones);
+  const activeZoneNote = buildActiveZoneNote(activeZones);
+
   // Session language: customer selected a specific language in the widget
   const sessionLang = lang && LANG_NAMES[lang]
     ? `\n\nSESSION LANGUAGE: The customer selected ${LANG_NAMES[lang]}. ALWAYS respond in ${LANG_NAMES[lang]}. Never switch language.`
@@ -168,7 +192,7 @@ async function aiChatFlow(message, history, business, lang) {
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Today is ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${sessionLang}${distanceMarker}`,
+    system: `Today is ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${activeZoneNote}${sessionLang}${distanceMarker}`,
     messages: msgs,
   });
 
