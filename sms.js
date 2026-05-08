@@ -8,6 +8,23 @@ function normalizePhone(phone) {
   return digits;
 }
 
+async function vonageSend(to, from, text) {
+  const apiKey    = process.env.VONAGE_API_KEY;
+  const apiSecret = process.env.VONAGE_API_SECRET;
+  if (!apiKey || !apiSecret) { console.warn('SMS: VONAGE_* env vars not set, skipping.'); return; }
+
+  const r = await fetch('https://rest.nexmo.com/sms/json', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret, from, to, text }),
+    signal: AbortSignal.timeout(8000),
+  });
+  const data = await r.json();
+  const msg = data.messages?.[0];
+  if (msg?.status !== '0') throw new Error(msg?.['error-text'] || `status ${msg?.status}`);
+  return msg['message-id'];
+}
+
 export async function sendSmsConfirmation({ to, businessName, bookingNum, pickup, destination, datetime, vehicle, price }) {
   const apiKey    = process.env.VONAGE_API_KEY;
   const apiSecret = process.env.VONAGE_API_SECRET;
@@ -27,17 +44,32 @@ export async function sendSmsConfirmation({ to, businessName, bookingNum, pickup
   ].filter(Boolean);
 
   try {
-    const r = await fetch('https://rest.nexmo.com/sms/json', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey, api_secret: apiSecret, from, to: recipient, text: lines.join('\n') }),
-      signal: AbortSignal.timeout(8000),
-    });
-    const data = await r.json();
-    const msg = data.messages?.[0];
-    if (msg?.status !== '0') throw new Error(msg?.['error-text'] || `status ${msg?.status}`);
-    console.log(`SMS sent to ${recipient} (${bookingNum}) — messageId: ${msg['message-id']}`);
+    const id = await vonageSend(recipient, from, lines.join('\n'));
+    console.log(`SMS sent to ${recipient} (${bookingNum}) — messageId: ${id}`);
   } catch (err) {
     console.error('SMS send error:', err?.message || err);
+  }
+}
+
+export async function sendAdminSms({ to, businessName, bookingNum, name, phone, pickup, destination, datetime, vehicle, price }) {
+  if (!process.env.VONAGE_API_KEY) return;
+  const recipient = normalizePhone(to);
+  if (!recipient) return;
+
+  const from = process.env.VONAGE_FROM || 'BooklyAi';
+  const lines = [
+    `🆕 New booking ${bookingNum}`,
+    `👤 ${name}${phone ? ` | 📱 ${phone}` : ''}`,
+    `📍 ${pickup} → ${destination}`,
+    `📅 ${datetime}`,
+    vehicle && `🚗 ${vehicle}`,
+    price   && `💰 ${price}`,
+  ].filter(Boolean);
+
+  try {
+    const id = await vonageSend(recipient, from, lines.join('\n'));
+    console.log(`Admin SMS sent to ${recipient} (${bookingNum}) — messageId: ${id}`);
+  } catch (err) {
+    console.error('Admin SMS error:', err?.message || err);
   }
 }

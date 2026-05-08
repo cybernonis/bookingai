@@ -6,8 +6,8 @@
 
 import { createBooking, getAvailableSlots, getSlotById, markSlotUnavailable } from './db.js';
 import { calculateDistance } from './distance.js';
-import { sendBookingConfirmation } from './email.js';
-import { sendSmsConfirmation } from './sms.js';
+import { sendBookingConfirmation, sendAdminNotification } from './email.js';
+import { sendSmsConfirmation, sendAdminSms } from './sms.js';
 import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic();
@@ -246,6 +246,43 @@ async function aiChatFlow(message, history, business, lang) {
         bookingNum,
         pickup, destination, datetime, vehicle, price,
       }).catch(e => console.error('SMS err:', e?.message));
+    }
+
+    const adminEmail = business.config?.email;
+    const adminPhone = business.config?.phone;
+
+    if (adminEmail) {
+      sendAdminNotification({
+        to: adminEmail,
+        businessName: business.name,
+        bookingNum,
+        name: name || 'Customer',
+        phone, email: cleanEmail,
+        rows: [
+          { icon: '👤', label: 'Customer',     value: name },
+          { icon: '📱', label: 'Phone',        value: phone },
+          { icon: '📧', label: 'Email',        value: cleanEmail },
+          { icon: '🚩', label: 'Pickup',       value: pickup },
+          { icon: '🏁', label: 'Destination',  value: destination },
+          { icon: '📅', label: 'Date & Time',  value: datetime },
+          ...(distInfo ? [
+            { icon: '📏', label: 'Distance',   value: distInfo.distance_text },
+            { icon: '⏱',  label: 'Duration',   value: distInfo.duration_text },
+          ] : []),
+          { icon: '🚗', label: 'Vehicle',      value: vehicle },
+          { icon: '💰', label: 'Price',        value: price },
+        ],
+      }).catch(e => console.error('Admin email err:', e?.message));
+    }
+
+    if (adminPhone) {
+      sendAdminSms({
+        to: adminPhone,
+        businessName: business.name,
+        bookingNum,
+        name: name || 'Customer',
+        phone, pickup, destination, datetime, vehicle, price,
+      }).catch(e => console.error('Admin SMS err:', e?.message));
     }
 
     const distLine = distInfo
