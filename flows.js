@@ -197,13 +197,19 @@ async function aiChatFlow(message, history, business, lang) {
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   // Server-side zone detection — must run before buildPricingInstructions
-  const activeZones    = detectActiveZones(history, message, business.config.pricing_zones);
-  const activeZoneNote = buildActiveZoneNote(activeZones);
+  const activeZones = detectActiveZones(history, message, business.config.pricing_zones);
 
-  const pricingRules      = buildPricingInstructions(business.config.pricing, activeZones);
-  const vehicleRules      = buildVehicleInstructions(business.config.vehicles);
-  const zoneRules         = buildZoneInstructions(business.config.zones);
-  const pricingZoneRules  = buildPricingZoneInstructions(business.config.pricing_zones);
+  // When zones are active, prices are pre-computed — suppress zone calculation instructions
+  // to prevent Claude from double-applying the surcharge.
+  const pricingRules     = buildPricingInstructions(business.config.pricing, activeZones);
+  const vehicleRules     = buildVehicleInstructions(business.config.vehicles);
+  const zoneRules        = buildZoneInstructions(business.config.zones);
+  const pricingZoneRules = activeZones.length
+    ? `\n\nPRICING ZONES: Zone surcharges have already been applied to the prices shown above. Use those prices as-is — do NOT apply any additional zone multiplier.`
+    : buildPricingZoneInstructions(business.config.pricing_zones);
+  const activeZoneNote   = activeZones.length
+    ? `\n\nACTIVE ZONE: "${activeZones.map(z => z.name).join(', ')}" — prices already include zone surcharge. Quote the prices as listed.`
+    : '';
 
   // Session language: customer selected a specific language in the widget
   const sessionLang = lang && LANG_NAMES[lang]
