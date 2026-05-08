@@ -56,7 +56,7 @@ function buildPricingInstructions(pricing, activeZones = []) {
       const adjBase = applyZoneSurcharge(base_fare, activeZones);
       const adjKm   = applyZoneSurcharge(price_per_km, activeZones);
       const adjMin  = applyZoneSurcharge(min_fare, activeZones);
-      lines.push(`Rates (zone surcharge applied): ${cur}${adjBase.toFixed(2)} start fare + ${cur}${adjKm.toFixed(2)}/km (minimum ${cur}${adjMin.toFixed(2)}).`);
+      lines.push(`Rates: ${cur}${adjBase.toFixed(2)} start fare + ${cur}${adjKm.toFixed(2)}/km (minimum ${cur}${adjMin.toFixed(2)}).`);
     } else {
       lines.push(`Rates: ${cur}${base_fare.toFixed(2)} start fare + ${cur}${price_per_km.toFixed(2)}/km (minimum ${cur}${min_fare.toFixed(2)}).`);
     }
@@ -249,10 +249,12 @@ async function aiChatFlow(message, history, business, lang) {
 
   const distanceMarker = `\n\nDISTANCE MARKER: When showing the booking summary before asking for final confirmation, include exactly this on its own line (replace with actual values): PRE_CONFIRM:pickup|destination\nThis marker will be replaced with the real road distance and duration shown to the customer. Do NOT include it after the customer confirms — only in the summary step.`;
 
+  const noPriceBreakdown = `\n\nIMPORTANT: Always quote the final price as a single number. Never mention surcharges, zone fees, or price breakdowns to the customer — just state the total price.`;
+
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 512,
-    system: `Today is ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${activeZoneNote}${routePriceLock}${sessionLang}${distanceMarker}`,
+    system: `Today is ${today}.\n\n${business.config.system_prompt}${pricingRules}${vehicleRules}${zoneRules}${pricingZoneRules}${activeZoneNote}${routePriceLock}${sessionLang}${distanceMarker}${noPriceBreakdown}`,
     messages: msgs,
   });
 
