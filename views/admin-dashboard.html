@@ -273,7 +273,9 @@
     .ai-ch-header {
       background: var(--accent); color: #fff;
       padding: 14px 18px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+      cursor: grab; user-select: none;
     }
+    .ai-ch-header.grabbing { cursor: grabbing; }
     .ai-ch-header-info { flex: 1; min-width: 0; }
     .ai-ch-header h3 { font-size: 0.9rem; font-weight: 600; margin: 0; }
     .ai-ch-header-sub { font-size: 0.7rem; opacity: 0.65; display: flex; align-items: center; gap: 5px; margin-top: 1px; }
@@ -2053,14 +2055,34 @@
 
   // ── AI Chat Panel ─────────────────────────────────────────────────────────
 
-  let aiPanelOpen = false;
-  let aiChatBiz   = null;
+  let aiPanelOpen  = false;
+  let aiChatBiz    = null;
   let _aiPendingZone = null;
+  let _aiPanelDragged = false;
 
   function toggleAiPanel() {
     aiPanelOpen = !aiPanelOpen;
-    document.getElementById('ai-chat-panel').classList.toggle('open', aiPanelOpen);
-    document.querySelector('.main').classList.toggle('ai-panel-open', aiPanelOpen);
+    const panel = document.getElementById('ai-chat-panel');
+
+    if (!aiPanelOpen) {
+      if (_aiPanelDragged) {
+        // Panel was moved — reset to default position instantly then close
+        panel.style.transition = 'none';
+        panel.style.left = panel.style.top = '';
+        panel.style.right = '0'; panel.style.bottom = '0';
+        panel.style.transform = '';
+        panel.classList.remove('open');
+        requestAnimationFrame(() => { panel.style.transition = ''; });
+        _aiPanelDragged = false;
+      } else {
+        panel.classList.remove('open');
+      }
+      document.querySelector('.main').classList.remove('ai-panel-open');
+      return;
+    }
+
+    panel.classList.add('open');
+    document.querySelector('.main').classList.add('ai-panel-open');
     if (aiPanelOpen) {
       populateAiBizSel();
       if (!document.getElementById('ai-ch-msgs').children.length) {
@@ -2088,6 +2110,70 @@
     input.value = btn.textContent.trim();
     input.focus();
   }
+
+  // ── Draggable AI panel ────────────────────────────────────────────────────
+  (function() {
+    const panel  = document.getElementById('ai-chat-panel');
+    const header = document.querySelector('.ai-ch-header');
+    let dragging = false, ox = 0, oy = 0;
+
+    function startDrag(cx, cy) {
+      if (!panel.classList.contains('open')) return;
+      const r = panel.getBoundingClientRect();
+      // First drag: switch from CSS right/bottom to inline left/top
+      if (!_aiPanelDragged) {
+        _aiPanelDragged = true;
+        panel.style.transition = 'none';
+        panel.style.transform  = 'none';
+        panel.style.right  = 'auto';
+        panel.style.bottom = 'auto';
+        panel.style.left   = r.left + 'px';
+        panel.style.top    = r.top  + 'px';
+      }
+      ox = cx - parseFloat(panel.style.left);
+      oy = cy - parseFloat(panel.style.top);
+      dragging = true;
+      header.classList.add('grabbing');
+      document.body.style.userSelect = 'none';
+    }
+
+    function doMove(cx, cy) {
+      if (!dragging) return;
+      const W = window.innerWidth, H = window.innerHeight;
+      const l = Math.max(0, Math.min(cx - ox, W - panel.offsetWidth));
+      const t = Math.max(0, Math.min(cy - oy, H - panel.offsetHeight));
+      panel.style.left = l + 'px';
+      panel.style.top  = t + 'px';
+    }
+
+    function endDrag() {
+      dragging = false;
+      header.classList.remove('grabbing');
+      document.body.style.userSelect = '';
+    }
+
+    // Mouse
+    header.addEventListener('mousedown', e => {
+      if (e.target.closest('.ai-ch-close, select, input, button')) return;
+      startDrag(e.clientX, e.clientY);
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => { if (dragging) doMove(e.clientX, e.clientY); });
+    document.addEventListener('mouseup', endDrag);
+
+    // Touch
+    header.addEventListener('touchstart', e => {
+      if (e.target.closest('.ai-ch-close')) return;
+      const t = e.touches[0];
+      startDrag(t.clientX, t.clientY);
+    }, { passive: true });
+    document.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      const t = e.touches[0];
+      doMove(t.clientX, t.clientY);
+    }, { passive: false });
+    document.addEventListener('touchend', endDrag);
+  })();
 
   function addAiMsg(role, text) {
     const msgs = document.getElementById('ai-ch-msgs');
