@@ -140,6 +140,23 @@ app.patch('/api/bookings/:id', (req, res) => {
   res.json({ booking: updateBookingStatus(id, status) });
 });
 
+// ── Places Autocomplete (proxies Google Places, keeps key server-side) ───────
+
+app.get('/api/places/autocomplete', async (req, res) => {
+  const { input } = req.query;
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey || !input?.trim()) return res.json({ suggestions: [] });
+  try {
+    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${apiKey}&types=establishment%7Cgeocode`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    const data = await r.json();
+    const suggestions = (data.predictions || []).slice(0, 5).map(p => ({ text: p.description }));
+    res.json({ suggestions });
+  } catch {
+    res.json({ suggestions: [] });
+  }
+});
+
 // ── Chat ──────────────────────────────────────────────────────────────────────
 
 app.post('/api/chat', async (req, res) => {

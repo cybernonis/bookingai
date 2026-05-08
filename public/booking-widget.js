@@ -135,6 +135,23 @@
       color: #fff;
     }
 
+    #bw-input-area { position: relative; }
+    #bw-autocomplete {
+      display: none;
+      position: absolute; bottom: calc(100% + 4px); left: 0; right: 0;
+      background: #fff; border: 1.5px solid #e0e0e0; border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12); overflow: hidden; z-index: 10;
+    }
+    .bw-ac-item {
+      padding: 9px 14px; font-size: 0.82rem; color: #1a1a2e; cursor: pointer;
+      line-height: 1.4; border-bottom: 1px solid #f0f0f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      transition: background 0.12s; display: flex; align-items: center; gap: 8px;
+    }
+    .bw-ac-item:last-child { border-bottom: none; }
+    .bw-ac-item:hover { background: var(--bw-ac-hover, #f0f4ff); }
+    .bw-ac-pin { font-size: 14px; flex-shrink: 0; }
+
     @media (max-width: 420px) {
       #bw-panel { width: calc(100vw - 16px); right: 8px; bottom: 80px; }
       #bw-bubble { right: 16px; bottom: 16px; }
@@ -168,6 +185,7 @@
     <div id="bw-messages"></div>
     <div id="bw-quick-replies"></div>
     <div id="bw-input-area">
+      <div id="bw-autocomplete"></div>
       <input id="bw-input" type="text" placeholder="Γράψε μήνυμα..." autocomplete="off" />
       <button id="bw-send" aria-label="Send">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -315,6 +333,7 @@
     if (!text.trim()) return;
 
     quickRepliesEl.innerHTML = '';
+    hideAc();
     inputEl.value = '';
     inputEl.disabled = true;
     sendBtn.disabled = true;
@@ -379,6 +398,56 @@
       addMessage('assistant', 'Γεια! Πώς μπορώ να σε βοηθήσω με την κράτησή σου;');
     }
   }
+
+  // ── Autocomplete ──────────────────────────────────────────────────────────
+
+  const acEl = panel.querySelector('#bw-autocomplete');
+  let acTimer = null;
+
+  function isLocationQuestion() {
+    const msgs = messagesEl.querySelectorAll('.bw-msg-assistant');
+    if (!msgs.length) return false;
+    const last = msgs[msgs.length - 1].textContent.toLowerCase();
+    return /pick.?up|where.*pick|destination|where.*go|address|location|starting point|drop.?off|pickup|from where|to where|where would|αναχώρηση|προορισμός|πού θα/i.test(last);
+  }
+
+  function hideAc() {
+    acEl.style.display = 'none';
+    acEl.innerHTML = '';
+  }
+
+  function showAc(suggestions) {
+    acEl.innerHTML = '';
+    if (!suggestions.length) { acEl.style.display = 'none'; return; }
+    suggestions.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'bw-ac-item';
+      item.innerHTML = `<span class="bw-ac-pin">📍</span>${s.text}`;
+      item.addEventListener('mousedown', e => {
+        e.preventDefault();
+        inputEl.value = s.text;
+        hideAc();
+        inputEl.focus();
+      });
+      acEl.appendChild(item);
+    });
+    acEl.style.display = 'block';
+  }
+
+  inputEl.addEventListener('input', () => {
+    clearTimeout(acTimer);
+    const val = inputEl.value.trim();
+    if (val.length < 2 || !isLocationQuestion()) { hideAc(); return; }
+    acTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/places/autocomplete?input=${encodeURIComponent(val)}`);
+        const data = await res.json();
+        showAc(data.suggestions || []);
+      } catch { hideAc(); }
+    }, 300);
+  });
+
+  inputEl.addEventListener('blur', () => setTimeout(hideAc, 150));
 
   // ── Events ────────────────────────────────────────────────────────────────
 
