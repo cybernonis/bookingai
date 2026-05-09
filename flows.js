@@ -98,6 +98,45 @@ function buildPricingInstructions(pricing, activeZones = []) {
     lines.push(`If they choose 1-${extrasItems.length} ask if they want anything else with the same list. If they choose ${extrasItems.length + 1} or say "no"/"nothing" proceed.`);
   }
 
+  const daySurcharges = pricing.day_surcharges || [];
+  if (daySurcharges.length > 0) {
+    lines.push('DAY/TIME SURCHARGES — applied on top of base or fixed price:');
+    daySurcharges.forEach(ds => {
+      const dayStr = (ds.days || []).map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
+      const mult = (1 + ds.surcharge_pct / 100).toFixed(2);
+      lines.push(`• "${ds.name}": ${dayStr} ${ds.from}–${ds.to} → +${ds.surcharge_pct}% (×${mult})`);
+    });
+    lines.push('RULE: Ask for travel date and time BEFORE quoting the final price. If the trip falls in a surcharge window apply it and show: "Base €X + [Rule] +Y% = €Z total".');
+  }
+
+  const distanceRules = pricing.distance_rules || [];
+  if (distanceRules.length > 0) {
+    lines.push('DISTANCE RULES — applied after base price is calculated:');
+    distanceRules.forEach(dr => {
+      const range = dr.max_km ? `${dr.min_km || 0}–${dr.max_km}km` : `>${dr.min_km}km`;
+      if (dr.discount_pct) {
+        lines.push(`• ${dr.name || range}: Routes ${range} → -${dr.discount_pct}% discount (×${(1 - dr.discount_pct / 100).toFixed(2)})`);
+      } else if (dr.surcharge_pct) {
+        lines.push(`• ${dr.name || range}: Routes ${range} → +${dr.surcharge_pct}%`);
+      }
+    });
+    lines.push('Apply automatically based on the calculated km. Show adjustment in the price breakdown.');
+  }
+
+  const compositeRules = pricing.composite_rules || [];
+  if (compositeRules.length > 0) {
+    lines.push('SPECIAL COMBINED RULES — apply ONLY when ALL conditions match simultaneously:');
+    compositeRules.forEach(cr => {
+      const conds = [];
+      if (cr.vehicle_label) conds.push(`vehicle="${cr.vehicle_label}"`);
+      if (cr.zone_name)     conds.push(`zone="${cr.zone_name}"`);
+      if (cr.days?.length)  conds.push(`days=${cr.days.join('/')}`);
+      if (cr.from && cr.to) conds.push(`time=${cr.from}–${cr.to}`);
+      lines.push(`• "${cr.name}": [${conds.join(', ')}] → +${cr.surcharge_pct}%`);
+    });
+    lines.push('Combined rules stack on top of all other surcharges. Show full breakdown when applied.');
+  }
+
   return lines.join('\n');
 }
 
@@ -770,6 +809,51 @@ Rules:
   };
 }
 
+export function detectConflicts(currentConfig, patch) {
+  const warnings = [];
+  const norm = s => (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+  // Fixed route: same origin→destination, different price
+  if (patch.pricing?.fixed_routes) {
+    const existing = currentConfig.pricing?.fixed_routes || [];
+    for (const newR of patch.pricing.fixed_routes) {
+      const match = existing.find(r =>
+        norm(r.origin) === norm(newR.origin) &&
+        norm(r.destination) === norm(newR.destination)
+      );
+      if (match && Math.abs(Number(match.price) - Number(newR.price)) > 0.001) {
+        warnings.push(`Route "${newR.origin} → ${newR.destination}": price €${match.price} → €${newR.price}`);
+      }
+    }
+  }
+
+  // Pricing zone: duplicate name with different id
+  if (patch.pricing_zones) {
+    const existing = currentConfig.pricing_zones || [];
+    for (const newZ of patch.pricing_zones) {
+      if (!newZ.name) continue;
+      const collision = existing.find(z => norm(z.name) === norm(newZ.name) && z.id !== newZ.id);
+      if (collision) warnings.push(`Zone "${newZ.name}" already exists — will be overwritten`);
+    }
+  }
+
+  // Day surcharges: overlapping days between new and preserved rules
+  if (patch.pricing?.day_surcharges) {
+    const patchIds = new Set(patch.pricing.day_surcharges.map(d => d.id));
+    const preserved = (currentConfig.pricing?.day_surcharges || []).filter(e => !patchIds.has(e.id));
+    for (const newDs of patch.pricing.day_surcharges) {
+      for (const exDs of preserved) {
+        const shared = (newDs.days || []).filter(d => (exDs.days || []).includes(d));
+        if (shared.length > 0) {
+          warnings.push(`Day surcharge "${newDs.name}" overlaps with "${exDs.name}" on: ${shared.join(', ')}`);
+        }
+      }
+    }
+  }
+
+  return warnings;
+}
+
 export async function applySettingsCommand(message, business) {
   if (isGeographicZoneCommand(message)) {
     return await applyGeographicZone(message, business);
@@ -780,19 +864,24 @@ export async function applySettingsCommand(message, business) {
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 4096,
     system: `You are an AI assistant for managing taxi business settings.
-The admin writes a command in any language. You process it and return JSON with two message fields.
+The admin writes a command in any language. You process it and return JSON.
 
 CURRENT CONFIG:
 ${configJson}
 
 CONFIG STRUCTURE:
-- email: string (business email)
-- office_address: string (physical address)
-- region: { country:"greece"|"cyprus"|"other", prefecture?:string, custom?:string }
-- dashboard_lang: "el"|"en"|"fr"|"de"|"it"|"es"|"ru"
-- widget_lang: { mode:"auto"|"single"|"multi", lang?:string, langs?:string[] }
-- zones: { mode: "whitelist"|"blacklist"|"open", areas: string[], intra_zone: boolean }
-- pricing: { mode, base_fare, price_per_km, min_fare, currency, rounding, two_way_enabled, two_way_discount_pct, night_surcharge_enabled, night_surcharge_pct, night_from, night_to, extras:{child_seat,extra_luggage,pet}, fixed_routes:[{origin,destination,price}] }
+- email, office_address, region, dashboard_lang, widget_lang (as in config above)
+- zones: { mode:"whitelist"|"blacklist"|"open", areas:string[], intra_zone:boolean }
+- pricing: {
+    mode, base_fare, price_per_km, min_fare, currency, rounding,
+    two_way_enabled, two_way_discount_pct,
+    night_surcharge_enabled, night_surcharge_pct, night_from, night_to,
+    extras: { child_seat?, extra_luggage?, pet? },
+    fixed_routes: [{ origin, destination, price }],
+    day_surcharges: [{ id, name, days:["monday"|"tuesday"|"wednesday"|"thursday"|"friday"|"saturday"|"sunday"], from:"HH:MM", to:"HH:MM", surcharge_pct:number }],
+    distance_rules: [{ id, name, min_km?:number, max_km?:number, discount_pct?:number, surcharge_pct?:number }],
+    composite_rules: [{ id, name, vehicle_label?:string, zone_name?:string, days?:string[], from?:string, to?:string, surcharge_pct:number }]
+  }
 - vehicles: [{ id, label, icon, capacity, surcharge_type:"none"|"fixed"|"pct", surcharge_value, enabled }]
 - pricing_zones: [{ id, name, surcharge_type:"pct"|"fixed"|"multiplier", surcharge_value, keywords:string[] }]
 
@@ -803,34 +892,54 @@ RESPONSE FORMAT — return ONLY valid JSON, nothing outside it:
   "patch":   { <config changes> } or null
 }
 
-MESSAGE field rules (always English):
-- Successful change: "Updated base_fare to 3" / "Added fixed route X→Y at €60" / "Enabled night surcharge 25%"
-- Read-only query: "INFO: <what was shown>"
-- Unsupported command: "CANNOT: <what> — <why>"
+MESSAGE rules (English only):
+- Change: "Updated base_fare to 3" / "Added fixed route X→Y at €60" / "Added day surcharge Weekend +40%"
+- Query: "INFO: <what was shown>"
+- Unsupported: "CANNOT: <what> — <why>"
 
-REPLY field rules:
-- Detect the language of the admin's input and respond in that exact language
+REPLY rules:
+- Detect the admin's language and reply in that language
+- For queries (INFO:): return a formatted markdown list or table of the requested data
 - For changes: confirm what was done with the new values
-- For CANNOT: explain what you cannot do and suggest what IS possible
-- NEVER claim you made a change when patch is null
+- NEVER claim a change when patch is null
 
 PATCH rules:
 1. patch MUST be non-null for ANY command that changes a setting
-2. patch:null is ONLY for read/display queries or CANNOT cases
-3. In patch include ONLY top-level keys that change
-4. For nested objects/arrays include ALL current fields plus your change (never partial)
-5. system_prompt values: ALWAYS write in English regardless of input language
-6. Geographic names (origin, destination, areas, keywords): keep exactly as written by admin
+2. patch:null ONLY for read queries or CANNOT
+3. Include ONLY top-level keys that change
+4. For nested objects/arrays: include ALL current fields + your change (never partial)
+5. system_prompt: ALWAYS write in English regardless of input language
+6. Geographic names: keep exactly as written by admin
+7. New record IDs: short unique string — check existing IDs to avoid collision (e.g. "ds_1", "dr_1", "cr_1")
 
-EXAMPLES:
-- "Add Rethymno to areas" → patch: {"zones":{"mode":"whitelist","areas":["Heraklion","Rethymno"],"intra_zone":false}}
-- "Change Heraklion-Rethymno price to €60" → patch: {"pricing":{<ALL current pricing fields, updated fixed_routes>}}
-- "Enable night surcharge +25%" → patch: {"pricing":{<ALL current pricing fields, night_surcharge_enabled:true, night_surcharge_pct:25>}}
-- "Set base fare to €3" → patch: {"pricing":{<ALL current pricing fields, base_fare:3>}}
-- "Lasithi area ×1.2" → patch: {"pricing_zones":[<existing zones>, {"id":"zone_1","name":"Lasithi Area","surcharge_type":"multiplier","surcharge_value":1.2,"keywords":["lasithi","ierapetra"]}]}
-- "Delete Lasithi zone" → patch: {"pricing_zones":[<all zones except Lasithi>]}
-- "Show pricing zones" → patch: null, message: "INFO: listed X zones"
-- "Delete all bookings" → patch: null, message: "CANNOT: ..."`,
+ANALYSIS EXAMPLES:
+- "Show all pricing zones" → patch:null, message:"INFO: listed N pricing zones", reply:"**Pricing Zones:**\n• Zone1 (+20%): kw1, kw2, kw3\n• Zone2 (+€10): kw4, kw5"
+- "What price for Airport→Hersonissos?" → patch:null, message:"INFO: fixed route €X" or "INFO: no fixed route for this pair", reply:"<price from fixed_routes or formula>"
+- "Show all fixed prices" → patch:null, message:"INFO: listed N fixed routes", reply:"<formatted table of all fixed_routes>"
+- "Show all surcharges / extra charges" → patch:null, message:"INFO: listed all surcharges", reply:"<day surcharges + extras + pricing zones + night surcharge combined>"
+- "Show all pricing zones with keywords" → patch:null, message:"INFO: listed N zones", reply:"<per-zone breakdown with all keywords>"
+
+CREATION EXAMPLES:
+- "Fix price Airport→Elounda €85" → patch:{"pricing":{<ALL current pricing fields>, "fixed_routes":[...current_fixed_routes, {"origin":"Αεροδρόμιο","destination":"Ελούντα","price":85}]}}
+- "Night surcharge 23:00-06:00 +25%" → patch:{"pricing":{<ALL>, "night_surcharge_enabled":true,"night_surcharge_pct":25,"night_from":"23:00","night_to":"06:00"}}
+- "Friday & Saturday 20:00-24:00 +40%" → patch:{"pricing":{<ALL>, "day_surcharges":[...current_day_surcharges, {"id":"ds_1","name":"Weekend Evening","days":["friday","saturday"],"from":"20:00","to":"24:00","surcharge_pct":40}]}}
+- "Routes over 80km -10% discount" → patch:{"pricing":{<ALL>, "distance_rules":[...current_distance_rules, {"id":"dr_1","name":"Long Distance Discount","min_km":80,"discount_pct":10}]}}
+- "VIP south zone Sunday +50%" → patch:{"pricing":{<ALL>, "composite_rules":[...current_composite_rules, {"id":"cr_1","name":"VIP South Sunday","vehicle_label":"VIP","zone_name":"Νότια Ζώνη","days":["sunday"],"surcharge_pct":50}]}}
+- "Lasithi area ×1.2" → patch:{"pricing_zones":[...current_zones, {"id":"zone_1","name":"Lasithi Area","surcharge_type":"multiplier","surcharge_value":1.2,"keywords":["lasithi","ierapetra",...]}]}
+
+MODIFICATION EXAMPLES:
+- "Change south zone from +20% to +30%" → patch:{"pricing_zones":[...ALL zones with south zone surcharge_value updated to 30]}
+- "Hersonissos fix price → €40" → patch:{"pricing":{<ALL>, "fixed_routes":[...ALL routes with Hersonissos price updated to 40]}}
+- "Add Tympaki to south zone" → patch:{"pricing_zones":[...ALL zones; south zone gets "τυμπάκι" appended to its keywords array]}
+- "Remove Rethymno from fixed prices" → patch:{"pricing":{<ALL>, "fixed_routes":[...ALL routes EXCEPT those with Rethymno as origin or destination]}}
+- "Change weekend surcharge to +50%" → patch:{"pricing":{<ALL>, "day_surcharges":[...ALL day_surcharges with weekend rule surcharge_pct updated to 50]}}
+
+DELETION EXAMPLES:
+- "Delete western zone" → patch:{"pricing_zones":[<ALL zones EXCEPT western>]}
+- "Remove all fixed prices" → patch:{"pricing":{<ALL>, "fixed_routes":[]}}
+- "Delete all day surcharges" → patch:{"pricing":{<ALL>, "day_surcharges":[]}}
+- "Zero / reset all extra charges" → patch:{"pricing":{<ALL>, "day_surcharges":[],"distance_rules":[],"composite_rules":[],"night_surcharge_enabled":false,"extras":{}},"pricing_zones":[]}
+- "Delete all bookings" → patch:null, message:"CANNOT: bookings cannot be deleted via AI — use the bookings panel"`,
     messages: [{ role: 'user', content: message }],
   });
 

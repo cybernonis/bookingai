@@ -11,7 +11,7 @@ import {
   setupNewBusiness, updateBusinessConfig, replaceBusinessConfig, updateBusinessMeta,
   createAiHistoryEntry, finalizeAiHistoryEntry, getAiHistory, getAiHistoryEntry, setAiHistoryStatus,
 } from './db.js';
-import { getBookingReply, applySettingsCommand } from './flows.js';
+import { getBookingReply, applySettingsCommand, detectConflicts } from './flows.js';
 import { sendEmailDirect } from './email.js';
 import { sendSmsDirect }   from './sms.js';
 
@@ -364,6 +364,12 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
     let saved = false;
 
     if (result.patch && !result.pending_zone) {
+      // Conflict detection — warn admin before applying
+      const conflicts = detectConflicts(biz.config, result.patch);
+      if (conflicts.length > 0) {
+        displayReply += '\n\n⚠️ **Προσοχή:**\n' + conflicts.map(c => `• ${c}`).join('\n');
+      }
+
       // Deep-merge nested objects so a partial patch never wipes sibling fields
       const DEEP_MERGE_KEYS = ['pricing', 'zones', 'widget_lang', 'region'];
       for (const key of DEEP_MERGE_KEYS) {
