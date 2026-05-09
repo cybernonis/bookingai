@@ -358,7 +358,11 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
   try {
     const snapshotBefore = { ...biz.config };
     const result = await applySettingsCommand(message, biz);
+    // result.message = English (for DB/logs), result.reply = admin's language (for display)
+    const englishSummary = result.message || '';
+    let displayReply     = result.reply || englishSummary;
     let saved = false;
+
     if (result.patch && !result.pending_zone) {
       // Deep-merge nested objects so a partial patch never wipes sibling fields
       const DEEP_MERGE_KEYS = ['pricing', 'zones', 'widget_lang', 'region'];
@@ -373,27 +377,26 @@ app.post('/api/admin/business/:id/ai-settings', requireAdmin, async (req, res) =
         result.patch.pricing.fixed_routes = safeMergeFixedRoutes(currentRoutes, result.patch.pricing.fixed_routes, message);
       }
       const category = detectAiCategory(result.patch);
-      console.log(`[AI-SAVE] bizId=${bizId} category=${category} patch_keys=${Object.keys(result.patch).join(',')}`);
+      console.log(`[AI-SAVE] bizId=${bizId} category=${category} keys=${Object.keys(result.patch).join(',')} summary="${englishSummary}"`);
       updateBusinessConfig(bizId, result.patch);
       saved = true;
       const snapshotAfter = { ...getBusinessById(bizId).config };
-      const histId = createAiHistoryEntry({ business_id: bizId, command: message, summary: result.message, category, snapshot_before: snapshotBefore });
+      const histId = createAiHistoryEntry({ business_id: bizId, command: message, summary: englishSummary, category, snapshot_before: snapshotBefore });
       finalizeAiHistoryEntry(histId, snapshotAfter);
       setAiMeta(bizId, category, message);
     } else if (!result.pending_zone) {
-      const rawMsg = result.message || '';
-      const isReadOnly = /^(ℹ️|📋|show|list|here|current|the |these |pricing zones|zones:|vehicles:|routes:)/i.test(rawMsg.trim());
-      const isCannotMsg = rawMsg.startsWith('CANNOT:');
-      console.log(`[AI-NOSAVE] bizId=${bizId} patch=null read=${isReadOnly} msg="${rawMsg.slice(0, 80)}"`);
-      // Rewrite message so the admin knows it was not applied
-      if (!isReadOnly && !isCannotMsg) {
-        result.message = `❌ Δεν εφαρμόστηκε — ${rawMsg}`;
-      } else if (isCannotMsg) {
-        result.message = `❌ ${rawMsg.replace(/^CANNOT:\s*/i, '')}`;
+      const isInfo    = /^INFO:/i.test(englishSummary);
+      const isCannot  = /^CANNOT:/i.test(englishSummary);
+      console.log(`[AI-NOSAVE] bizId=${bizId} type=${isInfo?'info':isCannot?'cannot':'unsaved'} summary="${englishSummary.slice(0, 80)}"`);
+      if (isCannot) {
+        displayReply = `❌ ${displayReply}`;
+      } else if (!isInfo) {
+        // Modification command that returned no patch — flag it clearly
+        displayReply = `❌ Δεν εφαρμόστηκε — ${displayReply}`;
       }
     }
     const updated = getBusinessById(bizId);
-    res.json({ message: result.message, saved, pending_zone: result.pending_zone || null, business: updated });
+    res.json({ message: displayReply, saved, pending_zone: result.pending_zone || null, business: updated });
   } catch (err) {
     console.error('AI settings error:', err);
     res.status(500).json({ error: 'Σφάλμα επεξεργασίας.' });

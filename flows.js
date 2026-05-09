@@ -761,8 +761,10 @@ Rules:
   else if (zone.surcharge_type === 'fixed') surchargeLabel = `+€${zone.surcharge_value}`;
   else                                      surchargeLabel = `×${zone.surcharge_value}`;
 
+  const confirmMsg = `🗺 Found **${newZone.keywords.length} locations** for zone "${zone.zone_name}" (${surchargeLabel}). Save it?`;
   return {
-    message: `🗺 Found **${newZone.keywords.length} locations** for zone "${zone.zone_name}" (${surchargeLabel}). Save it?`,
+    message: `GEO_ZONE: "${zone.zone_name}" ${surchargeLabel} — ${newZone.keywords.length} keywords`,
+    reply: confirmMsg,
     pending_zone: newZone,
     patch: null,
   };
@@ -778,7 +780,7 @@ export async function applySettingsCommand(message, business) {
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 4096,
     system: `You are an AI assistant for managing taxi business settings.
-The admin writes a command in their preferred language. You convert it into a JSON patch to update the config.
+The admin writes a command in any language. You process it and return JSON with two message fields.
 
 CURRENT CONFIG:
 ${configJson}
@@ -789,51 +791,65 @@ CONFIG STRUCTURE:
 - region: { country:"greece"|"cyprus"|"other", prefecture?:string, custom?:string }
 - dashboard_lang: "el"|"en"|"fr"|"de"|"it"|"es"|"ru"
 - widget_lang: { mode:"auto"|"single"|"multi", lang?:string, langs?:string[] }
-  • "auto": reply in customer's language
-  • "single": always in language lang
-  • "multi": customer chooses from langs
 - zones: { mode: "whitelist"|"blacklist"|"open", areas: string[], intra_zone: boolean }
 - pricing: { mode, base_fare, price_per_km, min_fare, currency, rounding, two_way_enabled, two_way_discount_pct, night_surcharge_enabled, night_surcharge_pct, night_from, night_to, extras:{child_seat,extra_luggage,pet}, fixed_routes:[{origin,destination,price}] }
 - vehicles: [{ id, label, icon, capacity, surcharge_type:"none"|"fixed"|"pct", surcharge_value, enabled }]
 - pricing_zones: [{ id, name, surcharge_type:"pct"|"fixed"|"multiplier", surcharge_value, keywords:string[] }]
-  • surcharge_type "pct": +N%, "fixed": +€N, "multiplier": ×N
-  • keywords: list of words (lowercase) for location matching
 
-RULES:
-1. Return ONLY valid JSON: {"message":"...","patch":{...} or null}
-2. CRITICAL: patch MUST be non-null for ANY command that changes a setting. patch:null is ONLY for read/display commands ("show", "list", "what is", "εμφάνισε", "δείξε", "τι είναι").
-3. If you are unsure whether to return a patch, return the patch anyway.
-4. In patch include ONLY top-level keys that change.
-5. For nested objects/arrays always include ALL current fields plus your change (never send partial objects).
-6. If a command is outside the supported config fields (e.g. "delete all bookings", "send email", "generate report"), set patch:null and your message MUST start with "CANNOT:" followed by what you cannot do and why. Example: "CANNOT: Delete bookings — booking management is not part of the config."
-7. NEVER write a success message when patch is null for a modification command. If you cannot apply it, say so with "CANNOT:".
-8. Examples:
-   - "Add Rethymno to areas" → patch: {"zones":{"mode":"whitelist","areas":["Heraklion","Rethymno"],"intra_zone":false}}
-   - "Change Heraklion-Rethymno price to €60" → patch: {"pricing":{<ALL current pricing fields, updated fixed_routes>}}
-   - "Enable night surcharge +25%" → patch: {"pricing":{<ALL current pricing fields, night_surcharge_enabled:true, night_surcharge_pct:25>}}
-   - "Set base fare to €3" → patch: {"pricing":{<ALL current pricing fields, base_fare:3>}}
-   - "Lasithi area ×1.2" → patch: {"pricing_zones":[<existing zones>, {"id":"zone_1","name":"Lasithi Area","surcharge_type":"multiplier","surcharge_value":1.2,"keywords":["lasithi","ierapetra"]}]}
-   - "Delete Lasithi zone" → patch: {"pricing_zones":[<all zones except Lasithi>]}
-   - "Show pricing zones" → patch: null, message: list of zones  ← read-only
-   - "Delete all bookings" → patch: null, message: "CANNOT: ..."  ← unsupported
-9. Write nothing outside JSON`,
+RESPONSE FORMAT — return ONLY valid JSON, nothing outside it:
+{
+  "message": "<English only — brief action summary for internal logging>",
+  "reply":   "<Same language as the admin's input — full friendly explanation>",
+  "patch":   { <config changes> } or null
+}
+
+MESSAGE field rules (always English):
+- Successful change: "Updated base_fare to 3" / "Added fixed route X→Y at €60" / "Enabled night surcharge 25%"
+- Read-only query: "INFO: <what was shown>"
+- Unsupported command: "CANNOT: <what> — <why>"
+
+REPLY field rules:
+- Detect the language of the admin's input and respond in that exact language
+- For changes: confirm what was done with the new values
+- For CANNOT: explain what you cannot do and suggest what IS possible
+- NEVER claim you made a change when patch is null
+
+PATCH rules:
+1. patch MUST be non-null for ANY command that changes a setting
+2. patch:null is ONLY for read/display queries or CANNOT cases
+3. In patch include ONLY top-level keys that change
+4. For nested objects/arrays include ALL current fields plus your change (never partial)
+5. system_prompt values: ALWAYS write in English regardless of input language
+6. Geographic names (origin, destination, areas, keywords): keep exactly as written by admin
+
+EXAMPLES:
+- "Add Rethymno to areas" → patch: {"zones":{"mode":"whitelist","areas":["Heraklion","Rethymno"],"intra_zone":false}}
+- "Change Heraklion-Rethymno price to €60" → patch: {"pricing":{<ALL current pricing fields, updated fixed_routes>}}
+- "Enable night surcharge +25%" → patch: {"pricing":{<ALL current pricing fields, night_surcharge_enabled:true, night_surcharge_pct:25>}}
+- "Set base fare to €3" → patch: {"pricing":{<ALL current pricing fields, base_fare:3>}}
+- "Lasithi area ×1.2" → patch: {"pricing_zones":[<existing zones>, {"id":"zone_1","name":"Lasithi Area","surcharge_type":"multiplier","surcharge_value":1.2,"keywords":["lasithi","ierapetra"]}]}
+- "Delete Lasithi zone" → patch: {"pricing_zones":[<all zones except Lasithi>]}
+- "Show pricing zones" → patch: null, message: "INFO: listed X zones"
+- "Delete all bookings" → patch: null, message: "CANNOT: ..."`,
     messages: [{ role: 'user', content: message }],
   });
 
   const text = response.content[0].text.trim();
-  console.log(`[AI-CMD] message="${message}" raw_response=${text.slice(0, 300)}`);
+  console.log(`[AI-CMD] msg="${message.slice(0, 80)}" raw=${text.slice(0, 200)}`);
 
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     console.warn(`[AI-CMD] no JSON found in response`);
-    return { message: 'Could not understand the command. Please try again.', patch: null };
+    return { message: 'Could not understand the command.', reply: 'Δεν κατάλαβα την εντολή. Παρακαλώ δοκιμάστε ξανά.', patch: null };
   }
   try {
     const parsed = JSON.parse(jsonMatch[0]);
-    console.log(`[AI-CMD] patch=${parsed.patch ? 'YES (keys: ' + Object.keys(parsed.patch).join(',') + ')' : 'null'}`);
+    // Normalise: if Claude omitted reply, fall back to message
+    if (!parsed.reply) parsed.reply = parsed.message;
+    console.log(`[AI-CMD] patch=${parsed.patch ? 'YES (' + Object.keys(parsed.patch).join(',') + ')' : 'null'} msg="${parsed.message}"`);
     return parsed;
   } catch (e) {
     console.warn(`[AI-CMD] JSON parse error: ${e.message}`);
-    return { message: 'Parse error. Please try again.', patch: null };
+    return { message: 'Parse error.', reply: 'Σφάλμα ανάλυσης. Παρακαλώ δοκιμάστε ξανά.', patch: null };
   }
 }
