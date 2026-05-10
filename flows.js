@@ -144,7 +144,7 @@ function buildPricingInstructions(pricing, activeZones = []) {
 
 function buildZoneInstructions(zones) {
   if (!zones) return '';
-  const { mode, areas, intra_zone, route_rules = [] } = zones;
+  const { mode, areas, intra_zone, route_rules = [], prefecture_zones = [], zone_rules = [] } = zones;
   const list = Array.isArray(areas) && areas.length ? areas.join(', ') : null;
   let s = '\n\nSERVICE ZONES:';
   if (mode === 'whitelist' && list) {
@@ -158,26 +158,54 @@ function buildZoneInstructions(zones) {
     s += '\nINTRA-ZONE RULE (applies globally): Transfers within the same city or area are NOT allowed. If pickup and destination refer to the same city/village/area, politely decline and explain you only serve between different locations. Examples NOT ALLOWED: Chania → Chania, Heraklion → Heraklion. Examples ALLOWED: Chania → Heraklion, Athens → Thessaloniki.';
   }
 
-  const deniedRules  = route_rules.filter(r => r.allowed === false);
-  const allowedRules = route_rules.filter(r => r.allowed === true);
+  if (prefecture_zones.length > 0) {
+    s += '\n\nPREFECTURE ZONES (geographic groups):';
+    prefecture_zones.forEach(z => {
+      s += `\n• "${z.name}" (id: ${z.id}): [${(z.keywords || []).join(', ')}]`;
+    });
+    s += '\nTo identify a location\'s zone: check if any keyword from that zone appears in the pickup or destination text.';
+  }
 
-  if (deniedRules.length > 0 || allowedRules.length > 0) {
-    s += '\n\nROUTE RULES — evaluate in order for EVERY booking request:';
-    if (allowedRules.length > 0) {
-      s += '\nSTEP 1 — EXPLICIT EXCEPTIONS (allowed even if global intra-zone rule would deny):';
-      allowedRules.forEach(r => {
+  const allowedRouteRules = route_rules.filter(r => r.allowed === true);
+  const deniedRouteRules  = route_rules.filter(r => r.allowed === false);
+  const allowedZoneRules  = zone_rules.filter(r => r.allowed === true);
+  const deniedZoneRules   = zone_rules.filter(r => r.allowed === false);
+
+  const hasAnyRules = allowedRouteRules.length || deniedRouteRules.length || allowedZoneRules.length || deniedZoneRules.length;
+
+  if (hasAnyRules) {
+    s += '\n\nROUTE RULES — evaluate in this exact order for EVERY booking request:';
+
+    if (allowedRouteRules.length > 0 || allowedZoneRules.length > 0) {
+      s += '\nSTEP 1 — EXPLICIT EXCEPTIONS (these override any deny rule below):';
+      allowedRouteRules.forEach(r => {
         s += `\n• ALLOWED: pickup∈[${r.from_keywords.join('/')}] AND destination∈[${r.to_keywords.join('/')}]`;
       });
+      allowedZoneRules.forEach(r => {
+        const fz = prefecture_zones.find(z => z.id === r.from_zone);
+        const tz = prefecture_zones.find(z => z.id === r.to_zone);
+        s += `\n• ALLOWED (zone): pickup∈${fz ? `"${fz.name}"` : r.from_zone} → destination∈${tz ? `"${tz.name}"` : r.to_zone}`;
+      });
     }
-    if (deniedRules.length > 0) {
-      s += '\nSTEP 2 — DENIED ROUTES (must refuse, no exceptions):';
-      deniedRules.forEach(r => {
+
+    if (deniedRouteRules.length > 0 || deniedZoneRules.length > 0) {
+      s += '\nSTEP 2 — DENIED ROUTES (must refuse — no exceptions unless Step 1 applies):';
+      deniedRouteRules.forEach(r => {
         s += `\n• DENIED "${r.name}": pickup∈[${r.from_keywords.join('/')}] AND destination∈[${r.to_keywords.join('/')}]`;
         if (r.deny_message) s += `\n  → Tell customer: "${r.deny_message}"`;
       });
+      deniedZoneRules.forEach(r => {
+        const fz = prefecture_zones.find(z => z.id === r.from_zone);
+        const tz = prefecture_zones.find(z => z.id === r.to_zone);
+        const fLabel = fz ? `"${fz.name}" [${(fz.keywords || []).join('/')}]` : r.from_zone;
+        const tLabel = tz ? `"${tz.name}" [${(tz.keywords || []).join('/')}]` : r.to_zone;
+        s += `\n• DENIED (zone) "${r.name}": pickup∈${fLabel} AND destination∈${tLabel}`;
+        if (r.deny_message) s += `\n  → Tell customer: "${r.deny_message}"`;
+      });
     }
-    s += '\nSTEP 3 — INTRA-ZONE rule (if active). STEP 4 — allow everything else.';
-    s += '\nWhen a route is DENIED: apologize, use the provided customer message, and suggest inter-city alternatives or direct contact. NEVER write CONFIRMED_BOOKING for a denied route.';
+
+    s += '\nSTEP 3 — INTRA-ZONE global rule (if active). STEP 4 — allow everything else.';
+    s += '\nWhen a route is DENIED: apologize, quote the provided message, suggest inter-city alternatives or direct contact. NEVER write CONFIRMED_BOOKING for a denied route.';
   }
 
   return s;
@@ -227,12 +255,18 @@ function buildPricingZoneInstructions(pricingZones) {
 // ── Route rule validator (server-side, defense-in-depth) ─────────────────────
 
 function checkRouteRules(pickup, destination, config) {
-  const routeRules = config?.zones?.route_rules || [];
+  const routeRules   = config?.zones?.route_rules      || [];
+  const zoneRules    = config?.zones?.zone_rules       || [];
+  const prefZones    = config?.zones?.prefecture_zones || [];
   const norm = s => (s || '').toLowerCase();
   const pN = norm(pickup);
   const dN = norm(destination);
 
-  // Priority 1: explicit allowed overrides (beat any deny rule below)
+  const detectZone = loc => prefZones.find(z =>
+    (z.keywords || []).some(kw => loc.includes(norm(kw)))
+  );
+
+  // Priority 1: route_rules allowed:true — explicit keyword exception
   for (const rule of routeRules) {
     if (rule.allowed !== true) continue;
     const fromHit = (rule.from_keywords || []).some(kw => pN.includes(norm(kw)));
@@ -240,14 +274,29 @@ function checkRouteRules(pickup, destination, config) {
     if (fromHit && toHit) return { allowed: true };
   }
 
-  // Priority 2: explicit denied rules
+  // Priority 2: zone_rules allowed:true — zone-level exception
+  const pickupZone = detectZone(pN);
+  const destZone   = detectZone(dN);
+  for (const rule of zoneRules) {
+    if (rule.allowed !== true) continue;
+    if (pickupZone?.id === rule.from_zone && destZone?.id === rule.to_zone)
+      return { allowed: true };
+  }
+
+  // Priority 3: route_rules allowed:false — explicit keyword denial
   for (const rule of routeRules) {
     if (rule.allowed !== false) continue;
     const fromHit = (rule.from_keywords || []).some(kw => pN.includes(norm(kw)));
     const toHit   = (rule.to_keywords   || []).some(kw => dN.includes(norm(kw)));
-    if (fromHit && toHit) {
+    if (fromHit && toHit)
       return { allowed: false, ruleName: rule.name, denyMessage: rule.deny_message };
-    }
+  }
+
+  // Priority 4: zone_rules allowed:false — zone-level denial
+  for (const rule of zoneRules) {
+    if (rule.allowed !== false) continue;
+    if (pickupZone?.id === rule.from_zone && destZone?.id === rule.to_zone)
+      return { allowed: false, ruleName: rule.name, denyMessage: rule.deny_message };
   }
 
   return { allowed: true };
@@ -926,6 +975,20 @@ export function detectConflicts(currentConfig, patch) {
     }
   }
 
+  // Zone rules: duplicate from+to zone pair with same allowed value
+  if (patch.zones?.zone_rules) {
+    const existing = currentConfig.zones?.zone_rules || [];
+    for (const newR of patch.zones.zone_rules) {
+      const collision = existing.find(r =>
+        r.id !== newR.id &&
+        r.from_zone === newR.from_zone &&
+        r.to_zone   === newR.to_zone   &&
+        r.allowed   === newR.allowed
+      );
+      if (collision) warnings.push(`Zone rule "${newR.name}" duplicates "${collision.name}" (${newR.from_zone}→${newR.to_zone}) — possible duplicate`);
+    }
+  }
+
   return warnings;
 }
 
@@ -948,6 +1011,8 @@ CONFIG STRUCTURE:
 - email, office_address, region, dashboard_lang, widget_lang (as in config above)
 - zones: {
     mode:"whitelist"|"blacklist"|"open", areas:string[], intra_zone:boolean,
+    prefecture_zones: [{ id:string, name:string, keywords:string[] }],
+    zone_rules: [{ id:string, name:string, from_zone:string, to_zone:string, allowed:boolean, deny_message?:string }],
     route_rules: [{ id, name, from_keywords:string[], to_keywords:string[], allowed:boolean, deny_message?:string }]
   }
 - pricing: {
@@ -1019,15 +1084,50 @@ DELETION EXAMPLES:
 - "Zero / reset all extra charges" → patch:{"pricing":{<ALL>, "day_surcharges":[],"distance_rules":[],"composite_rules":[],"night_surcharge_enabled":false,"extras":{}},"pricing_zones":[]}
 - "Delete all bookings" → patch:null, message:"CANNOT: bookings cannot be deleted via AI — use the bookings panel"
 
-ROUTE RULE EXAMPLES:
-route_rules evaluation order: 1) allowed:true overrides → 2) allowed:false denials → 3) intra_zone global → 4) allow.
-from_keywords / to_keywords: include main city name + common spelling variants + nearby towns in the same prefecture.
-deny_message: write in the same language as the admin's input.
+ZONE RULE SYSTEM:
+prefecture_zones: named geographic groups (prefectures/nomoi) with member-city keywords. Define each zone ONCE and reuse in zone_rules.
+zone_rules: policies between zone pairs — from_zone→to_zone. Intra-zone rule = same from_zone and to_zone. Inter-zone (different zones) = allowed by default (no rule needed).
+route_rules: fine-grained keyword overrides — use only for specific city-pair exceptions not covered by zone_rules.
 
-- "Εντός νομού Χανίων μη αποδεκτό" → patch:{"zones":{...ALL current zones fields, "route_rules":[...current_route_rules, {"id":"rr_1","name":"No intra-Chania","from_keywords":["χανιά","chania","χανια","σούδα","κίσαμος","κισαμος","πλατανιάς","πλατανιας","σφακιά","σφακια","κολυμβάρι","παλαιόχωρα"],"to_keywords":["χανιά","chania","χανια","σούδα","κίσαμος","κισαμος","πλατανιάς","πλατανιας","σφακιά","σφακια","κολυμβάρι","παλαιόχωρα"],"allowed":false,"deny_message":"Λυπούμαστε, δεν εξυπηρετούμε διαδρομές εντός νομού Χανίων. Εξυπηρετούμε μεταφορές μεταξύ νομών."}]}}
-- "Απαγόρευσε διαδρομές εντός ίδιας πόλης" → patch:{"zones":{...ALL current zones fields, "intra_zone":false}}
+Evaluation order (both Claude and server-side):
+1) route_rules allowed:true  → explicit keyword exception (highest priority)
+2) zone_rules  allowed:true  → zone-level exception
+3) route_rules allowed:false → explicit keyword denial
+4) zone_rules  allowed:false → zone-level denial (e.g. intra-prefecture block)
+5) intra_zone global (if true)
+6) ALLOW by default
+
+ZONE RULE EXAMPLES:
+- "Εντός νομού Χανίων μη αποδεκτό" →
+  Step A: If "chania" prefecture_zone does not exist in current config, CREATE it.
+  Step B: Add zone_rule intra-chania denied.
+  patch:{"zones":{...ALL current zones fields,
+    "prefecture_zones":[...current_prefecture_zones, {"id":"chania","name":"Νομός Χανίων","keywords":["χανιά","chania","χανια","σούδα","suda","κίσαμος","kisamos","κισαμος","πλατανιάς","platanias","πλατανιας","σφακιά","sfakia","σφακια","κολυμβάρι","kolympari","παλαιόχωρα","paleochora","καστέλι","kasteli","νέα χώρα"]}],
+    "zone_rules":[...current_zone_rules, {"id":"zr_1","name":"No intra-Chania","from_zone":"chania","to_zone":"chania","allowed":false,"deny_message":"Λυπούμαστε, δεν εξυπηρετούμε διαδρομές εντός νομού Χανίων. Εξυπηρετούμε μεταφορές μεταξύ διαφορετικών νομών."}]
+  }}
+
+- "Εντός νομού Ηρακλείου μη αποδεκτό" →
+  patch:{"zones":{...ALL,
+    "prefecture_zones":[...current_prefecture_zones, {"id":"heraklion","name":"Νομός Ηρακλείου","keywords":["ηράκλειο","heraklion","ηρακλειο","χερσόνησος","hersonissos","χερσονησος","μάλια","malia","ελούντα","elounda","αγ. νικόλαος","άγιος νικόλαος","agios nikolaos","λιμένας χερσονήσου","γούβες","gouves","σταλίδα","stalida","μοίρες","moires","τυμπάκι","tympaki","ζαρός","zaros"]}],
+    "zone_rules":[...current_zone_rules, {"id":"zr_2","name":"No intra-Heraklion","from_zone":"heraklion","to_zone":"heraklion","allowed":false,"deny_message":"Λυπούμαστε, δεν εξυπηρετούμε διαδρομές εντός νομού Ηρακλείου. Εξυπηρετούμε μεταφορές μεταξύ διαφορετικών νομών."}]
+  }}
+
 - "Μόνο inter-city transfers, όχι intra-city" → patch:{"zones":{...ALL current zones fields, "intra_zone":false}}
-- "Από Ηράκλειο προς Χανιά επιτρέπεται ρητά" → patch:{"zones":{...ALL,"route_rules":[...current, {"id":"rr_2","name":"Heraklion→Chania explicit allow","from_keywords":["ηράκλειο","heraklion","ηρακλειο"],"to_keywords":["χανιά","chania","χανια"],"allowed":true,"deny_message":null}]}}
+- "Απαγόρευσε διαδρομές εντός ίδιας πόλης" → patch:{"zones":{...ALL current zones fields, "intra_zone":false}}
+
+- "Χανιά → Ηράκλειο πάντα επιτρέπεται" →
+  Ensure both zones exist in prefecture_zones, then add zone_rule allowed:true.
+  patch:{"zones":{...ALL,
+    "zone_rules":[...current_zone_rules, {"id":"zr_3","name":"Chania→Heraklion allowed","from_zone":"chania","to_zone":"heraklion","allowed":true,"deny_message":null}]
+  }}
+
+- "Διέγραψε τον κανόνα ζώνης Χανίων" → patch:{"zones":{...ALL,"zone_rules":[...ALL zone_rules EXCEPT the Chania one]}}
+- "Διέγραψε τον νομό Χανίων" → patch:{"zones":{...ALL,"prefecture_zones":[...ALL EXCEPT chania],"zone_rules":[...ALL zone_rules with from_zone!="chania" AND to_zone!="chania"]}}
+- "Ποιοι κανόνες ζωνών ισχύουν;" → patch:null, message:"INFO: listed N zone rules", reply:"<formatted list: zone name, from/to prefectures, allowed/denied>"
+- "Ποιες διαδρομές απαγορεύονται;" → patch:null, message:"INFO: listed N denied rules", reply:"<list of denied zone_rules + denied route_rules>"
+
+ROUTE RULE EXAMPLES (fine-grained keyword overrides):
+- "Από Ηράκλειο προς Χανιά επιτρέπεται ρητά" → patch:{"zones":{...ALL,"route_rules":[...current, {"id":"rr_1","name":"Heraklion→Chania explicit allow","from_keywords":["ηράκλειο","heraklion","ηρακλειο"],"to_keywords":["χανιά","chania","χανια"],"allowed":true,"deny_message":null}]}}
 - "Διέγραψε τον κανόνα για Χανιά" → patch:{"zones":{...ALL,"route_rules":[...ALL route_rules EXCEPT the Chania one]}}
 - "Ποιες διαδρομές απαγορεύονται;" → patch:null, message:"INFO: listed N denied route rules", reply:"<formatted list of denied rules with keywords>"`,
     messages: [{ role: 'user', content: message }],
